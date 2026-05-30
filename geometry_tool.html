@@ -47,6 +47,7 @@
     --shadow: 0 2px 12px rgba(0, 0, 0, 0.07);
     --r: 10px;
     --r2: 14px;
+   --stage-h: clamp(320px, 48vh, 520px);
    }
    * {
     box-sizing: border-box;
@@ -377,12 +378,14 @@
     justify-content: center;
     align-items: center;
     padding: 18px 12px;
-    min-height: 420px;
+    min-height: var(--stage-h);
    }
    .canvas-wrap svg {
     width: min(100%, 900px);
     height: auto;
     max-width: 100%;
+    max-height: calc(var(--stage-h) - 36px);
+    display: block;
     overflow: visible;
    }
 
@@ -495,6 +498,7 @@
    body.presenting .container {
     max-width: none;
     padding: 22px 34px 30px;
+    --stage-h: calc(100vh - 300px);
    }
    body.presenting .hint-card,
    body.presenting .formula-card,
@@ -502,10 +506,11 @@
     background: #ffffff;
    }
    body.presenting .canvas-wrap {
-    min-height: calc(100vh - 300px);
+    min-height: max(320px, var(--stage-h));
    }
    body.presenting .canvas-wrap svg {
     width: min(96vw, 1180px);
+    max-height: calc(var(--stage-h) - 36px);
    }
    body.presenting .anim-title {
     color: #f8fafc;
@@ -839,8 +844,11 @@
     .hero-stats { gap: 12px; }
     .topic-grid { grid-template-columns: 1fr; }
     .container { padding: 16px 12px; }
-    .canvas-wrap { padding: 8px 4px; min-height: 260px; }
-    .canvas-wrap svg { max-width: 100%; height: auto; }
+    body.anim-active .container { padding: 12px 10px 20px; }
+    .anim-header { gap: 8px; margin-bottom: 12px; }
+    .canvas-wrap { --stage-h: clamp(250px, 42vh, 360px); padding: 8px 4px; min-height: var(--stage-h); }
+    .canvas-wrap svg { max-width: 100%; max-height: calc(var(--stage-h) - 16px); height: auto; }
+    body.presenting .container { padding: 12px 10px 18px; --stage-h: calc(100vh - 250px); }
     .hint-card, .formula-card { font-size: 14px; }
     .ai-panel { position: fixed; bottom: 0; left: 0; right: 0; max-height: 50vh; z-index: 200; }
     .ctrl-row { flex-wrap: wrap; }
@@ -1315,7 +1323,15 @@
      },
      s,
     );
-    e.textContent = txt;
+    const lines = String(txt).split('\n');
+    if (lines.length === 1) {
+     e.textContent = txt;
+    } else {
+     lines.forEach((line, i) => {
+      const span = E('tspan', { x, dy: i === 0 ? 0 : (sz || 13) * 1.25 }, e);
+      span.textContent = line;
+     });
+    }
     return e;
    }
    function R(s, x, y, w, h, fill, stroke, sw, rx) {
@@ -1358,6 +1374,58 @@
      s,
     );
    }
+   function SPH(s, cx, cy, r) {
+    const id = `sphereGrad-${Math.round(cx)}-${Math.round(cy)}-${Math.round(r)}`;
+    E(
+     'ellipse',
+     {
+      cx,
+      cy: cy + r * 0.92,
+      rx: r * 0.72,
+      ry: r * 0.16,
+      fill: 'rgba(106,58,0,0.18)',
+     },
+     s,
+    );
+    const defs = E('defs', {}, s);
+    const grad = E(
+     'radialGradient',
+     { id, cx: '34%', cy: '28%', r: '72%', fx: '28%', fy: '22%' },
+     defs,
+    );
+    E('stop', { offset: '0%', 'stop-color': '#FFF7E8' }, grad);
+    E('stop', { offset: '42%', 'stop-color': '#F5C978' }, grad);
+    E('stop', { offset: '78%', 'stop-color': '#9A5800' }, grad);
+    E('stop', { offset: '100%', 'stop-color': '#5C3000' }, grad);
+    C(s, cx, cy, r, `url(#${id})`, '#9A5800', 1.8);
+    E(
+     'ellipse',
+     {
+      cx,
+      cy: cy + r * 0.1,
+      rx: r * 0.82,
+      ry: r * 0.24,
+      fill: 'none',
+      stroke: '#6A3A00',
+      'stroke-width': 1.1,
+      'stroke-dasharray': '4 3',
+      opacity: 0.48,
+     },
+     s,
+    );
+    E(
+     'ellipse',
+     {
+      cx: cx - r * 0.28,
+      cy: cy - r * 0.32,
+      rx: r * 0.18,
+      ry: r * 0.11,
+      fill: 'rgba(255,255,255,0.72)',
+      transform: `rotate(-25 ${cx - r * 0.28} ${cy - r * 0.32})`,
+     },
+     s,
+    );
+   }
    function RA(s, x, y, sz, col) {
     E(
      'path',
@@ -1372,6 +1440,33 @@
    }
    function clr(s) {
     s.replaceChildren();
+   }
+   function unionBBox(boxes) {
+    const valid = boxes.filter((b) => b && b.width > 0 && b.height > 0);
+    if (!valid.length) return null;
+    const x1 = Math.min(...valid.map((b) => b.x));
+    const y1 = Math.min(...valid.map((b) => b.y));
+    const x2 = Math.max(...valid.map((b) => b.x + b.width));
+    const y2 = Math.max(...valid.map((b) => b.y + b.height));
+    return { x: x1, y: y1, width: x2 - x1, height: y2 - y1 };
+   }
+   function fitAnimContent(bgGroup, animGroup, sd) {
+    if (sd.noAutoFit) return;
+    try {
+     animGroup.removeAttribute('transform');
+     const boxes = [];
+     if (bgGroup.childNodes.length) boxes.push(bgGroup.getBBox());
+     if (animGroup.childNodes.length) boxes.push(animGroup.getBBox());
+     const b = unionBBox(boxes);
+     if (!b) return;
+     const vw = 460, vh = 220, pad = sd.fitPad || 10;
+     const availW = vw - pad * 2, availH = vh - pad * 2;
+     const scale = Math.min(1, availW / b.width, availH / b.height);
+     const tx = pad + (availW - b.width * scale) / 2 - b.x * scale;
+     const ty = pad + (availH - b.height * scale) / 2 - b.y * scale;
+     const needsFit = scale < 0.999 || b.x < pad || b.y < pad || b.x + b.width > vw - pad || b.y + b.height > vh - pad;
+     if (needsFit) animGroup.setAttribute('transform', `translate(${tx},${ty}) scale(${scale})`);
+    } catch (_) {}
    }
 
    function renderGrade() {
@@ -1502,29 +1597,11 @@
     if (sd.bg) sd.bg(bgGroup);
     const dur = sd.dur || 1400,
      t0 = performance.now();
-    let autoFitDone = false;
     function tick(now) {
      const p = Math.min(1, (now - t0) / dur);
      clr(animGroup);
      sd.draw(animGroup, ease(p));
-     // 自动适配：只在内容超出时做一次（首帧之后），noAutoFit:true 的步骤跳过
-     if (!autoFitDone && p > 0.05 && !sd.noAutoFit) {
-      autoFitDone = true;
-      try {
-       const b = animGroup.getBBox();
-       if (b.width > 0 && b.height > 0) {
-        const vw = 460, vh = 220, pad = 8;
-        const out = b.x < pad || b.y < pad || b.x + b.width > vw - pad || b.y + b.height > vh - pad;
-        if (out) {
-         const availW = vw - pad * 2, availH = vh - pad * 2;
-         const s = Math.min(1, availW / b.width, availH / b.height);
-         const tx = pad + (availW - b.width * s) / 2 - b.x * s;
-         const ty = pad + (availH - b.height * s) / 2 - b.y * s;
-         animGroup.setAttribute('transform', `translate(${tx},${ty}) scale(${s})`);
-        }
-       }
-      } catch (_) {}
-     }
+     fitAnimContent(bgGroup, animGroup, sd);
      if (p < 1) af = requestAnimationFrame(tick);
      else af = null;
     }
@@ -1726,7 +1803,7 @@
         T(s, 280, 165, '圆柱', '#064A34', 12);
        }
        if (t > 0.78) {
-        C(s, 378, 104, 42, '#FEF0DC', '#9A5800', 1.8);
+        SPH(s, 378, 104, 42);
         T(s, 378, 162, '球', '#6A3A00', 12);
        }
       },
@@ -1967,11 +2044,11 @@
          },
          s,
         );
-        T(s, 272, 150, '圆柱', '#064A34', 11, 'middle');
+        T(s, 272, 164, '圆柱', '#064A34', 11, 'middle');
        }
        // 球
        if (t > 0.78) {
-        C(s, 404, 100, 34, '#FEF0DC', '#9A5800', 1.8);
+        SPH(s, 404, 100, 34);
         T(s, 404, 150, '球', '#6A3A00', 11, 'middle');
        }
       },
@@ -3493,7 +3570,7 @@
         1.8,
        );
        if (t > 0.88)
-        T(s, 166, 210, '拼成平行四边形！', '#6A3A00', 13, 'middle', '700');
+        T(s, 346, 186, '拼成平行四边形！', '#6A3A00', 13, 'middle', '700');
       },
      },
      {
@@ -4634,7 +4711,7 @@
         },
         s,
        );
-       T(s, 112, 170, '圆锥', '#0D3F6E', 11);
+       T(s, 112, 184, '圆锥', '#0D3F6E', 11);
        E(
         'ellipse',
         {
@@ -4675,7 +4752,7 @@
         },
         s,
        );
-       T(s, 300, 168, '圆柱（等底等高）', '#064A34', 10);
+       T(s, 300, 182, '圆柱（等底等高）', '#064A34', 10);
        if (t > 0.52) T(s, 206, 105, '倒3次', '#C03030', 20, 'middle', '700');
       },
      },
@@ -5107,7 +5184,7 @@
         T(
          s,
          28 + 4 * 40,
-         190,
+         204,
          '左右两侧到对称轴距离相等',
          '#9E9B96',
          10,
@@ -5145,7 +5222,7 @@
           '3,2',
          );
         }
-        T(s, 218, 170, '圆：无数条', '#701040', 11);
+        T(s, 218, 184, '圆：无数条', '#701040', 11);
        }
        if (t > 0.72) {
         R(s, 300, 74, 94, 70, '#E8F1FB', '#1A5FA8', 1.8);
@@ -5288,7 +5365,7 @@
          T(
           s,
           22 + 57 + dx / 2,
-          22 + 155,
+          22 + 168,
           `向右移${n}格`,
           '#C03030',
           12,
@@ -5343,7 +5420,7 @@
          C(s, px + dx, py, 4, '#C03030', 'none');
         });
        if (t > 0.75)
-        T(s, 230, 188, '每个点都移动了相同距离', '#9E9B96', 11, 'middle');
+        T(s, 230, 204, '每个点都移动了相同距离', '#9E9B96', 11, 'middle');
       },
      },
      {
@@ -5405,10 +5482,10 @@
         for (let c = 0; c < 10; c++)
          R(s, 22 + c * 40, 22 + r * 28, 40, 28, 'none', '#F0EDE6', 0.6);
        R(s, 22 + 40, 22 + 28, 80, 56, '#E8F1FB', '#1A5FA8', 1.8);
-       T(s, 62 + 40, 22 + 28 + 68, '原图形', '#0D3F6E', 10);
+       T(s, 62 + 40, 22 + 28 + 78, '原图形', '#0D3F6E', 10);
        if (t > 0.3) {
         R(s, 22 + 40 + 3 * 40, 22 + 28, 80, 56, 'none', '#1A5FA8', 1, '4,2');
-        T(s, 62 + 40 + 3 * 40, 22 + 28 + 68, '右移3格', '#1A5FA8', 10);
+        T(s, 62 + 40 + 3 * 40, 22 + 28 + 78, '右移3格', '#1A5FA8', 10);
        }
        if (t > 0.65) {
         R(
@@ -5424,7 +5501,7 @@
         T(
          s,
          62 + 40 + 3 * 40,
-         22 + 28 + 3 * 28 + 68,
+         22 + 28 + 3 * 28 + 80,
          '再下移3格',
          '#3A7010',
          10,
@@ -5671,7 +5748,7 @@
         T(s, 315, 137, '= 1 km', '#9A5800', 17, 'middle', '700');
        }
        if (t > 0.82)
-        T(s, 120, 188, '比例尺 1:50000', '#0D3F6E', 13, 'middle', '600');
+        T(s, 120, 206, '比例尺 1:50000', '#0D3F6E', 13, 'middle', '600');
       },
      },
     ],
