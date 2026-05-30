@@ -239,7 +239,7 @@
 
    .topic-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
     gap: 10px;
     margin-bottom: 24px;
    }
@@ -835,7 +835,7 @@
        <div class="stat-l">年级</div>
       </div>
       <div class="stat">
-       <div class="stat-n">28</div>
+       <div class="stat-n">26</div>
        <div class="stat-l">知识点</div>
       </div>
       <div class="stat">
@@ -1011,6 +1011,15 @@
     4: '#EEECFE',
     5: '#FCEAF2',
     6: '#EAF6DC',
+   };
+   // 深色版年级色：用于卡片图标与标签文字，保证在浅底上清晰可读
+   const GCD = {
+    1: '#0D3F6E',
+    2: '#064A34',
+    3: '#6A3A00',
+    4: '#3A2A90',
+    5: '#701040',
+    6: '#204808',
    };
    const GN = {
     1: '一年级',
@@ -1340,11 +1349,12 @@
     d.className = 'tcard';
     d.style.color = c;
     const icon = ICONS[t.tag] || 'ti-math-function';
+    const dc = GCD[cg] || c;
     const isVisited = visitedSet.has(t.id);
     const tagText = t.tag + (isVisited ? ' ✓' : '');
     d.innerHTML = `<div class="tcard-top">
-    <div class="tcard-icon" style="background:${bg};"><i class="ti ${icon}" style="color:${c};"></i></div>
-    <span class="tcard-badge" style="background:${bg};color:${c};">${tagText}</span></div>
+    <div class="tcard-icon" style="background:${bg};"><i class="ti ${icon}" style="color:${dc};"></i></div>
+    <span class="tcard-badge" style="background:${bg};color:${dc};">${tagText}</span></div>
   <div class="tcard-title">${t.title}</div>
   <div class="tcard-sub">${t.sub}</div>
   <div class="tcard-steps">${Array.from({ length: t.steps }, (_, i) => `<div class="tcard-step" style="background:${i === 0 ? c : '#E0DDD6'};"></div>`).join('')}</div>`;
@@ -1446,8 +1456,8 @@
      const p = Math.min(1, (now - t0) / dur);
      clr(animGroup);
      sd.draw(animGroup, ease(p));
-     // 自动适配：只在内容超出时做一次（首帧之后）
-     if (!autoFitDone && p > 0.05) {
+     // 自动适配：只在内容超出时做一次（首帧之后），noAutoFit:true 的步骤跳过
+     if (!autoFitDone && p > 0.05 && !sd.noAutoFit) {
       autoFitDone = true;
       try {
        const b = animGroup.getBBox();
@@ -2010,14 +2020,16 @@
         T(s, 208, 168, '∠B', '#6A3A00', 11, 'start');
         T(s, 150, 62, '∠C', '#6A3A00', 11);
        }
-       if (t > 0.6)
-        T(s, 305, 98, '∠A+∠B+∠C\n= 180°', '#9A5800', 14, 'middle', '700');
+       if (t > 0.6) {
+        T(s, 285, 100, '∠A+∠B', '#9A5800', 13, 'middle', '700');
+        T(s, 285, 118, '+∠C=180°', '#9A5800', 13, 'middle', '700');
+       }
        if (t > 0.78) {
-        C(s, 385, 112, 40, '#E4F6EE', '#0A7050', 2);
-        C(s, 385, 112, 4, '#0A7050', 'none');
-        L(s, 385, 112, 425, 112, '#1A5FA8', 2);
-        T(s, 406, 100, 'r', '#0D3F6E', 14, 'middle', '600');
-        T(s, 385, 164, 'd=2r', '#064A34', 12);
+        C(s, 408, 110, 36, '#E4F6EE', '#0A7050', 2);
+        C(s, 408, 110, 4, '#0A7050', 'none');
+        L(s, 408, 110, 444, 110, '#1A5FA8', 2);
+        T(s, 426, 100, 'r', '#0D3F6E', 13, 'middle', '600');
+        T(s, 408, 162, 'd=2r', '#064A34', 12);
        }
       },
      },
@@ -2346,7 +2358,7 @@
         );
         T(s, 265, 116, '正方形', '#3A2A90', 14, 'middle', '700');
        }
-       if (t > 0.75) T(s, 200, 160, '正方形满足长方形所有性质', '#9E9B96', 11);
+       if (t > 0.75) T(s, 200, 196, '正方形满足长方形所有性质', '#9E9B96', 11);
       },
      },
     ],
@@ -2550,16 +2562,18 @@
         2,
        );
        [
-        ['148', 135, 168, '#064A34'],
-        ['66', 236, 128, '#064A34'],
-        ['74', 215, 68, '#064A34'],
-        ['92', 110, 58, '#064A34'],
-        ['60', 52, 122, '#064A34'],
+        ['30', 135, 170, '#064A34'],
+        ['15', 238, 128, '#064A34'],
+        ['20', 220, 68, '#064A34'],
+        ['20', 100, 58, '#064A34'],
+        ['13', 48, 122, '#064A34'],
        ].forEach(([l, x, y, c], i) => {
         if (i / 5 < t + 0.06) T(s, x, y, l, c, 12);
        });
-       if (t > 0.82)
-        T(s, 350, 110, '合计\n= 440', '#064A34', 14, 'middle', '600');
+       if (t > 0.82) {
+        T(s, 350, 102, '合计', '#064A34', 13, 'middle', '600');
+        T(s, 350, 122, '= 98', '#064A34', 16, 'middle', '700');
+       }
       },
      },
      {
@@ -2710,11 +2724,11 @@
        for (let i = 0; i < shown; i++) {
         const r = Math.floor(i / 4),
          c = i % 4;
-        R(s, 56 + c * 54, 50 + r * 52, 54, 52, '#EEECFE', '#5A4AC0', 1, 4);
+        R(s, 78 + c * 54, 40 + r * 46, 54, 46, '#EEECFE', '#5A4AC0', 1, 4);
         if (t > 0.88)
-         T(s, 56 + c * 54 + 27, 50 + r * 52 + 30, String(i + 1), '#5A4AC0', 10);
+         T(s, 78 + c * 54 + 27, 40 + r * 46 + 27, String(i + 1), '#5A4AC0', 10);
        }
-       if (t > 0.9) T(s, 200, 208, '4列×3行 = 12格 = 12 cm²', '#3A2A90', 12);
+       if (t > 0.9) T(s, 200, 200, '4列 × 3行 = 12格 = 12 cm²', '#3A2A90', 12);
       },
      },
      {
@@ -3417,23 +3431,23 @@
       formula: '三角形面积 = bh ÷ 2',
       dur: 1200,
       draw(s, t) {
-       const A = [78, 148],
-        B = [252, 148],
-        Cp = [214, 62],
-        D = [118, 234];
+       const A = [78, 128],
+        B = [252, 128],
+        Cp = [214, 58],
+        D = [116, 198];
        PL(s, [A, B, Cp], '#FEF0DC', '#9A5800', 1.8);
        PL(s, [B, A, D], '#E4F6EE', '#0A7050', 1.8);
        L(s, A[0], A[1], B[0], B[1], '#1A5FA8', 2.8);
-       T(s, 165, 164, '底 b', '#0D3F6E', 13, 'middle', '600');
+       T(s, 168, 144, '底 b', '#0D3F6E', 13, 'middle', '600');
        // 补高线和h标注
        if (t > 0.4) {
-        L(s, 214, 62, 214, 148, '#C03030', 1.8, '5,3');
-        RA(s, 214, 148, 12, '#C03030');
-        T(s, 230, 108, '高 h', '#C03030', 12, 'start');
+        L(s, 214, 58, 214, 128, '#C03030', 1.8, '5,3');
+        RA(s, 214, 128, 12, '#C03030');
+        T(s, 232, 92, '高 h', '#C03030', 12, 'start');
        }
        if (t > 0.65) {
-        T(s, 370, 100, '平行四边形', '#9E9B96', 12, 'middle');
-        T(s, 370, 118, '= 2×三角形', '#5A4AC0', 14, 'middle', '700');
+        T(s, 372, 110, '平行四边形', '#9E9B96', 12, 'middle');
+        T(s, 372, 128, '= 2×三角形', '#5A4AC0', 14, 'middle', '700');
        }
       },
      },
@@ -4697,25 +4711,46 @@
       hint:
        '轴对称图形：沿一条直线折叠，两侧能完全重合。这条直线叫做对称轴。蝴蝶、枫叶都是轴对称图形。',
       formula: '轴对称图形：沿对称轴对折 → 两侧完全重合',
-      dur: 1400,
+      dur: 2200,
       draw(s, t) {
-       PL(
+       const ax = 218;
+       const apex = [218, 54],
+        right = [295, 160],
+        bottom = [218, 142],
+        left = [141, 160];
+       // 底层：完整图形淡色，表示对折后两半重合的最终位置
+       PL(s, [apex, right, bottom, left], '#FBEEF4', '#E0B8C8', 1.2);
+       // 对称轴（折痕）始终显示
+       L(s, ax, 44, ax, 178, '#C03030', 2, '5,3');
+       T(s, ax, 192, '对称轴（折痕）', '#C03030', 12);
+       // 左半边：固定不动
+       PL(s, [apex, bottom, left], '#FCEAF2', '#A03060', 2);
+       // 右半边：绕对称轴翻折，cos 从 1→-1 模拟对折盖过去
+       const fold = ease(Math.min(1, t / 0.82)),
+        angle = fold * Math.PI,
+        ca = Math.cos(angle);
+       const fpts = [apex, right, bottom].map(([x, y]) => [
+        ax + (x - ax) * ca,
+        y,
+       ]);
+       // 翻折中半透明，让"盖上去"的过程看得见
+       E(
+        'polygon',
+        {
+         points: fpts.map((p) => p.join(',')).join(' '),
+         fill: '#F6C9DC',
+         stroke: '#A03060',
+         'stroke-width': 2,
+         opacity: fold < 0.95 ? 0.78 : 1,
+        },
         s,
-        [
-         [218, 54],
-         [295, 160],
-         [218, 142],
-         [141, 160],
-        ],
-        '#FCEAF2',
-        '#A03060',
-        2,
        );
-       if (t > 0.48) L(s, 218, 44, 218, 178, '#C03030', 2, '5,3');
-       if (t > 0.48) T(s, 218, 192, '对称轴', '#C03030', 12);
-       if (t > 0.72) {
-        T(s, 218, 116, '←对折→', '#9E9B96', 12, 'middle');
-        T(s, 218, 134, '两侧完全重合！', '#701040', 11, 'middle');
+       // 提示文字（放右侧空白，避开图形）
+       if (t < 0.45) T(s, 372, 92, '沿折痕对折…', '#9E9B96', 13, 'middle');
+       else if (t < 0.82) T(s, 372, 92, '正在对折…', '#9A5800', 13, 'middle', '600');
+       if (t > 0.92) {
+        T(s, 372, 100, '两侧', '#701040', 14, 'middle', '700');
+        T(s, 372, 120, '完全重合！', '#701040', 14, 'middle', '700');
        }
       },
      },
@@ -4726,42 +4761,40 @@
       dur: 1300,
       draw(s, t) {
        if (t > 0.05) {
-        PL(
-         s,
-         [
-          [60, 152],
-          [112, 152],
-          [86, 80],
-         ],
-         '#FCEAF2',
-         '#A03060',
-         1.8,
-        );
-        L(s, 86, 74, 86, 158, '#C03030', 1.5, '4,2');
-        T(s, 86, 168, '等腰三角形', '#701040', 10);
+        PL(s, [[42, 148], [86, 148], [64, 82]], '#FCEAF2', '#A03060', 1.8);
+        L(s, 64, 76, 64, 154, '#C03030', 1.5, '4,2');
+        T(s, 64, 164, '等腰△1条', '#701040', 10);
        }
        if (t > 0.28) {
-        R(s, 140, 84, 90, 64, '#E8F1FB', '#1A5FA8', 1.8);
-        L(s, 140, 76, 230, 76, '#C03030', 1.5, '4,2');
-        L(s, 185, 84, 185, 148, '#C03030', 1.5, '4,2');
-        T(s, 185, 162, '长方形（2条）', '#0D3F6E', 10);
+        R(s, 108, 90, 84, 58, '#E8F1FB', '#1A5FA8', 1.8);
+        L(s, 108, 82, 192, 82, '#C03030', 1.5, '4,2');
+        L(s, 150, 90, 150, 148, '#C03030', 1.5, '4,2');
+        T(s, 150, 162, '长方形2条', '#0D3F6E', 10);
        }
-       if (t > 0.56) {
-        C(s, 340, 110, 48, '#E4F6EE', '#0A7050', 1.8);
+       if (t > 0.52) {
+        R(s, 222, 88, 62, 62, '#EEECFE', '#5A4AC0', 1.8);
+        L(s, 253, 80, 253, 158, '#C03030', 1.5, '4,2');
+        L(s, 214, 119, 292, 119, '#C03030', 1.5, '4,2');
+        L(s, 222, 88, 284, 150, '#C03030', 1, '4,2');
+        L(s, 222, 150, 284, 88, '#C03030', 1, '4,2');
+        T(s, 253, 164, '正方形4条', '#3A2A90', 10);
+       }
+       if (t > 0.76) {
+        C(s, 385, 112, 40, '#E4F6EE', '#0A7050', 1.8);
         for (let i = 0; i < 4; i++) {
          const a = (i * Math.PI) / 4;
          L(
           s,
-          340 + 48 * Math.cos(a),
-          110 + 48 * Math.sin(a),
-          340 - 48 * Math.cos(a),
-          110 - 48 * Math.sin(a),
+          385 + 40 * Math.cos(a),
+          112 + 40 * Math.sin(a),
+          385 - 40 * Math.cos(a),
+          112 - 40 * Math.sin(a),
           '#C03030',
           1,
           '3,2',
          );
         }
-        T(s, 340, 166, '圆（无数条）', '#064A34', 10);
+        T(s, 385, 162, '圆无数条', '#064A34', 10);
        }
       },
      },
@@ -4785,16 +4818,39 @@
       formula: '✅  轴对称：对折重合，对称轴是那条折叠线',
       dur: 1000,
       draw(s, t) {
-       [
-        ['蝴蝶', 72, 100, 38, '#FCEAF2', '#A03060'],
-        ['雪花', 218, 100, 38, '#E8F1FB', '#1A5FA8'],
-        ['正方形', 365, 100, 38, '#EEECFE', '#5A4AC0'],
-       ].forEach(([l, cx, cy, r, f, c], i) => {
-        if (i / 3 > t - 0.06) return;
-        C(s, cx, cy, r, f, c, 1.8);
-        L(s, cx, cy - r - 4, cx, cy + r + 4, c, 1.5, '4,2');
-        T(s, cx, cy + 56, l, c, 12);
-       });
+       // 蝴蝶（1条对称轴）
+       if (t > 0.02) {
+        const bx = 86, by = 104, col = '#A03060', f = '#FCEAF2';
+        E('ellipse', { cx: bx - 17, cy: by - 13, rx: 16, ry: 12, fill: f, stroke: col, 'stroke-width': 1.6 }, s);
+        E('ellipse', { cx: bx + 17, cy: by - 13, rx: 16, ry: 12, fill: f, stroke: col, 'stroke-width': 1.6 }, s);
+        E('ellipse', { cx: bx - 14, cy: by + 15, rx: 13, ry: 14, fill: f, stroke: col, 'stroke-width': 1.6 }, s);
+        E('ellipse', { cx: bx + 14, cy: by + 15, rx: 13, ry: 14, fill: f, stroke: col, 'stroke-width': 1.6 }, s);
+        L(s, bx, by - 22, bx, by + 26, col, 2.5);
+        L(s, bx, by - 36, bx, by + 36, '#C03030', 1.5, '4,2');
+        T(s, bx, by + 58, '蝴蝶 1条', col, 11);
+       }
+       // 雪花（6条对称轴）
+       if (t > 0.34) {
+        const sx = 230, sy = 104, col = '#1A5FA8', r = 36;
+        for (let i = 0; i < 6; i++) {
+         const a = (i * Math.PI) / 3;
+         L(s, sx, sy, sx + r * Math.cos(a), sy + r * Math.sin(a), col, 2);
+         const bx = sx + r * 0.55 * Math.cos(a), by = sy + r * 0.55 * Math.sin(a);
+         L(s, bx, by, bx + 9 * Math.cos(a + 0.6), by + 9 * Math.sin(a + 0.6), col, 1.5);
+         L(s, bx, by, bx + 9 * Math.cos(a - 0.6), by + 9 * Math.sin(a - 0.6), col, 1.5);
+        }
+        T(s, sx, sy + 58, '雪花 6条', col, 11);
+       }
+       // 正方形（4条对称轴）
+       if (t > 0.68) {
+        const qx = 374, qy = 104, h = 30, col = '#5A4AC0';
+        R(s, qx - h, qy - h, h * 2, h * 2, '#EEECFE', col, 1.8);
+        L(s, qx, qy - h - 5, qx, qy + h + 5, '#C03030', 1.4, '4,2');
+        L(s, qx - h - 5, qy, qx + h + 5, qy, '#C03030', 1.4, '4,2');
+        L(s, qx - h, qy - h, qx + h, qy + h, '#C03030', 1, '4,2');
+        L(s, qx - h, qy + h, qx + h, qy - h, '#C03030', 1, '4,2');
+        T(s, qx, qy + 58, '正方形 4条', col, 11);
+       }
       },
      },
     ],
@@ -5621,7 +5677,7 @@
    }
    function updateApiStatus() {
     document.getElementById('apiStatus').className =
-     'api-status' + (getApiKey() ? '  ok' : '');
+     'api-status' + (getApiKey() ? ' ok' : '');
    }
 
    function openSettings() {
