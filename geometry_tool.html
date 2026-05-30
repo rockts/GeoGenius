@@ -952,6 +952,7 @@
      </button>
      <button
       class="cbtn"
+      id="quizBtn"
       onclick="renderQuiz()"
       style="font-size: 12px; padding: 8px 14px"
      >
@@ -1310,7 +1311,7 @@
     );
    }
    function clr(s) {
-    while (s.firstChild) s.removeChild(s.firstChild);
+    s.replaceChildren();
    }
 
    function renderGrade() {
@@ -1382,6 +1383,8 @@
     document.getElementById('openAIBtn').style.display = '';
     document.getElementById('aiTopicLabel').textContent = t.title;
     document.getElementById('quizWrap').style.display = 'none';
+    const quizBtn = document.getElementById('quizBtn');
+    if (quizBtn) quizBtn.style.display = QUIZZES[t.id] ? '' : 'none';
     quizState = { active: false, correct: 0, total: 0 };
     // 打开知识点
     ct = t;
@@ -1432,16 +1435,20 @@
     updUI();
     // 绘制静态背景（仅一次）
     const bgGroup = document.getElementById('asvg-bg');
-    clr(bgGroup);
+    const animGroup = document.getElementById('asvg-anim');
+    clr(bgGroup); clr(animGroup);
+    animGroup.removeAttribute('transform');
     if (sd.bg) sd.bg(bgGroup);
     const dur = sd.dur || 1400,
      t0 = performance.now();
-    const animGroup = document.getElementById('asvg-anim');
+    let autoFitDone = false;
     function tick(now) {
      const p = Math.min(1, (now - t0) / dur);
      clr(animGroup);
      sd.draw(animGroup, ease(p));
-     if (!sd.noAutoFit) {
+     // 自动适配：只在内容超出时做一次（首帧之后）
+     if (!autoFitDone && p > 0.05) {
+      autoFitDone = true;
       try {
        const b = animGroup.getBBox();
        if (b.width > 0 && b.height > 0) {
@@ -5343,10 +5350,13 @@
        '旋转90°：图形转四分之一圈。在方格纸上，每个顶点到旋转中心的距离不变，方向转90°。',
       formula: '旋转90° = 转四分之一圈',
       dur: 1400,
-      draw(s, t) {
-       for (let r = 0; r < 8; r++)
+      noAutoFit: true,
+      bg(s) {
+       for (let r = 0; r < 7; r++)
         for (let c = 0; c < 10; c++)
          R(s, 22 + c * 38, 22 + r * 28, 38, 28, 'none', '#F0EDE6', 0.6);
+      },
+      draw(s, t) {
        const ox = 22 + 4 * 38 + 19,
         oy = 22 + 4 * 28;
        C(s, ox, oy, 5, '#1A5FA8', 'none');
@@ -5566,7 +5576,13 @@
 
    function renderQuiz() {
     const wrap = document.getElementById('quizWrap');
-    if (!ct || !QUIZZES[ct.id]) { wrap.style.display = 'none'; return; }
+    const quizBtn = document.getElementById('quizBtn');
+    if (!ct || !QUIZZES[ct.id]) {
+     wrap.style.display = 'none';
+     if (quizBtn) quizBtn.style.display = 'none';
+     return;
+    }
+    if (quizBtn) quizBtn.style.display = '';
     const qs = QUIZZES[ct.id];
     if (!qs.length) { wrap.style.display = 'none'; return; }
     const qi = Math.floor(Math.random() * qs.length);
