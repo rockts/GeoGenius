@@ -123,6 +123,21 @@
    }
    .screen.active {
     display: block;
+    animation: fadeSlideIn 0.3s ease;
+   }
+   @keyframes fadeSlideIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+   }
+
+   /* ── FORMULA HIGHLIGHT PULSE ── */
+   .formula-card.highlight {
+    animation: pulse 0.5s ease;
+   }
+   @keyframes pulse {
+    0%   { transform: scale(1); }
+    50%  { transform: scale(1.03); }
+    100% { transform: scale(1); }
    }
 
    /* ── HOME ── */
@@ -633,6 +648,24 @@
     cursor: not-allowed;
    }
 
+   /* ── QUIZ ── */
+   .quiz-opt {
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: var(--r);
+    padding: 10px 14px;
+    font-size: 13px;
+    cursor: pointer;
+    text-align: left;
+    font-family: inherit;
+    color: var(--text);
+    transition: all 0.15s;
+   }
+   .quiz-opt:hover {
+    border-color: var(--bl);
+    background: var(--bll);
+   }
+
    /* ── SETTINGS MODAL ── */
    .modal-overlay {
     position: fixed;
@@ -753,6 +786,20 @@
    .api-status.ok {
     background: #3a7010;
    }
+
+   /* ── RESPONSIVE ── */
+   @media (max-width: 640px) {
+    .hero-title { font-size: 20px; }
+    .hero-stats { gap: 12px; }
+    .topic-grid { grid-template-columns: 1fr; }
+    .container { padding: 16px 12px; }
+    .canvas-wrap { padding: 8px 4px; min-height: 180px; }
+    .canvas-wrap svg { max-width: 100%; height: auto; }
+    .ai-panel { position: fixed; bottom: 0; left: 0; right: 0; max-height: 50vh; z-index: 200; }
+    .ctrl-row { flex-wrap: wrap; }
+    .cbtn { padding: 8px 12px; font-size: 12px; }
+    .modal { width: 96vw; padding: 20px 16px 16px; }
+   }
   </style>
  </head>
  <body>
@@ -837,7 +884,10 @@
       height="220"
       viewBox="0 0 460 220"
       style="max-width: 100%; overflow: visible"
-     ></svg>
+     >
+      <g id="asvg-bg"></g>
+      <g id="asvg-anim"></g>
+     </svg>
     </div>
     <div class="dot-row" id="dotrow"></div>
     <div class="hint-card" id="shint"></div>
@@ -890,8 +940,8 @@
      </div>
     </div>
 
-    <!-- 问AI按钮（面板折叠时显示） -->
-    <div style="margin-top: 10px; text-align: right">
+    <!-- 问AI按钮 -->
+    <div style="margin-top: 10px; text-align: right; display: flex; gap: 8px; justify-content: flex-end;">
      <button
       class="cbtn"
       id="openAIBtn"
@@ -900,7 +950,17 @@
      >
       🤖 问问AI老师
      </button>
+     <button
+      class="cbtn"
+      onclick="renderQuiz()"
+      style="font-size: 12px; padding: 8px 14px"
+     >
+      📝 做个小练习
+     </button>
     </div>
+
+    <!-- 练习区域 -->
+    <div id="quizWrap" style="display:none;margin-top:10px;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r2);padding:14px 16px;"></div>
    </div>
   </div>
 
@@ -1309,12 +1369,14 @@
    }
 
    function openT(t) {
-    // 清空AI对话
+    // 清空AI对话 + 练习
     aiHistory = [];
     document.getElementById('aiMsgs').innerHTML = '';
     document.getElementById('aiPanel').classList.remove('open');
     document.getElementById('openAIBtn').style.display = '';
     document.getElementById('aiTopicLabel').textContent = t.title;
+    document.getElementById('quizWrap').style.display = 'none';
+    quizState = { active: false, correct: 0, total: 0 };
     // 打开知识点
     ct = t;
     cs = 0;
@@ -1360,36 +1422,33 @@
     fc.textContent = sd.formula;
     fc.className = 'formula-card' + (step === ct.steps - 1 ? ' highlight' : '');
     updUI();
+    // 绘制静态背景（仅一次）
+    const bgGroup = document.getElementById('asvg-bg');
+    clr(bgGroup);
+    if (sd.bg) sd.bg(bgGroup);
     const dur = sd.dur || 1400,
      t0 = performance.now();
+    const animGroup = document.getElementById('asvg-anim');
     function tick(now) {
-     const p = Math.min(1, (now - t0) / dur),
-      svg = document.getElementById('asvg');
-     clr(svg);
-     const g = E('g', {}, svg);
-     sd.draw(g, ease(p));
-     // 全局可视区域适配：如果某一步内容超出画布，自动缩放并居中到安全区域
-     try {
-      const b = g.getBBox(),
-       vw = 460,
-       vh = 220,
-       pad = 8,
-       out =
-        b.width > 0 &&
-        b.height > 0 &&
-        (b.x < pad ||
-         b.y < pad ||
-         b.x + b.width > vw - pad ||
-         b.y + b.height > vh - pad);
-      if (out) {
-       const availW = vw - pad * 2,
-        availH = vh - pad * 2,
-        s = Math.min(1, availW / b.width, availH / b.height),
-        tx = pad + (availW - b.width * s) / 2 - b.x * s,
-        ty = pad + (availH - b.height * s) / 2 - b.y * s;
-       g.setAttribute('transform', `translate(${tx},${ty}) scale(${s})`);
-      }
-     } catch (_) {}
+     const p = Math.min(1, (now - t0) / dur);
+     clr(animGroup);
+     sd.draw(animGroup, ease(p));
+     if (!sd.noAutoFit) {
+      try {
+       const b = animGroup.getBBox();
+       if (b.width > 0 && b.height > 0) {
+        const vw = 460, vh = 220, pad = 8;
+        const out = b.x < pad || b.y < pad || b.x + b.width > vw - pad || b.y + b.height > vh - pad;
+        if (out) {
+         const availW = vw - pad * 2, availH = vh - pad * 2;
+         const s = Math.min(1, availW / b.width, availH / b.height);
+         const tx = pad + (availW - b.width * s) / 2 - b.x * s;
+         const ty = pad + (availH - b.height * s) / 2 - b.y * s;
+         animGroup.setAttribute('transform', `translate(${tx},${ty}) scale(${s})`);
+        }
+       }
+      } catch (_) {}
+     }
      if (p < 1) af = requestAnimationFrame(tick);
      else af = null;
     }
@@ -5473,6 +5532,63 @@
     ],
    };
 
+   /* ─── 互动练习题 ─── */
+   const QUIZZES = {
+    a1: [{ q: '以下哪个是立体图形？', opts: ['长方形', '正方体', '三角形', '圆形'], a:1, hint:'正方体有长宽高三个维度，是立体图形' }],
+    a2: [{ q: '平面图形有几个维度？', opts: ['3个', '1个', '2个', '0个'], a:2, hint:'平面图形只有长和宽，是二维的' }],
+    b1: [{ q: '直角等于多少度？', opts: ['45°', '60°', '90°', '180°'], a:2, hint:'直角是90°，用□标记' }],
+    b2: [{ q: '正方形有几条对称轴？', opts: ['1条', '2条', '3条', '4条'], a:3, hint:'正方形有4条对称轴' }],
+    c1: [{ q: '平行四边形有几组对边平行？', opts: ['1组', '2组', '0组', '3组'], a:1, hint:'平行四边形两组对边分别平行' }],
+    c2: [{ q: '周长是指什么？', opts: ['图形内部大小', '图形边缘一圈的长度', '图形的高度', '图形的颜色'], a:1, hint:'周长是围绕图形一整圈的总长度' }],
+    c3: [{ q: '长方形周长公式是？', opts: ['C=ab', 'C=2(a+b)', 'C=a+b', 'C=4a'], a:1, hint:'C=2(a+b)，先算括号内' }],
+    c4: [{ q: '面积单位是？', opts: ['cm', 'm', 'cm²', 'g'], a:2, hint:'面积是二维的，单位用平方' }],
+    c5: [{ q: '长方形面积公式是？', opts: ['S=2(a+b)', 'S=ab', 'S=a+b', 'S=4a'], a:1, hint:'长×宽=面积' }],
+    d1: [{ q: '三角形内角和等于？', opts: ['90°', '180°', '270°', '360°'], a:1, hint:'任意三角形内角和都是180°' }],
+    d2: [{ q: '梯形有几组对边平行？', opts: ['0组', '1组', '2组', '3组'], a:1, hint:'梯形只有一组对边平行' }],
+    e1: [{ q: '平行四边形面积公式是？', opts: ['S=ab÷2', 'S=bh', 'S=(a+b)h÷2', 'S=πr²'], a:1, hint:'底×高，等于剪拼后的长方形面积' }],
+    e2: [{ q: '三角形面积公式是？', opts: ['S=bh', 'S=bh÷2', 'S=ab', 'S=(a+b)h÷2'], a:1, hint:'底×高÷2，两个三角形拼成平行四边形' }],
+    e3: [{ q: '梯形面积公式是？', opts: ['S=bh÷2', 'S=ab', 'S=(a+b)×h÷2', 'S=πr²'], a:2, hint:'(上底+下底)×高÷2' }],
+    f1: [{ q: 'π约等于多少？', opts: ['2.14', '3.14', '4.14', '1.14'], a:1, hint:'π≈3.14159…，通常取3.14' }],
+    f2: [{ q: '圆的面积公式是？', opts: ['S=2πr', 'S=πd', 'S=πr²', 'S=πr'], a:2, hint:'扇形切拼近似长方形：长=πr，宽=r，面积=πr²' }],
+    f3: [{ q: '圆柱表面积公式是？', opts: ['S=πr²h', 'S=2πr(r+h)', 'S=2πrh', 'S=πr²'], a:1, hint:'2个底面+侧面：2πr²+2πrh=2πr(r+h)' }],
+    f4: [{ q: '圆柱体积公式是？', opts: ['V=2πrh', 'V=πr²', 'V=πr²h', 'V=⅓πr²h'], a:2, hint:'底面积×高=πr²h' }],
+    f5: [{ q: '等底等高的圆锥体积是圆柱的？', opts: ['½', '¼', '⅓', '相等'], a:2, hint:'圆锥倒满圆柱需要3次，V圆锥=⅓V圆柱' }],
+   };
+   let quizState = { active: false, correct: 0, total: 0 };
+
+   function renderQuiz() {
+    const wrap = document.getElementById('quizWrap');
+    if (!ct || !QUIZZES[ct.id]) { wrap.style.display = 'none'; return; }
+    const qs = QUIZZES[ct.id];
+    if (!qs.length) { wrap.style.display = 'none'; return; }
+    const qi = Math.floor(Math.random() * qs.length);
+    const q = qs[qi];
+    wrap.style.display = 'block';
+    wrap.style.animation = 'fadeSlideIn 0.3s ease';
+    wrap.innerHTML = `<div style="font-weight:600;font-size:13px;color:var(--text);margin-bottom:10px;">📝 小练习：${q.q}</div>
+     <div style="display:flex;flex-direction:column;gap:6px;" id="quizOpts">
+      ${q.opts.map((o,i)=>`<button class="quiz-opt" onclick="answerQuiz(${i},${q.a},'${q.hint.replace(/'/g,"\\'")}')">${'ABCD'[i]}. ${o}</button>`).join('')}
+     </div>
+     <div id="quizFeedback" style="margin-top:8px;font-size:12px;min-height:20px;"></div>`;
+    quizState.active = true;
+   }
+
+   function answerQuiz(chosen, correct, hint) {
+    if (!quizState.active) return;
+    quizState.active = false;
+    quizState.total++;
+    const fb = document.getElementById('quizFeedback');
+    const btns = document.querySelectorAll('.quiz-opt');
+    btns.forEach((b,i) => { b.disabled = true; if (i === correct) b.style.background = 'var(--grl)'; });
+    if (chosen === correct) {
+     quizState.correct++;
+     fb.innerHTML = '<span style="color:var(--gr)">✅ 正确！' + hint + '</span>';
+    } else {
+     fb.innerHTML = '<span style="color:var(--rd)">❌ 不对哦。' + hint + '</span>';
+     btns[chosen].style.background = 'var(--rdl)';
+    }
+   }
+
    /* ─── AI 功能 ─── */
    let aiHistory = [];
 
@@ -5604,14 +5720,81 @@
    }
 
    function getMockAIReply(q, topicTitle) {
+    const stepHint = (ct && ANIMS[ct.id] && ANIMS[ct.id][cs]) ? ANIMS[ct.id][cs].hint : '';
+    const stepFormula = (ct && ANIMS[ct.id] && ANIMS[ct.id][cs]) ? ANIMS[ct.id][cs].formula : '';
     const lq = q.toLowerCase();
-    if (lq.includes('为什么') || lq.includes('怎么'))
-     return `关于「${topicTitle}」，这是个好问题！你可以把公式想象成：先数一行有多少个，再数有几行，乘起来就是总数啦！就像排列整齐的糖果一样～`;
+    if (lq.includes('为什么') || lq.includes('怎么') || lq.includes('÷') || lq.includes('除'))
+     return `好问题！当前这步说的是：${stepHint}。简单说，${stepFormula ? '公式「' + stepFormula + '」的背后道理就是：' : ''}把复杂图形变成已知图形来算，这是数学里最重要的思想之一～`;
     if (lq.includes('不懂') || lq.includes('不明白') || lq.includes('难'))
-     return `别担心，「${topicTitle}」一开始确实有点绕。建议你先看动画演示，把图形在脑子里想象出来，然后再看公式，会清晰很多哦！`;
+     return `慢慢来～你正在学「${topicTitle}」的第${cs+1}步。当前${stepHint}。建议反复看动画，把图形在脑子里画出来，理解会更深！`;
     if (lq.includes('例题') || lq.includes('例子') || lq.includes('练习'))
-     return `好的！比如一个长方形，长8厘米，宽5厘米，面积 = 8×5 = 40平方厘米。你可以试着改变数字，自己算算看，做多了就熟练啦！`;
-    return `关于「${topicTitle}」你问得很棒！数学里每个公式都有它的道理，要多观察图形、多动手，你一定能掌握的！有具体的步骤不懂可以告诉我～`;
+     return `好！以「${topicTitle}」为例，公式 ${stepFormula || ''}。你可以把图形画在纸上，标出已知数据，然后代入公式一步步算。`;
+    if (lq.includes('你好') || lq.includes('老师'))
+     return `你好！我是AI老师～我们正在学「${topicTitle}」，已经到第${cs+1}步了。有什么不明白的尽管问！`;
+    return `你问的很好！当前我们学到了「${topicTitle}」的第${cs+1}/${ct.steps}步。这一步的关键：${stepHint}。需要我再详细讲讲吗？`;
+   }
+
+   /* ─── 键盘快捷键 ─── */
+   document.addEventListener('keydown', (e) => {
+    if (document.getElementById('ascreen').classList.contains('active')) {
+     if (e.key === 'ArrowRight' || e.key === ' ') {
+      e.preventDefault();
+      next();
+     }
+     if (e.key === 'ArrowLeft') prev();
+     if (e.key === 'r' || e.key === 'R') replay();
+     if (e.key === 'Escape') goHome();
+    }
+   });
+
+   /* ─── 学习进度持久化 ─── */
+   const VISITED_KEY = 'geo_visited';
+   function loadVisited() {
+    try { return new Set(JSON.parse(localStorage.getItem(VISITED_KEY)) || []); }
+    catch (_) { return new Set(); }
+   }
+   function saveVisited(s) {
+    localStorage.setItem(VISITED_KEY, JSON.stringify([...s]));
+   }
+   function saveGrade(g) {
+    localStorage.setItem('geo_grade', g);
+   }
+   function loadGrade() {
+    const g = parseInt(localStorage.getItem('geo_grade'));
+    return (g >= 1 && g <= 6) ? g : null;
+   }
+
+   const visitedSet = loadVisited();
+   // 恢复上次年级
+   const savedGrade = loadGrade();
+   if (savedGrade) cg = savedGrade;
+
+   // 重写 mkCard 以标记已访问
+   const _mkCardOrig = mkCard;
+   function mkCard(t, c, bg) {
+    const card = _mkCardOrig(t, c, bg);
+    if (visitedSet.has(t.id)) {
+     const badge = card.querySelector('.tcard-badge');
+     if (badge) badge.textContent = badge.textContent + ' ✓';
+    }
+    return card;
+   }
+
+   // 重写 openT 以保存进度
+   const _openTOrig = openT;
+   function openT(t) {
+    visitedSet.add(t.id);
+    saveVisited(visitedSet);
+    // 更新卡片标记
+    renderTopics();
+    _openTOrig(t);
+   }
+
+   // 年级切换时保存
+   const _renderGradeOrig = renderGrade;
+   function renderGrade() {
+    saveGrade(cg);
+    _renderGradeOrig();
    }
 
    // 初始化
