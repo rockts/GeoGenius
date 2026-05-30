@@ -1326,6 +1326,7 @@
      }
      b.onclick = () => {
       cg = g;
+      localStorage.setItem('geo_grade', String(g));
       renderGrade();
       renderTopics();
      };
@@ -1338,9 +1339,11 @@
     d.className = 'tcard';
     d.style.color = c;
     const icon = ICONS[t.tag] || 'ti-math-function';
+    const isVisited = visitedSet.has(t.id);
+    const tagText = t.tag + (isVisited ? ' ✓' : '');
     d.innerHTML = `<div class="tcard-top">
     <div class="tcard-icon" style="background:${bg};"><i class="ti ${icon}" style="color:${c};"></i></div>
-    <span class="tcard-badge" style="background:${bg};color:${c};">${t.tag}</span></div>
+    <span class="tcard-badge" style="background:${bg};color:${c};">${tagText}</span></div>
   <div class="tcard-title">${t.title}</div>
   <div class="tcard-sub">${t.sub}</div>
   <div class="tcard-steps">${Array.from({ length: t.steps }, (_, i) => `<div class="tcard-step" style="background:${i === 0 ? c : '#E0DDD6'};"></div>`).join('')}</div>`;
@@ -1369,6 +1372,9 @@
    }
 
    function openT(t) {
+    // 保存访问记录
+    visitedSet.add(t.id);
+    localStorage.setItem('geo_visited', JSON.stringify([...visitedSet]));
     // 清空AI对话 + 练习
     aiHistory = [];
     document.getElementById('aiMsgs').innerHTML = '';
@@ -1385,6 +1391,8 @@
     showSc('ascreen');
     buildDots();
     run(0);
+    // 更新首页卡片标记
+    setTimeout(() => renderTopics(), 100);
    }
    function buildDots() {
     document.getElementById('dotrow').innerHTML = Array.from(
@@ -5757,7 +5765,7 @@
     localStorage.setItem(VISITED_KEY, JSON.stringify([...s]));
    }
    function saveGrade(g) {
-    localStorage.setItem('geo_grade', g);
+    localStorage.setItem('geo_grade', String(g));
    }
    function loadGrade() {
     const g = parseInt(localStorage.getItem('geo_grade'));
@@ -5768,34 +5776,6 @@
    // 恢复上次年级
    const savedGrade = loadGrade();
    if (savedGrade) cg = savedGrade;
-
-   // 重写 mkCard 以标记已访问
-   const _mkCardOrig = mkCard;
-   function mkCard(t, c, bg) {
-    const card = _mkCardOrig(t, c, bg);
-    if (visitedSet.has(t.id)) {
-     const badge = card.querySelector('.tcard-badge');
-     if (badge) badge.textContent = badge.textContent + ' ✓';
-    }
-    return card;
-   }
-
-   // 重写 openT 以保存进度
-   const _openTOrig = openT;
-   function openT(t) {
-    visitedSet.add(t.id);
-    saveVisited(visitedSet);
-    // 更新卡片标记
-    renderTopics();
-    _openTOrig(t);
-   }
-
-   // 年级切换时保存
-   const _renderGradeOrig = renderGrade;
-   function renderGrade() {
-    saveGrade(cg);
-    _renderGradeOrig();
-   }
 
    // 初始化
    updateApiStatus();
