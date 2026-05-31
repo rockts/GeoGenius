@@ -2223,7 +2223,8 @@
         T(s, ox + 98, oy - 118, '另一条边', '#0D3F6E', 11, 'start');
        }
        if (t > 0.82) {
-        const p = `M${ox + 44},${oy} A44,44,0,0,1,${ox + 44 * Math.cos((-Math.PI * 3) / 7)},${oy - 44 * Math.sin((Math.PI * 3) / 7)}`;
+        const angle = Math.atan2(110, 90);
+        const p = `M${ox + 44},${oy} A44,44,0,0,0,${ox + 44 * Math.cos(angle)},${oy - 44 * Math.sin(angle)}`;
         E(
          'path',
          { d: p, fill: 'none', stroke: '#C03030', 'stroke-width': 2 },
