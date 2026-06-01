@@ -868,10 +868,7 @@
    </div>
    <div style="display: flex; align-items: center; gap: 10px">
     <span class="header-badge">2022版课标</span>
-    <button class="settings-btn" onclick="openSettings()">
-     <span class="api-status" id="apiStatus"></span
-     ><i class="ti ti-robot"></i> AI设置
-    </button>
+    <span class="header-badge" style="background:var(--grl);color:var(--gr);"><i class="ti ti-robot" style="font-size:12px;"></i> AI已启用</span>
    </div>
   </header>
 
@@ -6028,35 +6025,33 @@
 当前公式：${currentFormula}
 请用简洁易懂的语言回答学生问题，多用比喻和生活例子，避免使用复杂数学符号，回答控制在150字以内。`;
 
-    const apiKey = getApiKey();
     document.getElementById('aiThinking').style.display = 'flex';
 
     try {
      let reply = '';
-     if (!apiKey) {
-      // Mock 回复
+     // 使用本地代理 API（Key 已在 nginx 配置中隐藏）
+     const messages = [
+      { role: 'system', content: sysPrompt },
+      ...aiHistory.filter((m) => m.role !== 'system').slice(-6),
+      { role: 'user', content: q },
+     ];
+     const res = await fetch('/geogenius/api/chat', {
+      method: 'POST',
+      headers: {
+       'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+       model: 'deepseek-chat',
+       messages,
+       temperature: 0.7,
+       max_tokens: 300,
+      }),
+     });
+     if (!res.ok) {
+      // 如果代理失败，使用 mock 回复
       await new Promise((r) => setTimeout(r, 900));
       reply = getMockAIReply(q, ct ? ct.title : '');
      } else {
-      const messages = [
-       { role: 'system', content: sysPrompt },
-       ...aiHistory.filter((m) => m.role !== 'system').slice(-6),
-       { role: 'user', content: q },
-      ];
-      const res = await fetch('https://api.deepseek.com/chat/completions', {
-       method: 'POST',
-       headers: {
-        'Content-Type': 'application/json',
-        Authorization: 'Bearer ' + apiKey,
-       },
-       body: JSON.stringify({
-        model: 'deepseek-chat',
-        messages,
-        temperature: 0.7,
-        max_tokens: 300,
-       }),
-      });
-      if (!res.ok) throw new Error('API错误 ' + res.status);
       const data = await res.json();
       reply = data.choices[0].message.content.trim();
      }
@@ -6064,7 +6059,9 @@
      appendMsg('bot', reply);
     } catch (e) {
      document.getElementById('aiThinking').style.display = 'none';
-     appendMsg('bot', '😅 AI老师暂时有点忙，请稍后再试。（' + e.message + '）');
+     // 网络错误时使用 mock 回复
+     await new Promise((r) => setTimeout(r, 900));
+     appendMsg('bot', getMockAIReply(q, ct ? ct.title : ''));
     }
     document.getElementById('aiSend').disabled = false;
     document.getElementById('aiInput').focus();
