@@ -6034,7 +6034,7 @@
       ...aiHistory.filter((m) => m.role !== 'system').slice(-6),
       { role: 'user', content: q },
      ];
-     const res = await fetch('/geogenius/api/chat', {
+     const res = await fetch('/api/chat', {
       method: 'POST',
       headers: {
        'Content-Type': 'application/json',
