@@ -5944,8 +5944,7 @@
     return localStorage.getItem('geo_ai_key') || '';
    }
    function updateApiStatus() {
-    document.getElementById('apiStatus').className =
-     'api-status' + (getApiKey() ? ' ok' : '');
+    // AI 已默认启用，不再需要状态更新
    }
 
    function openSettings() {
@@ -6118,9 +6117,7 @@
    const savedGrade = loadGrade();
    if (savedGrade) cg = savedGrade;
 
-   // 初始化
-   updateApiStatus();
-
+   // 初始化（AI 已默认启用）
    renderGrade();
    renderTopics();
   </script>
