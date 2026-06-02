@@ -5511,36 +5511,59 @@
       formula: '旋转三要素：中心点 + 方向 + 角度',
       dur: 1400,
       draw(s, t) {
-       const cx = 190,
-        cy = 116,
-        angle = lerp(0, Math.PI / 2, t);
-       C(s, cx, cy, 5, '#1A5FA8', 'none');
-       T(s, cx - 14, cy + 14, 'O', '#0D3F6E', 12, 'start');
-       const pts = [
-        [40, 0],
-        [40, 50],
-        [0, 50],
-        [0, 0],
-       ].map(([rx, ry]) => {
-        const rotX = rx - 20,
-         rotY = ry - 65;
-        return [
-         cx + rotX * Math.cos(angle) - rotY * Math.sin(angle),
-         cy + rotX * Math.sin(angle) + rotY * Math.cos(angle) + 28,
-        ];
-       });
-       PL(s, pts, '#FEF0DC', '#9A5800', 2);
-       const ap = `M${cx + 58},${cy} A58,58,0,0,1,${cx + 58 * Math.cos(-angle)},${cy - 58 * Math.sin(angle)}`;
-       E(
-        'path',
-        { d: ap, fill: 'none', stroke: '#C03030', 'stroke-width': 2 },
-        s,
-       );
-       if (t > 0.5) {
-        const deg = Math.round((angle * 180) / Math.PI);
-        T(s, cx + 74, cy - 24, deg + '°', '#C03030', 16, 'middle', '700');
-        T(s, 356, 116, '顺时针\n' + deg + '°', '#6A3A00', 13, 'middle', '600');
+       // 旋转中心 O 在画布中央偏左
+       const cx = 185, cy = 120;
+       // 顺时针 = SVG坐标系中角度增大（Y轴向下）
+       const angle = lerp(0, Math.PI / 2, t);
+
+       // 正方形初始位置：以 O 为圆心，左上角在 O 右上方
+       // 定义正方形4个顶点相对 O 的初始偏移（初始在右上象限）
+       const sq = [[-50,-70],[0,-70],[0,-20],[-50,-20]]; // 左上、右上、右下、左下
+
+       // 顺时针旋转：x' = x*cos + y*sin, y' = -x*sin + y*cos（SVG Y向下，顺时针为正）
+       const rotPts = sq.map(([rx, ry]) => [
+        cx + rx * Math.cos(angle) + ry * Math.sin(angle),
+        cy - rx * Math.sin(angle) + ry * Math.cos(angle),
+       ]);
+
+       // 画原始位置（淡色轮廓参考）
+       if (t < 0.95) {
+        const origPts = sq.map(([rx, ry]) => [cx + rx, cy + ry]);
+        PL(s, origPts, 'none', '#D0C0A0', 1);
        }
+
+       // 画旋转中的正方形
+       PL(s, rotPts, '#FEF0DC', '#9A5800', 2.2);
+
+       // 旋转中心 O
+       C(s, cx, cy, 5, '#1A5FA8', 'none');
+       T(s, cx - 16, cy + 14, 'O', '#0D3F6E', 12, 'start');
+
+       // 弧线：从初始右上角位置扫到当前位置
+       // 右上角初始相对坐标 (0, -70)，距 O = 70
+       const r = 70;
+       const startX = cx + 0, startY = cy - r; // 初始右上角
+       const endX = cx + 0 * Math.cos(angle) + (-r) * Math.sin(angle);
+       const endY = cy - 0 * Math.sin(angle) + (-r) * Math.cos(angle);
+       if (angle > 0.01) {
+        const large = angle > Math.PI ? 1 : 0;
+        E('path', {
+         d: `M${startX},${startY} A${r},${r},0,${large},1,${endX},${endY}`,
+         fill: 'none', stroke: '#C03030', 'stroke-width': 1.8,
+        }, s);
+       }
+
+       // 角度标注
+       if (t > 0.4) {
+        const deg = Math.round(angle * 180 / Math.PI);
+        const labelR = r + 18;
+        const midA = angle / 2;
+        const lx = cx + labelR * Math.sin(midA);
+        const ly = cy - labelR * Math.cos(midA);
+        T(s, lx, ly, deg + '°', '#C03030', 13, 'middle', '700');
+       }
+       if (t > 0.5)
+        T(s, 348, 120, '顺时针\n旋转90°', '#6A3A00', 12, 'middle', '600');
       },
      },
      {
