@@ -2418,47 +2418,32 @@
       formula: '正方形：4直角，四边全等',
       dur: 1300,
       draw(s, t) {
-       R(s, 130, 65, 120, 120, '#EEECFE', '#5A4AC0', 2);
+       // 正方形居中，明确宽=高=120
+       const sx = 125, sy = 50, side = 120;
+       R(s, sx, sy, side, side, '#EEECFE', '#5A4AC0', 2);
+       // 四个直角标记
        if (t > 0.32)
-        [
-         [130, 65],
-         [250, 65],
-         [130, 185],
-         [250, 185],
-        ].forEach(([x, y]) => {
+        [[sx,sy],[sx+side,sy],[sx,sy+side],[sx+side,sy+side]].forEach(([x,y]) => {
          const sz = 14;
-         E(
-          'rect',
-          {
-           x: x === 130 ? x : x - sz,
-           y: y === 65 ? y : y - sz,
-           width: sz,
-           height: sz,
-           fill: 'none',
-           stroke: '#C03030',
-           'stroke-width': 1.5,
-          },
-          s,
-         );
+         E('rect', {
+          x: x === sx ? x : x - sz,
+          y: y === sy ? y : y - sz,
+          width: sz, height: sz,
+          fill: 'none', stroke: '#C03030', 'stroke-width': 1.5,
+         }, s);
         });
+       // 四边等长标注（刻度线 + 数字）
        if (t > 0.65) {
-        [
-         [190, 65, false],
-         [250, 125, true],
-         [190, 185, false],
-         [130, 125, true],
-        ].forEach(([x, y, v]) =>
-         L(
-          s,
-          v ? x : x - 6,
-          v ? y - 6 : y,
-          v ? x : x + 6,
-          v ? y + 6 : y,
-          '#5A4AC0',
-          2.5,
-         ),
-        );
-        T(s, 190, 204, '四条边全相等', '#3A2A90', 13, 'middle', '600');
+        // 四条边中点刻度线
+        [[sx+side/2, sy, false],[sx+side, sy+side/2, true],
+         [sx+side/2, sy+side, false],[sx, sy+side/2, true]
+        ].forEach(([x,y,v]) => L(s, v?x-7:x, v?y:y-7, v?x+7:x, v?y:y+7, '#5A4AC0', 2.5));
+        // 边长标注
+        T(s, sx+side/2, sy-14, '6cm', '#3A2A90', 12, 'middle', '600');
+        T(s, sx+side+14, sy+side/2, '6cm', '#3A2A90', 12, 'start', '600');
+        T(s, sx+side/2, sy+side+18, '6cm', '#3A2A90', 12, 'middle', '600');
+        T(s, sx-24, sy+side/2, '6cm', '#3A2A90', 12, 'end', '600');
+        T(s, sx+side/2, sy+side+34, '四条边全相等', '#3A2A90', 12, 'middle', '600');
        }
       },
      },
@@ -2468,10 +2453,10 @@
       formula: '长≠宽 → 长方形 | 长=宽 → 正方形（特例）',
       dur: 1200,
       draw(s, t) {
-       R(s, 20, 80, 144, 84, '#E8F1FB', '#1A5FA8', 2);
-       T(s, 92, 72, '8cm', '#0D3F6E', 12);
-       T(s, 12, 124, '5cm', '#0D3F6E', 12);
-       T(s, 92, 176, '8≠5，长方形', '#0D3F6E', 11);
+       R(s, 30, 80, 144, 84, '#E8F1FB', '#1A5FA8', 2);
+       T(s, 102, 72, '8cm', '#0D3F6E', 12);
+       T(s, 20, 124, '5cm', '#0D3F6E', 12, 'start');
+       T(s, 102, 176, '8≠5，长方形', '#0D3F6E', 11);
        if (t > 0.5) {
         R(s, 222, 78, 94, 94, '#EEECFE', '#5A4AC0', 2);
         T(s, 269, 70, '6cm', '#3A2A90', 12);
