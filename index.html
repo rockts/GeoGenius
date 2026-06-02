@@ -3031,50 +3031,29 @@
       formula: '锐角<90° | 直角=90° | 钝角>90° | 平角=180°',
       dur: 1300,
       draw(s, t) {
+       // 两行布局：上行锐角/直角，下行钝角/平角，避免手机屏幕挤压
        [
-        [52, 145, 38, '锐角\n<90°', '#0A7050'],
-        [152, 145, 90, '直角\n=90°', '#1A5FA8'],
-        [262, 145, 128, '钝角\n>90°', '#9A5800'],
-        [362, 145, 180, '平角\n=180°', '#5A4AC0'],
+        [95,  88, 38,  '锐角\n<90°',  '#0A7050'],
+        [290, 88, 90,  '直角\n=90°',  '#1A5FA8'],
+        [95,  175, 128, '钝角\n>90°', '#9A5800'],
+        [290, 175, 180, '平角\n=180°','#5A4AC0'],
        ].forEach(([x, y, deg, lbl, col], i) => {
         if (i / 4 > t - 0.06) return;
         const rad = (deg * Math.PI) / 180;
         if (deg < 180) {
-         L(s, x, y, x + 60, y, col, 2);
-         L(
-          s,
-          x,
-          y,
-          x + 60 * Math.cos(Math.PI - rad),
-          y - 60 * Math.sin(rad),
-          col,
-          2,
-         );
+         L(s, x, y, x + 65, y, col, 2);
+         L(s, x, y, x + 65 * Math.cos(Math.PI - rad), y - 65 * Math.sin(rad), col, 2);
         } else {
-         // 平角：从顶点出发画两条反向射线，体现"角"的概念
-         L(s, x, y, x + 54, y, col, 2);       // 右边（0°方向）
-         L(s, x, y, x - 54, y, col, 2);       // 左边（180°方向）
+         // 平角：顶点出发两条反向射线
+         L(s, x, y, x + 65, y, col, 2);
+         L(s, x, y, x - 65, y, col, 2);
         }
         C(s, x, y, 4, col, 'none');
         if (deg === 90)
-         E(
-          'rect',
-          {
-           x,
-           y: y - 11,
-           width: 11,
-           height: 11,
-           fill: 'none',
-           stroke: '#C03030',
-           'stroke-width': 1.5,
-          },
-          s,
-         );
-        lbl
-         .split('\n')
-         .forEach((l, j) =>
-          T(s, x + (deg < 180 ? 30 : 0), y + 14 + j * 14, l, col, 10),
-         );
+         E('rect', { x, y: y - 12, width: 12, height: 12,
+           fill: 'none', stroke: '#C03030', 'stroke-width': 1.5 }, s);
+        lbl.split('\n').forEach((l, j) =>
+         T(s, x + (deg < 180 ? 32 : 0), y + 15 + j * 14, l, col, 10));
        });
       },
      },
