@@ -1528,9 +1528,6 @@
    }
 
    function openT(t) {
-    // 保存访问记录
-    visitedSet.add(t.id);
-    localStorage.setItem('geo_visited', JSON.stringify([...visitedSet]));
     // 清空AI对话 + 练习
     aiHistory = [];
     document.getElementById('aiMsgs').innerHTML = '';
@@ -1574,6 +1571,11 @@
     nb.innerHTML = last
      ? '<i class="ti ti-check"></i> 完成'
      : '下一步 <i class="ti ti-arrow-right"></i>';
+    // 走到最后一步才算完成，记录进度
+    if (last && ct) {
+     visitedSet.add(ct.id);
+     localStorage.setItem('geo_visited', JSON.stringify([...visitedSet]));
+    }
    }
    function run(step) {
     if (af) {
@@ -1592,7 +1594,7 @@
     const bgGroup = document.getElementById('asvg-bg');
     const animGroup = document.getElementById('asvg-anim');
     clr(bgGroup); clr(animGroup);
-    animGroup.removeAttribute('transform');
+    animGroup.removeAttribute('transform'); // 每次都清除，防止noAutoFit步骤的transform残留
     if (sd.bg) sd.bg(bgGroup);
     const dur = sd.dur || 1400,
      t0 = performance.now();
@@ -5935,6 +5937,13 @@
      fb.innerHTML = '<span style="color:var(--rd)">❌ 不对哦。' + hint + '</span>';
      btns[chosen].style.background = 'var(--rdl)';
     }
+    // 答完后显示"再来一题"按钮
+    const nextBtn = document.createElement('button');
+    nextBtn.className = 'cbtn';
+    nextBtn.style.cssText = 'margin-top:10px;font-size:12px;padding:7px 14px;';
+    nextBtn.innerHTML = '<i class="ti ti-refresh"></i> 再来一题';
+    nextBtn.onclick = renderQuiz;
+    fb.appendChild(nextBtn);
    }
 
    /* ─── AI 功能 ─── */
@@ -6032,7 +6041,6 @@
      const messages = [
       { role: 'system', content: sysPrompt },
       ...aiHistory.filter((m) => m.role !== 'system').slice(-6),
-      { role: 'user', content: q },
      ];
      const res = await fetch('/api/chat', {
       method: 'POST',
@@ -6094,6 +6102,24 @@
      if (e.key === 'Escape' && !document.fullscreenElement) goHome();
     }
    });
+
+   /* ─── 移动端软键盘遮挡修复 ─── */
+   if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', () => {
+     const panel = document.getElementById('aiPanel');
+     if (panel && panel.classList.contains('open') && window.innerWidth <= 640) {
+      const offset = window.innerHeight - window.visualViewport.height;
+      panel.style.bottom = offset + 'px';
+     }
+    });
+    window.visualViewport.addEventListener('scroll', () => {
+     const panel = document.getElementById('aiPanel');
+     if (panel && panel.classList.contains('open') && window.innerWidth <= 640) {
+      const offset = window.innerHeight - window.visualViewport.height;
+      panel.style.bottom = offset + 'px';
+     }
+    });
+   }
 
    /* ─── 学习进度持久化 ─── */
    const VISITED_KEY = 'geo_visited';
