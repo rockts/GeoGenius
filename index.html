@@ -912,6 +912,11 @@
      每个知识点包含逐步推导动画，可随时暂停重播 ·
      内容依据义务教育数学课程标准（2022年版）
     </div>
+    <div style="text-align:center;margin:18px 0 4px;">
+     <button onclick="openFeedback()" style="background:none;border:1.5px solid #c7cfe8;border-radius:20px;padding:7px 18px;font-size:12px;color:#666;cursor:pointer;display:inline-flex;align-items:center;gap:6px;">
+      <i class="ti ti-message-circle" style="font-size:14px;"></i> 使用反馈
+     </button>
+    </div>
    </div>
 
    <!-- ANIM -->
@@ -1573,8 +1578,11 @@
      : '下一步 <i class="ti ti-arrow-right"></i>';
     // 走到最后一步才算完成，记录进度
     if (last && ct) {
-     visitedSet.add(ct.id);
-     localStorage.setItem('geo_visited', JSON.stringify([...visitedSet]));
+     if (!visitedSet.has(ct.id)) {
+      visitedSet.add(ct.id);
+      localStorage.setItem('geo_visited', JSON.stringify([...visitedSet]));
+      track('topic_complete', ct.id); // 首次完成才上报
+     }
     }
    }
    function run(step) {
@@ -5957,10 +5965,12 @@
     if (!quizState.active) return;
     quizState.active = false;
     quizState.total++;
+    const isCorrect = chosen === correct;
+    track('quiz_answer', ct ? ct.id : '', isCorrect); // 埋点：答题结果
     const fb = document.getElementById('quizFeedback');
     const btns = document.querySelectorAll('.quiz-opt');
     btns.forEach((b,i) => { b.disabled = true; if (i === correct) b.style.background = 'var(--grl)'; });
-    if (chosen === correct) {
+    if (isCorrect) {
      quizState.correct++;
      fb.innerHTML = '<span style="color:var(--gr)">✅ 正确！' + hint + '</span>';
     } else {
@@ -6176,7 +6186,98 @@
    // 初始化（AI 已默认启用）
    renderGrade();
    renderTopics();
+
+   /* ─── 匿名数据埋点 ─── */
+   function track(event, topicId, correct) {
+    try {
+     fetch('/api/track', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ event, topicId, grade: cg, correct: !!correct }),
+     }).catch(() => {}); // 失败静默
+    } catch (_) {}
+   }
+
+   /* ─── 学生反馈弹窗 ─── */
+   function openFeedback() {
+    document.getElementById('feedbackModal').style.display = 'flex';
+   }
+   function closeFeedback() {
+    document.getElementById('feedbackModal').style.display = 'none';
+   }
+   let feedbackRating = 0;
+   function setRating(n) {
+    feedbackRating = n;
+    document.querySelectorAll('.fb-star').forEach((s, i) => {
+     s.style.color = i < n ? '#f5a623' : '#ccc';
+    });
+   }
+   async function submitFeedback() {
+    if (!feedbackRating) { alert('请先选择星级'); return; }
+    const grade = document.getElementById('fbGrade').value;
+    const hardest = document.getElementById('fbHardest').value;
+    const comment = document.getElementById('fbComment').value.trim();
+    const btn = document.getElementById('fbSubmitBtn');
+    btn.disabled = true;
+    btn.textContent = '提交中…';
+    try {
+     await fetch('/api/feedback', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ grade, rating: feedbackRating, hardest, comment }),
+     });
+     document.getElementById('feedbackModal').innerHTML = `
+      <div style="background:#fff;border-radius:16px;padding:32px 24px;text-align:center;max-width:320px;width:90%">
+       <div style="font-size:40px;margin-bottom:12px">🎉</div>
+       <div style="font-size:16px;font-weight:600;color:#1a1a2e;margin-bottom:8px">谢谢你的反馈！</div>
+       <div style="font-size:13px;color:#666;margin-bottom:20px">你的意见帮助我们做得更好</div>
+       <button onclick="closeFeedback()" style="background:#4361ee;color:#fff;border:none;border-radius:8px;padding:10px 24px;font-size:14px;cursor:pointer">关闭</button>
+      </div>`;
+    } catch(e) {
+     btn.disabled = false;
+     btn.textContent = '提交';
+     alert('提交失败，请稍后再试');
+    }
+   }
   </script>
+
+  <!-- 反馈弹窗 -->
+  <div id="feedbackModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:9999;align-items:center;justify-content:center;">
+   <div style="background:#fff;border-radius:16px;padding:24px;max-width:340px;width:90%;box-shadow:0 8px 32px rgba(0,0,0,0.18);">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+     <span style="font-size:15px;font-weight:600;color:#1a1a2e">📝 使用反馈</span>
+     <button onclick="closeFeedback()" style="background:none;border:none;font-size:20px;color:#999;cursor:pointer;line-height:1">×</button>
+    </div>
+    <div style="margin-bottom:14px;">
+     <div style="font-size:13px;color:#555;margin-bottom:6px">你觉得这个工具好用吗？</div>
+     <div style="display:flex;gap:8px;">
+      <button class="fb-star" onclick="setRating(1)" style="background:none;border:none;font-size:28px;color:#ccc;cursor:pointer;padding:0">★</button>
+      <button class="fb-star" onclick="setRating(2)" style="background:none;border:none;font-size:28px;color:#ccc;cursor:pointer;padding:0">★</button>
+      <button class="fb-star" onclick="setRating(3)" style="background:none;border:none;font-size:28px;color:#ccc;cursor:pointer;padding:0">★</button>
+      <button class="fb-star" onclick="setRating(4)" style="background:none;border:none;font-size:28px;color:#ccc;cursor:pointer;padding:0">★</button>
+      <button class="fb-star" onclick="setRating(5)" style="background:none;border:none;font-size:28px;color:#ccc;cursor:pointer;padding:0">★</button>
+     </div>
+    </div>
+    <div style="margin-bottom:14px;">
+     <div style="font-size:13px;color:#555;margin-bottom:6px">你是几年级？</div>
+     <select id="fbGrade" style="width:100%;padding:8px 10px;border:1.5px solid #e0e0e0;border-radius:8px;font-size:13px;color:#333;">
+      <option value="">请选择</option>
+      <option>一年级</option><option>二年级</option><option>三年级</option>
+      <option>四年级</option><option>五年级</option><option>六年级</option>
+      <option>老师/家长</option>
+     </select>
+    </div>
+    <div style="margin-bottom:14px;">
+     <div style="font-size:13px;color:#555;margin-bottom:6px">哪个知识点最难懂？（可不填）</div>
+     <input id="fbHardest" type="text" placeholder="如：圆锥体积、梯形面积…" style="width:100%;padding:8px 10px;border:1.5px solid #e0e0e0;border-radius:8px;font-size:13px;color:#333;box-sizing:border-box;">
+    </div>
+    <div style="margin-bottom:18px;">
+     <div style="font-size:13px;color:#555;margin-bottom:6px">其他建议（可不填）</div>
+     <textarea id="fbComment" rows="2" placeholder="说说你的想法…" style="width:100%;padding:8px 10px;border:1.5px solid #e0e0e0;border-radius:8px;font-size:13px;color:#333;box-sizing:border-box;resize:none;"></textarea>
+    </div>
+    <button id="fbSubmitBtn" onclick="submitFeedback()" style="width:100%;background:#4361ee;color:#fff;border:none;border-radius:10px;padding:12px;font-size:14px;font-weight:600;cursor:pointer;">提交反馈</button>
+   </div>
+  </div>
  </body>
 </html>
 
