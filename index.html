@@ -3061,55 +3061,80 @@
       hint:
        '量角器的用法：中心对准顶点，零刻度线对准一条边，另一边所指刻度即角的度数。',
       formula: '量角：中心→顶点，0线→一边，读另一边刻度',
-      dur: 1300,
+      dur: 1600,
       draw(s, t) {
-       const cx = 185,
-        cy = 165;
-       E(
-        'path',
-        {
-         d: `M${cx - 85},${cy} A85,85,0,0,1,${cx + 85},${cy}`,
-         fill: '#F0EDE6',
-         stroke: '#9E9B96',
-         'stroke-width': 1.5,
-        },
-        s,
-       );
-       L(s, cx - 85, cy, cx + 85, cy, '#9E9B96', 1);
-       for (let a = 0; a <= 180; a += 10) {
-        const r = (a * Math.PI) / 180,
-         px = cx + 85 * Math.cos(Math.PI - r),
-         py = cy - 85 * Math.sin(r);
-        L(
-         s,
-         cx + (85 - (a % 30 === 0 ? 10 : 5)) * Math.cos(Math.PI - r),
-         cy - (85 - (a % 30 === 0 ? 10 : 5)) * Math.sin(r),
-         px,
-         py,
-         '#9E9B96',
-         a % 90 === 0 ? 2 : 0.8,
-        );
-        if (a % 30 === 0)
-         T(
-          s,
-          cx + 67 * Math.cos(Math.PI - r),
-          cy - 67 * Math.sin(r),
-          String(a),
-          '#6B6760',
-          9,
-         );
+       const cx = 185, cy = 162;
+       const targetDeg = 55;
+       const targetRad = (targetDeg * Math.PI) / 180;
+
+       // ── 第一阶段(t<0.35)：先画被测量的角 ──
+       // 角的顶点 = 量角器中心
+       // 一条边向右（0°方向），另一条边向左上55°
+       const edgeLen = 95;
+       // 底边（对准0°）
+       L(s, cx, cy, cx + edgeLen, cy, '#1A5FA8', 2.5);
+       // 另一条边（55°方向）
+       const ex = cx + edgeLen * Math.cos(Math.PI - targetRad);
+       const ey = cy - edgeLen * Math.sin(targetRad);
+       L(s, cx, cy, ex, ey, '#1A5FA8', 2.5);
+       // 角的弧线标注（小弧）
+       if (t < 0.35) {
+        E('path', {
+         d: `M${cx+30},${cy} A30,30,0,0,1,${cx+30*Math.cos(Math.PI-targetRad)},${cy-30*Math.sin(targetRad)}`,
+         fill: 'none', stroke: '#1A5FA8', 'stroke-width': 1.5,
+        }, s);
+        T(s, cx + 8, cy - 38, '?°', '#1A5FA8', 14, 'middle', '700');
        }
-       if (t > 0.48) {
-        L(
-         s,
-         cx,
-         cy,
-         cx + 82 * Math.cos(Math.PI - (55 * Math.PI) / 180),
-         cy - 82 * Math.sin((55 * Math.PI) / 180),
-         '#C03030',
-         2.5,
-        );
-        T(s, cx + 59, cy - 70, '55°', '#C03030', 17, 'middle', '700');
+
+       // ── 第二阶段(t≥0.35)：量角器出现并对准 ──
+       if (t >= 0.35) {
+        const phase = Math.min(1, (t - 0.35) / 0.65);
+
+        // 量角器半圆
+        E('path', {
+         d: `M${cx-85},${cy} A85,85,0,0,1,${cx+85},${cy}`,
+         fill: 'rgba(240,237,230,0.85)', stroke: '#9E9B96', 'stroke-width': 1.5,
+        }, s);
+        L(s, cx - 85, cy, cx + 85, cy, '#9E9B96', 1);
+
+        // 刻度
+        for (let a = 0; a <= 180; a += 10) {
+         const r = (a * Math.PI) / 180;
+         const px = cx + 85 * Math.cos(Math.PI - r);
+         const py = cy - 85 * Math.sin(r);
+         L(s,
+          cx + (85-(a%30===0?10:5)) * Math.cos(Math.PI-r),
+          cy - (85-(a%30===0?10:5)) * Math.sin(r),
+          px, py, '#9E9B96', a%90===0 ? 2 : 0.8);
+         if (a % 30 === 0)
+          T(s, cx+67*Math.cos(Math.PI-r), cy-67*Math.sin(r), String(a), '#6B6760', 9);
+        }
+
+        // 中心点标注
+        C(s, cx, cy, 3, '#C03030', 'none');
+        T(s, cx - 5, cy + 14, '中心', '#C03030', 9, 'middle');
+
+        // 0°对准底边的提示箭头（phase<0.5时）
+        if (phase < 0.5)
+         T(s, cx + 90, cy + 14, '↑ 0°对准', '#0A7050', 10, 'start');
+
+        // 指针从0°扫到55°
+        const sweepDeg = phase * targetDeg;
+        const sweepRad = (sweepDeg * Math.PI) / 180;
+        L(s, cx, cy,
+         cx + 82 * Math.cos(Math.PI - sweepRad),
+         cy - 82 * Math.sin(sweepRad),
+         '#C03030', 2.5);
+
+        // 度数标注跟随指针
+        if (phase > 0.3) {
+         const labelDeg = Math.round(sweepDeg);
+         T(s, cx + 56, cy - 68, labelDeg + '°', '#C03030', 16, 'middle', '700');
+        }
+
+        // 完成时加说明
+        if (phase > 0.9)
+         T(s, cx, cy - 108, '另一条边指向55°，所以这个角是55°', '#0A7050', 11, 'middle');
        }
       },
      },
