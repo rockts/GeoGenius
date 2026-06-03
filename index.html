@@ -887,11 +887,11 @@
        <div class="stat-l">年级</div>
       </div>
       <div class="stat">
-       <div class="stat-n">26</div>
+       <div class="stat-n">30</div>
        <div class="stat-l">知识点</div>
       </div>
       <div class="stat">
-       <div class="stat-n">100+</div>
+       <div class="stat-n">124</div>
        <div class="stat-l">动画步骤</div>
       </div>
      </div>
@@ -1023,6 +1023,13 @@
 
     <!-- 练习区域 -->
     <div id="quizWrap" style="display:none;margin-top:10px;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r2);padding:14px 16px;"></div>
+
+    <!-- 每页底部反馈 -->
+    <div style="text-align:center;margin-top:14px;padding-bottom:10px;">
+     <button onclick="openFeedback()" style="background:none;border:1px solid #dde3f0;border-radius:20px;padding:6px 18px;font-size:11px;color:#999;cursor:pointer;display:inline-flex;align-items:center;gap:5px;transition:border-color 0.2s,color 0.2s;" onmouseover="this.style.borderColor='#a5b4fc';this.style.color='#6366f1';" onmouseout="this.style.borderColor='#dde3f0';this.style.color='#999';">
+      <i class="ti ti-message-circle" style="font-size:13px;"></i> 反馈这个知识点
+     </button>
+    </div>
    </div>
   </div>
 
@@ -1641,22 +1648,32 @@
     showSc('home');
    }
    function togglePresent() {
-    const root = document.documentElement;
-    if (!document.fullscreenElement) root.requestFullscreen().catch(() => {
-     document.body.classList.toggle('presenting');
-     updatePresentState();
-    });
-    else document.exitFullscreen().catch(() => {});
+    const isOn = document.body.classList.contains('presenting');
+    if (isOn) {
+     document.body.classList.remove('presenting');
+     const exit = document.exitFullscreen || document.webkitExitFullscreen;
+     if (exit) exit.call(document).catch(() => {});
+    } else {
+     document.body.classList.add('presenting');
+     const root = document.documentElement;
+     const req = root.requestFullscreen || root.webkitRequestFullscreen;
+     if (req) req.call(root).catch(() => {});
+    }
+    updatePresentState();
    }
    function updatePresentState() {
-    const on = !!document.fullscreenElement || document.body.classList.contains('presenting');
-    document.body.classList.toggle('presenting', on);
+    const on = document.body.classList.contains('presenting');
     const btn = document.getElementById('bpresent');
     if (btn) btn.innerHTML = on
      ? '<i class="ti ti-minimize"></i> 退出投影'
      : '<i class="ti ti-presentation"></i> 投影模式';
    }
-   document.addEventListener('fullscreenchange', updatePresentState);
+   document.addEventListener('fullscreenchange', () => {
+    if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+     document.body.classList.remove('presenting');
+     updatePresentState();
+    }
+   });
    function showSc(id) {
     document
      .querySelectorAll('.screen')
@@ -2999,10 +3016,15 @@
        if (t > 0.45) {
         R(s, 290, 82, 96, 96, '#EEECFE', '#5A4AC0', 2);
         T(s, 338, 74, 'a', '#3A2A90', 17, 'middle', '600');
+        const tc = '#C03030', tw = 2;
+        L(s, 338, 76, 338, 83, tc, tw); L(s, 333, 79, 343, 79, tc, tw);
+        L(s, 338, 177, 338, 184, tc, tw); L(s, 333, 181, 343, 181, tc, tw);
+        L(s, 283, 130, 290, 130, tc, tw); L(s, 287, 125, 287, 135, tc, tw);
+        L(s, 386, 130, 393, 130, tc, tw); L(s, 389, 125, 389, 135, tc, tw);
        }
        if (t > 0.68) {
         T(s, 90, 182, 'S = ab', '#5A4AC0', 15, 'middle', '600');
-        T(s, 338, 182, 'S = a²', '#3A2A90', 15, 'middle', '600');
+        T(s, 338, 200, 'S = a²', '#3A2A90', 15, 'middle', '600');
        }
       },
      },
@@ -3118,8 +3140,10 @@
         }
 
         // 完成时加说明
-        if (phase > 0.9)
-         T(s, cx, cy - 108, '另一条边指向55°，所以这个角是55°', '#0A7050', 11, 'middle');
+        if (phase > 0.9) {
+         T(s, cx, cy - 96, '另一条边指向55°', '#0A7050', 12, 'middle', '600');
+         T(s, cx, cy - 78, '∴ 这个角 = 55°', '#C03030', 14, 'middle', '700');
+        }
        }
       },
      },
@@ -3162,7 +3186,7 @@
          '#9A5800',
          1.8,
         );
-        T(s, 80, 170, '锐角三角形', '#6A3A00', 10);
+        T(s, 80, 172, '锐角三角形', '#6A3A00', 12);
        }
        if (t > 0.35) {
         PL(
@@ -3189,7 +3213,7 @@
          },
          s,
         );
-        T(s, 205, 170, '直角三角形', '#3A2A90', 10);
+        T(s, 205, 172, '直角三角形', '#3A2A90', 12);
        }
        if (t > 0.65) {
         PL(
@@ -3203,7 +3227,7 @@
          '#0A7050',
          1.8,
         );
-        T(s, 328, 170, '钝角三角形', '#064A34', 10);
+        T(s, 328, 172, '钝角三角形', '#064A34', 12);
        }
       },
      },
@@ -4306,46 +4330,9 @@
       formula: '✅  S = 2πr(r+h)，先算括号内',
       dur: 1200,
       draw(s, t) {
-       E(
-        'ellipse',
-        {
-         cx: 155,
-         cy: 68,
-         rx: 58,
-         ry: 18,
-         fill: '#E4F6EE',
-         stroke: '#0A7050',
-         'stroke-width': 2,
-        },
-        s,
-       );
+       E('ellipse', {cx:155, cy:156, rx:58, ry:18, fill:'#E4F6EE', stroke:'#0A7050', 'stroke-width':2}, s);
        R(s, 97, 68, 116, 88, '#E4F6EE', '#0A7050', 1.5);
-       E(
-        'ellipse',
-        {
-         cx: 155,
-         cy: 156,
-         rx: 58,
-         ry: 18,
-         fill: '#E4F6EE',
-         stroke: '#0A7050',
-         'stroke-width': 2,
-        },
-        s,
-       );
-       E(
-        'ellipse',
-        {
-         cx: 155,
-         cy: 68,
-         rx: 58,
-         ry: 18,
-         fill: '#E4F6EE',
-         stroke: '#0A7050',
-         'stroke-width': 2,
-        },
-        s,
-       );
+       E('ellipse', {cx:155, cy:68, rx:58, ry:18, fill:'#E4F6EE', stroke:'#0A7050', 'stroke-width':2}, s);
        L(s, 95, 68, 95, 156, '#C03030', 1.8, '5,3');
        T(s, 74, 114, 'h=10', '#C03030', 12, 'middle');
        T(s, 155, 55, 'r=3', '#064A34', 13);
@@ -4381,48 +4368,13 @@
       formula: 'V = πr²h（底面积 × 高）',
       dur: 1300,
       draw(s, t) {
-       E(
-        'ellipse',
-        {
-         cx: 200,
-         cy: 68,
-         rx: 68,
-         ry: 20,
-         fill: '#E4F6EE',
-         stroke: '#0A7050',
-         'stroke-width': 2,
-        },
-        s,
-       );
+       E('ellipse', {cx:200, cy:158, rx:68, ry:20, fill:'#E4F6EE', stroke:'#0A7050', 'stroke-width':2}, s);
        R(s, 132, 68, 136, 90, '#E4F6EE', '#0A7050', 1.5);
-       E(
-        'ellipse',
-        {
-         cx: 200,
-         cy: 158,
-         rx: 68,
-         ry: 20,
-         fill: '#E4F6EE',
-         stroke: '#0A7050',
-         'stroke-width': 2,
-        },
-        s,
-       );
-       E(
-        'ellipse',
-        {
-         cx: 200,
-         cy: 68,
-         rx: 68,
-         ry: 20,
-         fill: '#E4F6EE',
-         stroke: '#0A7050',
-         'stroke-width': 2,
-        },
-        s,
-       );
+       E('ellipse', {cx:200, cy:68, rx:68, ry:20, fill:'#E4F6EE', stroke:'#0A7050', 'stroke-width':2}, s);
        L(s, 130, 68, 130, 158, '#C03030', 1.8, '5,3');
        T(s, 109, 115, 'h', '#C03030', 19, 'middle', '700');
+       L(s, 200, 68, 268, 68, '#064A34', 1.5);
+       T(s, 236, 58, 'r', '#064A34', 14, 'middle', '700');
        if (t > 0.58) {
         R(s, 296, 100, 120, 30, '#E4F6EE', '#0A7050', 1.5, 6);
         T(s, 356, 118, 'V = πr²h', '#064A34', 17, 'middle', '700');
@@ -4435,89 +4387,23 @@
       formula: '长方体V=lwh | 圆柱V=πr²h（都是底面积×高）',
       dur: 1300,
       draw(s, t) {
-       const x = 28,
-        y = 72,
-        w = 94,
-        h = 60,
-        d = 24;
-       PL(
-        s,
-        [
-         [x, y + h],
-         [x + w, y + h],
-         [x + w + d, y + h - d],
-         [x + d, y + h - d],
-        ],
-        '#E8F1FB',
-        '#1A5FA8',
-        1.5,
-       );
-       PL(
-        s,
-        [
-         [x, y],
-         [x + w, y],
-         [x + w, y + h],
-         [x, y + h],
-        ],
-        '#E8F1FB',
-        '#1A5FA8',
-        1.5,
-       );
-       PL(
-        s,
-        [
-         [x + w, y],
-         [x + w + d, y - d],
-         [x + w + d, y + h - d],
-         [x + w, y + h],
-        ],
-        '#C8DCF4',
-        '#1A5FA8',
-        1.5,
-       );
-       T(
-        s,
-        x + w / 2 + 6,
-        y + h + 20,
-        'V = lwh',
-        '#0D3F6E',
-        12,
-        'middle',
-        '600',
-       );
+       const x=28, y=55, w=90, h=70, d=24;
+       PL(s,[[x,y+h],[x+w,y+h],[x+w+d,y+h-d],[x+d,y+h-d]],'#D0E4F8','#1A5FA8',1.5);
+       PL(s,[[x,y],[x+w,y],[x+w,y+h],[x,y+h]],'#E8F1FB','#1A5FA8',1.5);
+       PL(s,[[x+w,y],[x+w+d,y-d],[x+w+d,y+h-d],[x+w,y+h]],'#C8DCF4','#1A5FA8',1.5);
+       PL(s,[[x,y],[x+d,y-d],[x+w+d,y-d],[x+w,y]],'#EAF2FC','#1A5FA8',1.5);
+       T(s, x+w/2, y+h+16, 'V = lwh', '#0D3F6E', 13, 'middle', '600');
        if (t > 0.4) {
-        E(
-         'ellipse',
-         {
-          cx: 292,
-          cy: y + 12,
-          rx: 54,
-          ry: 17,
-          fill: '#E4F6EE',
-          stroke: '#0A7050',
-          'stroke-width': 1.5,
-         },
-         s,
-        );
-        R(s, 238, y + 12, 108, h, '#E4F6EE', '#0A7050', 1.5);
-        E(
-         'ellipse',
-         {
-          cx: 292,
-          cy: y + h + 12,
-          rx: 54,
-          ry: 17,
-          fill: '#E4F6EE',
-          stroke: '#0A7050',
-          'stroke-width': 1.5,
-         },
-         s,
-        );
-        T(s, 292, y + h + 38, 'V = πr²h', '#064A34', 12, 'middle', '600');
+        const cx=305, topY=55, cr=52, cRy=16;
+        E('ellipse',{cx, cy:topY+h, rx:cr, ry:cRy, fill:'#E4F6EE', stroke:'#0A7050','stroke-width':1.5},s);
+        R(s, cx-cr, topY, cr*2, h, '#E4F6EE','#0A7050',1.5);
+        E('ellipse',{cx, cy:topY, rx:cr, ry:cRy, fill:'#E4F6EE', stroke:'#0A7050','stroke-width':1.5},s);
+        L(s, cx-cr-10, topY, cx-cr-10, topY+h, '#C03030', 1.5, '4,3');
+        T(s, cx-cr-22, topY+h/2, 'h', '#C03030', 14, 'middle', '700');
+        T(s, cx, topY+h+16, 'V = πr²h', '#064A34', 13, 'middle', '600');
        }
-       if (t > 0.6)
-        T(s, 210, 185, '本质：底面积 × 高', '#9E9B96', 12, 'middle');
+       if (t > 0.65)
+        T(s, 185, 200, '本质：底面积 × 高', '#9E9B96', 12, 'middle');
       },
      },
      {
@@ -4526,46 +4412,9 @@
       formula: '侧面积2πrh（cm²）≠ 体积πr²h（cm³）',
       dur: 1200,
       draw(s, t) {
-       E(
-        'ellipse',
-        {
-         cx: 160,
-         cy: 82,
-         rx: 58,
-         ry: 18,
-         fill: '#E4F6EE',
-         stroke: '#0A7050',
-         'stroke-width': 2,
-        },
-        s,
-       );
+       E('ellipse', {cx:160, cy:160, rx:58, ry:18, fill:'#E4F6EE', stroke:'#0A7050', 'stroke-width':2}, s);
        R(s, 102, 82, 116, 78, '#E4F6EE', '#0A7050', 1.5);
-       E(
-        'ellipse',
-        {
-         cx: 160,
-         cy: 160,
-         rx: 58,
-         ry: 18,
-         fill: '#E4F6EE',
-         stroke: '#0A7050',
-         'stroke-width': 2,
-        },
-        s,
-       );
-       E(
-        'ellipse',
-        {
-         cx: 160,
-         cy: 82,
-         rx: 58,
-         ry: 18,
-         fill: '#E4F6EE',
-         stroke: '#0A7050',
-         'stroke-width': 2,
-        },
-        s,
-       );
+       E('ellipse', {cx:160, cy:82, rx:58, ry:18, fill:'#E4F6EE', stroke:'#0A7050', 'stroke-width':2}, s);
        if (t > 0.4) {
         T(s, 344, 92, '侧面积', '#064A34', 13, 'middle');
         T(s, 344, 112, '= 2πrh（cm²）', '#0A7050', 14, 'middle', '600');
@@ -4581,46 +4430,9 @@
       formula: '✅  V = πr²h，单位cm³（立方厘米）',
       dur: 1200,
       draw(s, t) {
-       E(
-        'ellipse',
-        {
-         cx: 155,
-         cy: 68,
-         rx: 58,
-         ry: 18,
-         fill: '#E4F6EE',
-         stroke: '#0A7050',
-         'stroke-width': 2,
-        },
-        s,
-       );
+       E('ellipse', {cx:155, cy:154, rx:58, ry:18, fill:'#E4F6EE', stroke:'#0A7050', 'stroke-width':2}, s);
        R(s, 97, 68, 116, 86, '#E4F6EE', '#0A7050', 1.5);
-       E(
-        'ellipse',
-        {
-         cx: 155,
-         cy: 154,
-         rx: 58,
-         ry: 18,
-         fill: '#E4F6EE',
-         stroke: '#0A7050',
-         'stroke-width': 2,
-        },
-        s,
-       );
-       E(
-        'ellipse',
-        {
-         cx: 155,
-         cy: 68,
-         rx: 58,
-         ry: 18,
-         fill: '#E4F6EE',
-         stroke: '#0A7050',
-         'stroke-width': 2,
-        },
-        s,
-       );
+       E('ellipse', {cx:155, cy:68, rx:58, ry:18, fill:'#E4F6EE', stroke:'#0A7050', 'stroke-width':2}, s);
        L(s, 95, 68, 95, 154, '#C03030', 1.8, '5,3');
        T(s, 74, 113, 'h=10', '#C03030', 12, 'middle');
        T(s, 155, 55, 'r=3', '#064A34', 13);
@@ -4763,7 +4575,18 @@
         s,
        );
        T(s, 300, 186, '圆柱（等底等高）', '#064A34', 10);
-       if (t > 0.52) T(s, 206, 105, '倒3次', '#C03030', 20, 'middle', '700');
+       if (t > 0.45) {
+        const totalFillH = 82;
+        const poured = Math.min(3, (t - 0.45) / 0.18);
+        const fillH = Math.min(totalFillH, (poured / 3) * totalFillH);
+        const fillY = 70 + totalFillH - fillH;
+        E('ellipse', {cx:300, cy:fillY, rx:50, ry:15, fill:'rgba(147,197,253,0.5)', stroke:'none'}, s);
+        R(s, 250, fillY, 100, fillH, 'rgba(147,197,253,0.35)', 'none', 0);
+        E('ellipse', {cx:300, cy:fillY, rx:50, ry:15, fill:'rgba(147,197,253,0.6)', stroke:'#1A5FA8', 'stroke-width':1}, s);
+        const n = Math.min(3, Math.ceil((t - 0.45) / 0.18));
+        T(s, 206, 100, `已倒 ${n} 次`, '#C03030', 17, 'middle', '700');
+        if (t > 0.98) T(s, 206, 122, '= V圆柱', '#0A7050', 13, 'middle', '600');
+       }
       },
      },
      {
