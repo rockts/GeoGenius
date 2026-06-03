@@ -1,0 +1,6111 @@
+<!doctype html>
+<html lang="zh-CN">
+ <head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>几何公式动画推导 · 小学数学</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link
+   href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap"
+   rel="stylesheet"
+  />
+  <link
+   rel="stylesheet"
+   href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css"
+  />
+  <style>
+   :root {
+    --bg: #f7f5f0;
+    --surface: #ffffff;
+    --surface2: #f0ede6;
+    --border: #e4e0d8;
+    --border2: #d4d0c8;
+    --text: #1a1814;
+    --text2: #6b6760;
+    --text3: #9e9b96;
+    --bl: #1a5fa8;
+    --bll: #e8f1fb;
+    --blm: #3a7fd4;
+    --bldk: #0d3f6e;
+    --pu: #5a4ac0;
+    --pul: #eeecfe;
+    --pudk: #3a2a90;
+    --am: #9a5800;
+    --aml: #fef0dc;
+    --amdk: #6a3a00;
+    --te: #0a7050;
+    --tel: #e4f6ee;
+    --tedk: #064a34;
+    --pk: #a03060;
+    --pkl: #fceaf2;
+    --pkdk: #701040;
+    --gr: #3a7010;
+    --grl: #eaf6dc;
+    --grdk: #204808;
+    --rd: #c03030;
+    --rdl: #fdeaea;
+    --shadow: 0 2px 12px rgba(0, 0, 0, 0.07);
+    --r: 10px;
+    --r2: 14px;
+   --stage-h: clamp(320px, 48vh, 520px);
+   }
+   * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+   }
+   body {
+    font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+   }
+
+   /* ── HEADER ── */
+   .header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+   }
+   .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+   }
+   .logo-icon {
+    width: 32px;
+    height: 32px;
+    background: var(--bl);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+   }
+   .logo-icon i {
+    color: #fff;
+    font-size: 16px;
+   }
+   .logo-text {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text);
+   }
+   .logo-sub {
+    font-size: 11px;
+    color: var(--text3);
+    margin-top: 1px;
+   }
+   .header-badge {
+    font-size: 11px;
+    padding: 4px 10px;
+    background: var(--bll);
+    color: var(--bldk);
+    border-radius: 20px;
+    font-weight: 500;
+   }
+
+   /* ── LAYOUT ── */
+   .container {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 28px 20px;
+   }
+   body.anim-active .container {
+    max-width: 1160px;
+    padding: 18px 24px 28px;
+   }
+
+   /* ── SCREEN ── */
+   .screen {
+    display: none;
+   }
+   .screen.active {
+    display: block;
+    animation: fadeSlideIn 0.3s ease;
+   }
+   @keyframes fadeSlideIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+   }
+
+   /* ── FORMULA HIGHLIGHT PULSE ── */
+   .formula-card.highlight {
+    animation: pulse 0.5s ease;
+   }
+   @keyframes pulse {
+    0%   { transform: scale(1); }
+    50%  { transform: scale(1.03); }
+    100% { transform: scale(1); }
+   }
+
+   /* ── HOME ── */
+   .hero {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r2);
+    padding: 28px 32px;
+    margin-bottom: 24px;
+    position: relative;
+    overflow: hidden;
+   }
+   .hero::before {
+    content: '';
+    position: absolute;
+    top: -40px;
+    right: -40px;
+    width: 180px;
+    height: 180px;
+    background: var(--bll);
+    border-radius: 50%;
+    opacity: 0.6;
+   }
+   .hero-title {
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--text);
+    position: relative;
+   }
+   .hero-sub {
+    font-size: 14px;
+    color: var(--text2);
+    margin-top: 6px;
+    position: relative;
+    line-height: 1.7;
+   }
+   .hero-stats {
+    display: flex;
+    gap: 20px;
+    margin-top: 18px;
+    position: relative;
+   }
+   .stat {
+    text-align: center;
+   }
+   .stat-n {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--bl);
+   }
+   .stat-l {
+    font-size: 11px;
+    color: var(--text3);
+    margin-top: 2px;
+   }
+
+   .grade-bar {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+   }
+   .gpill {
+    padding: 8px 18px;
+    border-radius: 24px;
+    font-size: 13px;
+    font-weight: 400;
+    cursor: pointer;
+    border: 1.5px solid var(--border);
+    background: var(--surface);
+    color: var(--text2);
+    transition: all 0.15s;
+   }
+   .gpill:hover {
+    border-color: var(--bl);
+    color: var(--bl);
+   }
+   .gpill.active {
+    font-weight: 600;
+   }
+
+   .section-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text3);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+   }
+   .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+   }
+
+   .topic-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 10px;
+    margin-bottom: 24px;
+   }
+   .tcard {
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: var(--r2);
+    padding: 16px;
+    cursor: pointer;
+    transition:
+     border-color 0.15s,
+     transform 0.12s,
+     box-shadow 0.15s;
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+   }
+   .tcard:hover {
+    border-color: currentColor;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow);
+   }
+   .tcard-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+   }
+   .tcard-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+   }
+   .tcard-icon i {
+    font-size: 18px;
+   }
+   .tcard-badge {
+    font-size: 10px;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 20px;
+    letter-spacing: 0.04em;
+   }
+   .tcard-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+   }
+   .tcard-sub {
+    font-size: 11px;
+    color: var(--text2);
+   }
+   .tcard-steps {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+   }
+   .tcard-step {
+    flex: 1;
+    height: 3px;
+    border-radius: 2px;
+   }
+
+   /* ── ANIM SCREEN ── */
+   .anim-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+   }
+   .back-btn {
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: var(--r);
+    padding: 8px 14px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--text2);
+    transition: all 0.15s;
+    font-family: inherit;
+   }
+   .back-btn:hover {
+    border-color: var(--bl);
+    color: var(--bl);
+   }
+   .anim-title-wrap {
+    flex: 1;
+    min-width: 0;
+   }
+   .anim-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text);
+   }
+   .anim-sub {
+    font-size: 12px;
+    color: var(--text3);
+    margin-top: 2px;
+   }
+   .step-ctr {
+    font-size: 12px;
+    color: var(--text3);
+    white-space: nowrap;
+    font-weight: 500;
+   }
+
+   .progress-track {
+    height: 3px;
+    background: var(--border);
+    border-radius: 2px;
+    margin-bottom: 16px;
+   }
+   .progress-fill {
+    height: 3px;
+    background: var(--bl);
+    border-radius: 2px;
+    transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+   }
+
+   .canvas-wrap {
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: var(--r2);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 18px 12px;
+    min-height: var(--stage-h);
+   }
+   .canvas-wrap svg {
+    width: min(100%, 900px);
+    height: auto;
+    max-width: 100%;
+    max-height: calc(var(--stage-h) - 36px);
+    display: block;
+    overflow: visible;
+   }
+
+   .dot-row {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    margin: 12px 0 10px;
+   }
+   .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--border2);
+    transition: all 0.3s;
+    flex-shrink: 0;
+   }
+   .dot.active {
+    background: var(--bl);
+    transform: scale(1.4);
+   }
+   .dot.done {
+    background: var(--gr);
+   }
+
+   .hint-card {
+    background: var(--surface);
+    border-left: 3px solid var(--bl);
+    padding: 12px 16px;
+    font-size: 16px;
+    color: var(--text2);
+    line-height: 1.7;
+    min-height: 56px;
+    margin-bottom: 10px;
+    border-radius: 0 var(--r) var(--r) 0;
+   }
+   .formula-card {
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: var(--r);
+    padding: 12px 18px;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text);
+    min-height: 56px;
+    display: flex;
+    align-items: center;
+    margin-bottom: 16px;
+    transition:
+     background 0.3s,
+     border-color 0.3s,
+     color 0.3s;
+   }
+   .formula-card.highlight {
+    background: var(--bll);
+    border-color: var(--bl);
+    color: var(--bldk);
+   }
+
+   .ctrl-row {
+    display: flex;
+    gap: 8px;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+   }
+   .cbtn {
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: var(--r);
+    padding: 10px 18px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    color: var(--text2);
+    transition: all 0.15s;
+    font-family: inherit;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+   }
+   .cbtn:hover {
+    border-color: var(--bl);
+    color: var(--bl);
+   }
+   .cbtn.primary {
+    background: var(--bl);
+    border-color: var(--bl);
+    color: #fff;
+   }
+   .cbtn.primary:hover {
+    background: var(--bldk);
+   }
+   .ctrl-spacer {
+    flex: 1;
+   }
+   .cbtn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+    pointer-events: none;
+   }
+
+   body.presenting {
+    background: #111827;
+    color: #f8fafc;
+   }
+   body.presenting .header {
+    display: none;
+   }
+   body.presenting .container {
+    max-width: none;
+    padding: 22px 34px 30px;
+    --stage-h: calc(100vh - 300px);
+   }
+   body.presenting .hint-card,
+   body.presenting .formula-card,
+   body.presenting .canvas-wrap {
+    background: #ffffff;
+   }
+   body.presenting .canvas-wrap {
+    min-height: max(320px, var(--stage-h));
+   }
+   body.presenting .canvas-wrap svg {
+    width: min(96vw, 1180px);
+    max-height: calc(var(--stage-h) - 36px);
+   }
+   body.presenting .anim-title {
+    color: #f8fafc;
+    font-size: 20px;
+   }
+   body.presenting .anim-sub,
+   body.presenting .step-ctr {
+    color: #cbd5e1;
+    font-size: 14px;
+   }
+   body.presenting .progress-track {
+    background: #334155;
+   }
+
+   .footer-info {
+    margin-top: 20px;
+    padding: 12px 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+    font-size: 12px;
+    color: var(--text3);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+   }
+
+   /* ── AI PANEL ── */
+   .ai-panel {
+    margin-top: 12px;
+    background: var(--surface);
+    border: 1.5px solid var(--bl);
+    border-radius: var(--r2);
+    overflow: hidden;
+    display: none;
+   }
+   .ai-panel.open {
+    display: block;
+   }
+   .ai-panel-head {
+    background: var(--bll);
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+   }
+   .ai-panel-head-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--bldk);
+   }
+   .ai-close {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    color: var(--text3);
+    line-height: 1;
+    padding: 2px 4px;
+   }
+   .ai-close:hover {
+    color: var(--text);
+   }
+   .ai-msgs {
+    padding: 12px 14px;
+    max-height: 220px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+   }
+   .ai-msg {
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+   }
+   .ai-msg.user {
+    flex-direction: row-reverse;
+   }
+   .ai-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    flex-shrink: 0;
+   }
+   .ai-msg.bot .ai-avatar {
+    background: var(--bll);
+   }
+   .ai-msg.user .ai-avatar {
+    background: var(--aml);
+   }
+   .ai-bubble {
+    padding: 8px 12px;
+    border-radius: 10px;
+    font-size: 13px;
+    line-height: 1.65;
+    max-width: 82%;
+   }
+   .ai-msg.bot .ai-bubble {
+    background: var(--surface2);
+    color: var(--text);
+    border-radius: 4px 10px 10px 10px;
+   }
+   .ai-msg.user .ai-bubble {
+    background: var(--bl);
+    color: #fff;
+    border-radius: 10px 4px 10px 10px;
+   }
+   .ai-thinking {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--text3);
+    padding: 6px 14px 10px;
+   }
+   .ai-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--text3);
+    animation: aidot 0.9s infinite;
+   }
+   .ai-dot:nth-child(2) {
+    animation-delay: 0.18s;
+   }
+   .ai-dot:nth-child(3) {
+    animation-delay: 0.36s;
+   }
+   @keyframes aidot {
+    0%,
+    80%,
+    100% {
+     opacity: 0.3;
+     transform: scale(0.8);
+    }
+    40% {
+     opacity: 1;
+     transform: scale(1.2);
+    }
+   }
+   .ai-input-row {
+    display: flex;
+    gap: 8px;
+    padding: 10px 12px;
+    border-top: 1px solid var(--border);
+    background: var(--surface);
+   }
+   .ai-input {
+    flex: 1;
+    border: 1.5px solid var(--border);
+    border-radius: var(--r);
+    padding: 8px 12px;
+    font-size: 13px;
+    font-family: inherit;
+    outline: none;
+    background: var(--bg);
+   }
+   .ai-input:focus {
+    border-color: var(--bl);
+   }
+   .ai-send {
+    background: var(--bl);
+    border: none;
+    color: #fff;
+    border-radius: var(--r);
+    padding: 8px 14px;
+    font-size: 13px;
+    cursor: pointer;
+    font-family: inherit;
+    transition: background 0.15s;
+   }
+   .ai-send:hover {
+    background: var(--bldk);
+   }
+   .ai-send:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+   }
+
+   /* ── QUIZ ── */
+   .quiz-opt {
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: var(--r);
+    padding: 10px 14px;
+    font-size: 13px;
+    cursor: pointer;
+    text-align: left;
+    font-family: inherit;
+    color: var(--text);
+    transition: all 0.15s;
+   }
+   .quiz-opt:hover {
+    border-color: var(--bl);
+    background: var(--bll);
+   }
+
+   /* ── SETTINGS MODAL ── */
+   .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    z-index: 500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    display: none;
+   }
+   .modal-overlay.open {
+    display: flex;
+   }
+   .modal {
+    background: var(--surface);
+    border-radius: var(--r2);
+    padding: 28px 28px 22px;
+    width: min(460px, 92vw);
+    box-shadow: 0 8px 40px rgba(0, 0, 0, 0.18);
+   }
+   .modal h3 {
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 6px;
+   }
+   .modal p {
+    font-size: 13px;
+    color: var(--text2);
+    line-height: 1.7;
+    margin-bottom: 16px;
+   }
+   .modal label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text2);
+    display: block;
+    margin-bottom: 6px;
+   }
+   .modal input {
+    width: 100%;
+    border: 1.5px solid var(--border);
+    border-radius: var(--r);
+    padding: 10px 12px;
+    font-size: 13px;
+    font-family: inherit;
+    outline: none;
+    margin-bottom: 8px;
+   }
+   .modal input:focus {
+    border-color: var(--bl);
+   }
+   .modal-hint {
+    font-size: 11px;
+    color: var(--text3);
+    margin-bottom: 18px;
+    line-height: 1.6;
+   }
+   .modal-btns {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+   }
+   .modal-cancel {
+    background: none;
+    border: 1.5px solid var(--border);
+    border-radius: var(--r);
+    padding: 8px 16px;
+    font-size: 13px;
+    cursor: pointer;
+    font-family: inherit;
+    color: var(--text2);
+   }
+   .modal-cancel:hover {
+    border-color: var(--bl);
+    color: var(--bl);
+   }
+   .modal-confirm {
+    background: var(--bl);
+    border: none;
+    color: #fff;
+    border-radius: var(--r);
+    padding: 8px 18px;
+    font-size: 13px;
+    cursor: pointer;
+    font-family: inherit;
+   }
+   .modal-confirm:hover {
+    background: var(--bldk);
+   }
+
+   /* settings icon in header */
+   .settings-btn {
+    background: none;
+    border: 1.5px solid var(--border);
+    border-radius: var(--r);
+    padding: 6px 10px;
+    font-size: 13px;
+    cursor: pointer;
+    color: var(--text3);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-family: inherit;
+    transition: all 0.15s;
+   }
+   .settings-btn:hover {
+    border-color: var(--bl);
+    color: var(--bl);
+   }
+   .api-status {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #ccc;
+    flex-shrink: 0;
+   }
+   .api-status.ok {
+    background: #3a7010;
+   }
+
+   /* ── RESPONSIVE ── */
+   @media (max-width: 640px) {
+    .hero-title { font-size: 20px; }
+    .hero-stats { gap: 12px; }
+    .topic-grid { grid-template-columns: 1fr; }
+    .container { padding: 16px 12px; }
+    body.anim-active .container { padding: 12px 10px 20px; }
+    .anim-header { gap: 8px; margin-bottom: 12px; }
+    .canvas-wrap { --stage-h: clamp(250px, 42vh, 360px); padding: 8px 4px; min-height: var(--stage-h); }
+    .canvas-wrap svg { max-width: 100%; max-height: calc(var(--stage-h) - 16px); height: auto; }
+    body.presenting .container { padding: 12px 10px 18px; --stage-h: calc(100vh - 250px); }
+    .hint-card, .formula-card { font-size: 14px; }
+    .ai-panel { position: fixed; bottom: 0; left: 0; right: 0; max-height: 50vh; z-index: 200; }
+    .ctrl-row { flex-wrap: wrap; }
+    .cbtn { padding: 8px 12px; font-size: 12px; }
+    .modal { width: 96vw; padding: 20px 16px 16px; }
+   }
+  </style>
+ </head>
+ <body>
+  <header class="header">
+   <div class="logo">
+    <div class="logo-icon"><i class="ti ti-math-function"></i></div>
+    <div>
+     <div class="logo-text">几何公式动画推导</div>
+     <div class="logo-sub">小学数学可视化学习工具</div>
+    </div>
+   </div>
+   <div style="display: flex; align-items: center; gap: 10px">
+    <span class="header-badge">2022版课标</span>
+    <span class="header-badge" style="background:var(--grl);color:var(--gr);"><i class="ti ti-robot" style="font-size:12px;"></i> AI已启用</span>
+   </div>
+  </header>
+
+  <div class="container">
+   <!-- HOME -->
+   <div id="home" class="screen active">
+    <div class="hero">
+     <div class="hero-title">让每个公式都看得懂</div>
+     <div class="hero-sub">
+      覆盖义务教育数学课程标准（2022年版）图形与几何两大主题<br />图形认识与测量
+      · 图形位置与运动 · 一到六年级全覆盖
+     </div>
+     <div class="hero-stats">
+      <div class="stat">
+       <div class="stat-n">6</div>
+       <div class="stat-l">年级</div>
+      </div>
+      <div class="stat">
+       <div class="stat-n">30</div>
+       <div class="stat-l">知识点</div>
+      </div>
+      <div class="stat">
+       <div class="stat-n">124</div>
+       <div class="stat-l">动画步骤</div>
+      </div>
+     </div>
+    </div>
+
+    <div class="grade-bar" id="gbar"></div>
+
+    <div id="theme-label-1" class="section-label">图形认识与测量</div>
+    <div class="topic-grid" id="tgrid-m"></div>
+
+    <div id="theme-label-2" class="section-label" style="margin-top: 8px">
+     图形位置与运动
+    </div>
+    <div class="topic-grid" id="tgrid-p"></div>
+
+    <div class="footer-info">
+     <i class="ti ti-info-circle" style="font-size: 15px; flex-shrink: 0"></i>
+     每个知识点包含逐步推导动画，可随时暂停重播 ·
+     内容依据义务教育数学课程标准（2022年版）
+    </div>
+    <div style="text-align:center;margin:18px 0 4px;">
+     <button onclick="openFeedback()" style="background:none;border:1.5px solid #c7cfe8;border-radius:20px;padding:7px 18px;font-size:12px;color:#666;cursor:pointer;display:inline-flex;align-items:center;gap:6px;">
+      <i class="ti ti-message-circle" style="font-size:14px;"></i> 使用反馈
+     </button>
+    </div>
+   </div>
+
+   <!-- ANIM -->
+   <div id="ascreen" class="screen">
+    <div class="anim-header">
+     <button class="back-btn" onclick="goHome()">
+      <i class="ti ti-arrow-left"></i> 返回
+     </button>
+     <div class="anim-title-wrap">
+      <div class="anim-title" id="atitle"></div>
+      <div class="anim-sub" id="asub"></div>
+     </div>
+     <div class="step-ctr" id="sctr"></div>
+    </div>
+    <div class="progress-track">
+     <div class="progress-fill" id="pbar" style="width: 20%"></div>
+    </div>
+    <div class="canvas-wrap">
+     <svg
+      id="asvg"
+      width="460"
+      height="220"
+      viewBox="0 0 460 220"
+      style="max-width: 100%; overflow: visible"
+     >
+      <g id="asvg-bg"></g>
+      <g id="asvg-anim"></g>
+     </svg>
+    </div>
+    <div class="dot-row" id="dotrow"></div>
+    <div class="hint-card" id="shint"></div>
+    <div class="formula-card" id="sform"></div>
+    <div class="ctrl-row">
+     <button class="cbtn" id="bprev" onclick="prev()">
+      <i class="ti ti-arrow-left"></i> 上一步
+     </button>
+     <button class="cbtn" id="breplay" onclick="replay()">
+      <i class="ti ti-refresh"></i> 重播
+     </button>
+     <button class="cbtn" id="bpresent" onclick="togglePresent()">
+      <i class="ti ti-presentation"></i> 投影模式
+     </button>
+     <div class="ctrl-spacer"></div>
+     <button class="cbtn primary" id="bnext" onclick="next()">
+      下一步 <i class="ti ti-arrow-right"></i>
+     </button>
+    </div>
+
+    <!-- AI 对话面板 -->
+    <div class="ai-panel" id="aiPanel">
+     <div class="ai-panel-head">
+      <div class="ai-panel-head-left">
+       🤖 <span>AI老师</span>
+       <span
+        style="font-weight: 400; color: var(--text3); font-size: 11px"
+        id="aiTopicLabel"
+       ></span>
+      </div>
+      <button class="ai-close" onclick="closeAI()">✕</button>
+     </div>
+     <div class="ai-msgs" id="aiMsgs"></div>
+     <div class="ai-thinking" id="aiThinking" style="display: none">
+      <div class="ai-dot"></div>
+      <div class="ai-dot"></div>
+      <div class="ai-dot"></div>
+      <span>AI老师正在思考…</span>
+     </div>
+     <div class="ai-input-row">
+      <input
+       class="ai-input"
+       id="aiInput"
+       placeholder="问问AI老师吧，比如：这一步为什么要÷2？"
+       maxlength="200"
+       onkeydown="
+        if (event.key === 'Enter' && !event.shiftKey) {
+         event.preventDefault();
+         sendAI();
+        }
+       "
+      />
+      <button class="ai-send" id="aiSend" onclick="sendAI()">发送</button>
+     </div>
+    </div>
+
+    <!-- 问AI按钮 -->
+    <div style="margin-top: 10px; text-align: right; display: flex; gap: 8px; justify-content: flex-end;">
+     <button
+      class="cbtn"
+      id="openAIBtn"
+      onclick="toggleAI()"
+      style="font-size: 12px; padding: 8px 14px"
+     >
+      🤖 问问AI老师
+     </button>
+     <button
+      class="cbtn"
+      id="quizBtn"
+      onclick="renderQuiz()"
+      style="font-size: 12px; padding: 8px 14px"
+     >
+      📝 做个小练习
+     </button>
+    </div>
+
+    <!-- 练习区域 -->
+    <div id="quizWrap" style="display:none;margin-top:10px;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r2);padding:14px 16px;"></div>
+
+    <!-- 每页底部反馈 -->
+    <div style="text-align:center;margin-top:14px;padding-bottom:10px;">
+     <button onclick="openFeedback()" style="background:none;border:1px solid #dde3f0;border-radius:20px;padding:6px 18px;font-size:11px;color:#999;cursor:pointer;display:inline-flex;align-items:center;gap:5px;transition:border-color 0.2s,color 0.2s;" onmouseover="this.style.borderColor='#a5b4fc';this.style.color='#6366f1';" onmouseout="this.style.borderColor='#dde3f0';this.style.color='#999';">
+      <i class="ti ti-message-circle" style="font-size:13px;"></i> 反馈这个知识点
+     </button>
+    </div>
+   </div>
+  </div>
+
+  <!-- 设置弹窗 -->
+  <div class="modal-overlay" id="settingsModal">
+   <div class="modal">
+    <h3>🤖 AI老师设置</h3>
+    <p>
+     输入 DeepSeek API Key，即可启用真实 AI 讲解功能。<br />Key
+     仅存储在本地浏览器，不会上传到任何服务器。
+    </p>
+    <label>DeepSeek API Key</label>
+    <input
+     type="password"
+     id="apiKeyInput"
+     placeholder="sk-xxxxxxxxxxxxxxxxxxxxxxxx"
+    />
+    <div class="modal-hint">
+     获取免费 Key：<a
+      href="https://platform.deepseek.com/"
+      target="_blank"
+      style="color: var(--bl)"
+      >platform.deepseek.com</a
+     >（注册后在控制台创建）<br />
+     不填写则使用本地模拟回复，功能照常可用。
+    </div>
+    <div class="modal-btns">
+     <button class="modal-cancel" onclick="closeSettings()">取消</button>
+     <button class="modal-confirm" onclick="saveSettings()">保存</button>
+    </div>
+   </div>
+  </div>
+
+  <script>
+   const GC = {
+    1: '#1A5FA8',
+    2: '#0A7050',
+    3: '#9A5800',
+    4: '#5A4AC0',
+    5: '#A03060',
+    6: '#3A7010',
+   };
+   const GB = {
+    1: '#E8F1FB',
+    2: '#E4F6EE',
+    3: '#FEF0DC',
+    4: '#EEECFE',
+    5: '#FCEAF2',
+    6: '#EAF6DC',
+   };
+   // 深色版年级色：用于卡片图标与标签文字，保证在浅底上清晰可读
+   const GCD = {
+    1: '#0D3F6E',
+    2: '#064A34',
+    3: '#6A3A00',
+    4: '#3A2A90',
+    5: '#701040',
+    6: '#204808',
+   };
+   const GN = {
+    1: '一年级',
+    2: '二年级',
+    3: '三年级',
+    4: '四年级',
+    5: '五年级',
+    6: '六年级',
+   };
+   const ICONS = {
+    认识: 'ti-eye',
+    测量: 'ti-ruler',
+    概念: 'ti-bulb',
+    推导: 'ti-math-function',
+    运动: 'ti-arrows-move',
+    位置: 'ti-map-pin',
+    分类: 'ti-filter',
+    特征: 'ti-list',
+   };
+
+   // 测量主题
+   const MEASURE = {
+    1: [
+     {
+      id: 'a1',
+      title: '认识立体图形',
+      sub: '长方体·正方体·圆柱·球',
+      tag: '认识',
+      steps: 4,
+     },
+     {
+      id: 'a2',
+      title: '认识平面图形',
+      sub: '从立体面到平面形',
+      tag: '认识',
+      steps: 4,
+     },
+    ],
+    2: [
+     {
+      id: 'b1',
+      title: '角的初步认识',
+      sub: '角·直角·画法',
+      tag: '认识',
+      steps: 4,
+     },
+     {
+      id: 'b2',
+      title: '长方形与正方形',
+      sub: '边角特征与包含关系',
+      tag: '特征',
+      steps: 4,
+     },
+    ],
+    3: [
+     {
+      id: 'c1',
+      title: '四边形与平行四边形',
+      sub: '认识·特征·分类',
+      tag: '认识',
+      steps: 3,
+     },
+     {
+      id: 'c2',
+      title: '周长的认识',
+      sub: '一圈的总长度',
+      tag: '概念',
+      steps: 4,
+     },
+     {
+      id: 'c3',
+      title: '长方形周长公式',
+      sub: '推导 C = 2(a+b)',
+      tag: '推导',
+      steps: 5,
+     },
+     {
+      id: 'c4',
+      title: '面积的认识',
+      sub: '铺方格理解面积',
+      tag: '概念',
+      steps: 4,
+     },
+     {
+      id: 'c5',
+      title: '长方形面积公式',
+      sub: '推导 S = ab',
+      tag: '推导',
+      steps: 4,
+     },
+    ],
+    4: [
+     {
+      id: 'd1',
+      title: '角的度量',
+      sub: '四类角·量角器使用',
+      tag: '测量',
+      steps: 4,
+     },
+     {
+      id: 'd2',
+      title: '平行四边形与梯形',
+      sub: '定义·特征·分类',
+      tag: '特征',
+      steps: 4,
+     },
+    ],
+    5: [
+     {
+      id: 'e1',
+      title: '平行四边形面积',
+      sub: '剪拼变长方形推导',
+      tag: '推导',
+      steps: 5,
+     },
+     {
+      id: 'e2',
+      title: '三角形面积',
+      sub: '两个拼平行四边形',
+      tag: '推导',
+      steps: 5,
+     },
+     {
+      id: 'e3',
+      title: '梯形面积',
+      sub: '两梯形拼平行四边形',
+      tag: '推导',
+      steps: 5,
+     },
+     {
+      id: 'e4',
+      title: '组合图形面积',
+      sub: '分割法与补全法',
+      tag: '推导',
+      steps: 3,
+     },
+    ],
+    6: [
+     {
+      id: 'f1',
+      title: '圆的周长',
+      sub: 'π的发现 C = 2πr',
+      tag: '推导',
+      steps: 5,
+     },
+     {
+      id: 'f2',
+      title: '圆的面积',
+      sub: '扇形切拼 S = πr²',
+      tag: '推导',
+      steps: 5,
+     },
+     {
+      id: 'f3',
+      title: '圆柱的表面积',
+      sub: '展开图 S = 2πr(r+h)',
+      tag: '推导',
+      steps: 4,
+     },
+     { id: 'f4', title: '圆柱的体积', sub: 'V = πr²h', tag: '推导', steps: 4 },
+     { id: 'f5', title: '圆锥的体积', sub: 'V = ⅓πr²h', tag: '推导', steps: 4 },
+    ],
+   };
+
+   // 运动主题
+   const POSITION = {
+    2: [
+     {
+      id: 'p_b1',
+      title: '轴对称图形',
+      sub: '对折重合·对称轴',
+      tag: '运动',
+      steps: 4,
+     },
+     {
+      id: 'p_b2',
+      title: '平移与旋转初步',
+      sub: '感知两种运动现象',
+      tag: '运动',
+      steps: 4,
+     },
+    ],
+    4: [
+     {
+      id: 'p_d1',
+      title: '轴对称深化',
+      sub: '方格纸上画对称图形',
+      tag: '运动',
+      steps: 4,
+     },
+     {
+      id: 'p_d2',
+      title: '平移深化',
+      sub: '方格纸上描述平移',
+      tag: '运动',
+      steps: 4,
+     },
+     {
+      id: 'p_d3',
+      title: '旋转深化',
+      sub: '顺逆时针旋转90°',
+      tag: '运动',
+      steps: 4,
+     },
+    ],
+    5: [
+     {
+      id: 'p_e1',
+      title: '图形的放大与缩小',
+      sub: '按比例变化·比例尺',
+      tag: '运动',
+      steps: 4,
+     },
+    ],
+   };
+
+   let cg = 1,
+    ct = null,
+    cs = 0,
+    af = null;
+   const lerp = (a, b, t) => a + (b - a) * t;
+   const lp = (p, q, t) => [lerp(p[0], q[0], t), lerp(p[1], q[1], t)];
+   const ease = (t) => (t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2);
+   const ns = 'http://www.w3.org/2000/svg';
+   function E(tag, a, p) {
+    const e = document.createElementNS(ns, tag);
+    if (a) Object.entries(a).forEach(([k, v]) => e.setAttribute(k, v));
+    if (p) p.appendChild(e);
+    return e;
+   }
+   function T(s, x, y, txt, fill, sz, anc, fw) {
+    const e = E(
+     'text',
+     {
+      x,
+      y,
+      'text-anchor': anc || 'middle',
+      fill,
+      fontSize: sz || 13,
+      fontWeight: fw || '400',
+      fontFamily: "'Noto Sans SC',sans-serif",
+     },
+     s,
+    );
+    const lines = String(txt).split('\n');
+    if (lines.length === 1) {
+     e.textContent = txt;
+    } else {
+     lines.forEach((line, i) => {
+      const span = E('tspan', { x, dy: i === 0 ? 0 : (sz || 13) * 1.25 }, e);
+      span.textContent = line;
+     });
+    }
+    return e;
+   }
+   function R(s, x, y, w, h, fill, stroke, sw, rx) {
+    return E(
+     'rect',
+     {
+      x,
+      y,
+      width: w,
+      height: h,
+      fill,
+      stroke,
+      'stroke-width': sw || 1.5,
+      rx: rx || 2,
+     },
+     s,
+    );
+   }
+   function PL(s, pts, fill, stroke, sw) {
+    return E(
+     'polygon',
+     {
+      points: pts.map((p) => p.join(',')).join(' '),
+      fill,
+      stroke,
+      'stroke-width': sw || 2,
+     },
+     s,
+    );
+   }
+   function L(s, x1, y1, x2, y2, stroke, sw, dash) {
+    const a = { x1, y1, x2, y2, stroke, 'stroke-width': sw || 1.5 };
+    if (dash) a['stroke-dasharray'] = dash;
+    return E('line', a, s);
+   }
+   function C(s, cx, cy, r, fill, stroke, sw) {
+    return E(
+     'circle',
+     { cx, cy, r, fill, stroke, 'stroke-width': sw || 1.5 },
+     s,
+    );
+   }
+   function SPH(s, cx, cy, r) {
+    const id = `sphereGrad-${Math.round(cx)}-${Math.round(cy)}-${Math.round(r)}`;
+    E(
+     'ellipse',
+     {
+      cx,
+      cy: cy + r * 0.92,
+      rx: r * 0.72,
+      ry: r * 0.16,
+      fill: 'rgba(106,58,0,0.18)',
+     },
+     s,
+    );
+    const defs = E('defs', {}, s);
+    const grad = E(
+     'radialGradient',
+     { id, cx: '34%', cy: '28%', r: '72%', fx: '28%', fy: '22%' },
+     defs,
+    );
+    E('stop', { offset: '0%', 'stop-color': '#FFF7E8' }, grad);
+    E('stop', { offset: '42%', 'stop-color': '#F5C978' }, grad);
+    E('stop', { offset: '78%', 'stop-color': '#9A5800' }, grad);
+    E('stop', { offset: '100%', 'stop-color': '#5C3000' }, grad);
+    C(s, cx, cy, r, `url(#${id})`, '#9A5800', 1.8);
+    E(
+     'ellipse',
+     {
+      cx,
+      cy: cy + r * 0.1,
+      rx: r * 0.82,
+      ry: r * 0.24,
+      fill: 'none',
+      stroke: '#6A3A00',
+      'stroke-width': 1.1,
+      'stroke-dasharray': '4 3',
+      opacity: 0.48,
+     },
+     s,
+    );
+    E(
+     'ellipse',
+     {
+      cx: cx - r * 0.28,
+      cy: cy - r * 0.32,
+      rx: r * 0.18,
+      ry: r * 0.11,
+      fill: 'rgba(255,255,255,0.72)',
+      transform: `rotate(-25 ${cx - r * 0.28} ${cy - r * 0.32})`,
+     },
+     s,
+    );
+   }
+   function RA(s, x, y, sz, col) {
+    E(
+     'path',
+     {
+      d: `M${x},${y - sz}L${x + sz},${y - sz}L${x + sz},${y}`,
+      fill: 'none',
+      stroke: col || '#C03030',
+      'stroke-width': 1.5,
+     },
+     s,
+    );
+   }
+   function clr(s) {
+    s.replaceChildren();
+   }
+   function unionBBox(boxes) {
+    const valid = boxes.filter((b) => b && b.width > 0 && b.height > 0);
+    if (!valid.length) return null;
+    const x1 = Math.min(...valid.map((b) => b.x));
+    const y1 = Math.min(...valid.map((b) => b.y));
+    const x2 = Math.max(...valid.map((b) => b.x + b.width));
+    const y2 = Math.max(...valid.map((b) => b.y + b.height));
+    return { x: x1, y: y1, width: x2 - x1, height: y2 - y1 };
+   }
+   function fitAnimContent(bgGroup, animGroup, sd) {
+    if (sd.noAutoFit) return;
+    try {
+     animGroup.removeAttribute('transform');
+     const boxes = [];
+     if (bgGroup.childNodes.length) boxes.push(bgGroup.getBBox());
+     if (animGroup.childNodes.length) boxes.push(animGroup.getBBox());
+     const b = unionBBox(boxes);
+     if (!b) return;
+     const vw = 460, vh = 220, pad = sd.fitPad || 10;
+     const availW = vw - pad * 2, availH = vh - pad * 2;
+     const scale = Math.min(1, availW / b.width, availH / b.height);
+     if (scale >= 0.999) return;
+     const left = b.x * scale, top = b.y * scale;
+     const right = (b.x + b.width) * scale, bottom = (b.y + b.height) * scale;
+     const tx = left < pad ? pad - left : right > vw - pad ? vw - pad - right : 0;
+     const ty = top < pad ? pad - top : bottom > vh - pad ? vh - pad - bottom : 0;
+     animGroup.setAttribute('transform', `translate(${tx},${ty}) scale(${scale})`);
+    } catch (_) {}
+   }
+
+   function renderGrade() {
+    const bar = document.getElementById('gbar');
+    bar.innerHTML = '';
+    [1, 2, 3, 4, 5, 6].forEach((g) => {
+     const on = g === cg,
+      b = document.createElement('button');
+     b.className = 'gpill' + (on ? ' active' : '');
+     b.textContent = GN[g];
+     if (on) {
+      b.style.cssText = `border-color:${GC[g]};color:${GC[g]};background:${GB[g]};`;
+     }
+     b.onclick = () => {
+      cg = g;
+      localStorage.setItem('geo_grade', String(g));
+      renderGrade();
+      renderTopics();
+     };
+     bar.appendChild(b);
+    });
+   }
+
+   function mkCard(t, c, bg) {
+    const d = document.createElement('div');
+    d.className = 'tcard';
+    d.style.color = c;
+    const icon = ICONS[t.tag] || 'ti-math-function';
+    const dc = GCD[cg] || c;
+    const isVisited = visitedSet.has(t.id);
+    const tagText = t.tag + (isVisited ? ' ✓' : '');
+    d.innerHTML = `<div class="tcard-top">
+    <div class="tcard-icon" style="background:${bg};"><i class="ti ${icon}" style="color:${dc};"></i></div>
+    <span class="tcard-badge" style="background:${bg};color:${dc};">${tagText}</span></div>
+  <div class="tcard-title">${t.title}</div>
+  <div class="tcard-sub">${t.sub}</div>
+  <div class="tcard-steps">${Array.from({ length: t.steps }, (_, i) => `<div class="tcard-step" style="background:${i === 0 ? c : '#E0DDD6'};"></div>`).join('')}</div>`;
+    d.onclick = () => openT(t);
+    return d;
+   }
+
+   function renderTopics() {
+    const gm = document.getElementById('tgrid-m'),
+     gp = document.getElementById('tgrid-p');
+    gm.innerHTML = '';
+    gp.innerHTML = '';
+    const c = GC[cg],
+     bg = GB[cg];
+    (MEASURE[cg] || []).forEach((t) => gm.appendChild(mkCard(t, c, bg)));
+    (POSITION[cg] || []).forEach((t) => gp.appendChild(mkCard(t, c, bg)));
+    document.getElementById('theme-label-2').style.display = (
+     POSITION[cg] || []
+    ).length
+     ? 'flex'
+     : 'none';
+    document.getElementById('tgrid-p').style.display = (POSITION[cg] || [])
+     .length
+     ? 'grid'
+     : 'none';
+   }
+
+   function openT(t) {
+    // 清空AI对话 + 练习
+    aiHistory = [];
+    document.getElementById('aiMsgs').innerHTML = '';
+    document.getElementById('aiPanel').classList.remove('open');
+    document.getElementById('openAIBtn').style.display = '';
+    document.getElementById('aiTopicLabel').textContent = t.title;
+    document.getElementById('quizWrap').style.display = 'none';
+    const quizBtn = document.getElementById('quizBtn');
+    if (quizBtn) quizBtn.style.display = QUIZZES[t.id] ? '' : 'none';
+    quizState = { active: false, correct: 0, total: 0 };
+    // 打开知识点
+    ct = t;
+    cs = 0;
+    document.getElementById('atitle').textContent = t.title;
+    document.getElementById('asub').textContent = GN[cg] + ' · ' + t.sub;
+    showSc('ascreen');
+    buildDots();
+    run(0);
+    // 更新首页卡片标记
+    setTimeout(() => renderTopics(), 100);
+   }
+   function buildDots() {
+    document.getElementById('dotrow').innerHTML = Array.from(
+     { length: ct.steps },
+     (_, i) => `<div class="dot" id="sd${i}"></div>`,
+    ).join('');
+   }
+   function updUI() {
+    for (let i = 0; i < ct.steps; i++) {
+     const d = document.getElementById('sd' + i);
+     if (d)
+      d.className = 'dot' + (i === cs ? ' active' : i < cs ? ' done' : '');
+    }
+    document.getElementById('sctr').textContent = `${cs + 1} / ${ct.steps}`;
+    document.getElementById('pbar').style.width =
+     ((cs + 1) / ct.steps) * 100 + '%';
+    document.getElementById('bprev').disabled = cs === 0;
+    const last = cs === ct.steps - 1,
+     nb = document.getElementById('bnext');
+    nb.disabled = last;
+    nb.innerHTML = last
+     ? '<i class="ti ti-check"></i> 完成'
+     : '下一步 <i class="ti ti-arrow-right"></i>';
+    // 走到最后一步才算完成，记录进度
+    if (last && ct) {
+     if (!visitedSet.has(ct.id)) {
+      visitedSet.add(ct.id);
+      localStorage.setItem('geo_visited', JSON.stringify([...visitedSet]));
+      track('topic_complete', ct.id); // 首次完成才上报
+     }
+    }
+   }
+   function run(step) {
+    if (af) {
+     cancelAnimationFrame(af);
+     af = null;
+    }
+    const A = ANIMS[ct.id];
+    if (!A || !A[step]) return;
+    const sd = A[step];
+    document.getElementById('shint').textContent = sd.hint;
+    const fc = document.getElementById('sform');
+    fc.textContent = sd.formula;
+    fc.className = 'formula-card' + (step === ct.steps - 1 ? ' highlight' : '');
+    updUI();
+    // 绘制静态背景（仅一次）
+    const bgGroup = document.getElementById('asvg-bg');
+    const animGroup = document.getElementById('asvg-anim');
+    clr(bgGroup); clr(animGroup);
+    animGroup.removeAttribute('transform'); // 每次都清除，防止noAutoFit步骤的transform残留
+    if (sd.bg) sd.bg(bgGroup);
+    const dur = sd.dur || 1400,
+     t0 = performance.now();
+    function tick(now) {
+     const p = Math.min(1, (now - t0) / dur);
+     clr(animGroup);
+     sd.draw(animGroup, ease(p));
+     fitAnimContent(bgGroup, animGroup, sd);
+     if (p < 1) af = requestAnimationFrame(tick);
+     else af = null;
+    }
+    af = requestAnimationFrame(tick);
+   }
+   function next() {
+    if (ct && cs < ct.steps - 1) {
+     cs++;
+     run(cs);
+    }
+   }
+   function prev() {
+    if (ct && cs > 0) {
+     cs--;
+     run(cs);
+    }
+   }
+   function replay() {
+    if (ct) run(cs);
+   }
+   function goHome() {
+    if (af) {
+     cancelAnimationFrame(af);
+     af = null;
+    }
+    if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+    document.body.classList.remove('presenting');
+    showSc('home');
+   }
+   function togglePresent() {
+    const isOn = document.body.classList.contains('presenting');
+    if (isOn) {
+     document.body.classList.remove('presenting');
+     const exit = document.exitFullscreen || document.webkitExitFullscreen;
+     if (exit) exit.call(document).catch(() => {});
+    } else {
+     document.body.classList.add('presenting');
+     const root = document.documentElement;
+     const req = root.requestFullscreen || root.webkitRequestFullscreen;
+     if (req) req.call(root).catch(() => {});
+    }
+    updatePresentState();
+   }
+   function updatePresentState() {
+    const on = document.body.classList.contains('presenting');
+    const btn = document.getElementById('bpresent');
+    if (btn) btn.innerHTML = on
+     ? '<i class="ti ti-minimize"></i> 退出投影'
+     : '<i class="ti ti-presentation"></i> 投影模式';
+   }
+   document.addEventListener('fullscreenchange', () => {
+    if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+     document.body.classList.remove('presenting');
+     updatePresentState();
+    }
+   });
+   function showSc(id) {
+    document
+     .querySelectorAll('.screen')
+     .forEach((s) => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    document.body.classList.toggle('anim-active', id === 'ascreen');
+   }
+
+   /* ─── ANIMATIONS ─── */
+   const ANIMS = {
+    /* ── 一年级 ── */
+    a1: [
+     {
+      hint:
+       '生活中最常见的四种立体图形：长方体、正方体、圆柱和球，它们都占有三维空间。',
+      formula: '立体图形：有长度、宽度、高度（三维）',
+      dur: 1300,
+      draw(s, t) {
+       if (t > 0.06) {
+        const x = 20,
+         y = 62,
+         w = 90,
+         h = 52,
+         d = 20;
+        // 长方体：顶面
+        PL(
+         s,
+         [
+          [x, y],
+          [x + w, y],
+          [x + w + d, y - d],
+          [x + d, y - d],
+         ],
+         '#D8E8F8',
+         '#1A5FA8',
+         1.8,
+        );
+        // 长方体：正面
+        PL(
+         s,
+         [
+          [x, y],
+          [x + w, y],
+          [x + w, y + h],
+          [x, y + h],
+         ],
+         '#E8F1FB',
+         '#1A5FA8',
+         1.8,
+        );
+        // 长方体：右侧面
+        PL(
+         s,
+         [
+          [x + w, y],
+          [x + w + d, y - d],
+          [x + w + d, y + h - d],
+          [x + w, y + h],
+         ],
+         '#C0D4F0',
+         '#1A5FA8',
+         1.8,
+        );
+        T(s, x + w / 2, 128, '长方体', '#0D3F6E', 12);
+       }
+       if (t > 0.28) {
+        const cx = 170,
+         cy = 72,
+         s2 = 52,
+         d2 = 18;
+        // 正方体：顶面
+        PL(
+         s,
+         [
+          [cx, cy],
+          [cx + s2, cy],
+          [cx + s2 + d2, cy - d2],
+          [cx + d2, cy - d2],
+         ],
+         '#DDD8F8',
+         '#5A4AC0',
+         1.8,
+        );
+        // 正方体：正面
+        PL(
+         s,
+         [
+          [cx, cy],
+          [cx + s2, cy],
+          [cx + s2, cy + s2],
+          [cx, cy + s2],
+         ],
+         '#EEECFE',
+         '#5A4AC0',
+         1.8,
+        );
+        // 正方体：右侧面
+        PL(
+         s,
+         [
+          [cx + s2, cy],
+          [cx + s2 + d2, cy - d2],
+          [cx + s2 + d2, cy + s2 - d2],
+          [cx + s2, cy + s2],
+         ],
+         '#D0CCEE',
+         '#5A4AC0',
+         1.8,
+        );
+        T(s, cx + s2 / 2, 138, '正方体', '#3A2A90', 12);
+       }
+       if (t > 0.54) {
+        E(
+         'ellipse',
+         {
+          cx: 280,
+          cy: 78,
+          rx: 30,
+          ry: 10,
+          fill: '#E4F6EE',
+          stroke: '#0A7050',
+          'stroke-width': 1.8,
+         },
+         s,
+        );
+        R(s, 250, 78, 60, 64, '#E4F6EE', '#0A7050', 1.8);
+        E(
+         'ellipse',
+         {
+          cx: 280,
+          cy: 142,
+          rx: 30,
+          ry: 10,
+          fill: '#E4F6EE',
+          stroke: '#0A7050',
+          'stroke-width': 1.8,
+         },
+         s,
+        );
+        E(
+         'ellipse',
+         {
+          cx: 280,
+          cy: 78,
+          rx: 30,
+          ry: 10,
+          fill: '#E4F6EE',
+          stroke: '#0A7050',
+          'stroke-width': 1.8,
+         },
+         s,
+        );
+        T(s, 280, 165, '圆柱', '#064A34', 12);
+       }
+       if (t > 0.78) {
+        SPH(s, 378, 104, 42);
+        T(s, 378, 162, '球', '#6A3A00', 12);
+       }
+      },
+     },
+     {
+      hint:
+       '正方体是特殊的长方体——6个面全是正方形，12条棱等长。正方体⊂长方体。',
+      formula: '正方体 ⊂ 长方体（特殊的长方体）',
+      dur: 1200,
+      draw(s, t) {
+       E(
+        'ellipse',
+        {
+         cx: 200,
+         cy: 108,
+         rx: 165,
+         ry: 68,
+         fill: '#E8F1FB',
+         stroke: '#1A5FA8',
+         'stroke-width': 1.8,
+        },
+        s,
+       );
+       T(s, 90, 94, '长方体', '#0D3F6E', 15, 'middle', '700');
+       if (t > 0.4) {
+        E(
+         'ellipse',
+         {
+          cx: 220,
+          cy: 110,
+          rx: 70,
+          ry: 40,
+          fill: '#EEECFE',
+          stroke: '#5A4AC0',
+          'stroke-width': 2,
+         },
+         s,
+        );
+        T(s, 220, 114, '正方体', '#3A2A90', 14, 'middle', '700');
+       }
+       if (t > 0.75) T(s, 200, 192, '正方体是特殊的长方体', '#9E9B96', 11);
+      },
+     },
+     {
+      hint:
+       '把立体图形的某个面描绘下来，就得到了平面图形——二维，只有长和宽，没有厚度。',
+      formula: '立体图形的面 → 描绘 → 平面图形（二维）',
+      dur: 1200,
+      draw(s, t) {
+       const x = 38,
+        y = 56,
+        w = 115,
+        h = 72,
+        d = 26;
+       // 顶面
+       PL(
+        s,
+        [
+         [x, y],
+         [x + w, y],
+         [x + w + d, y - d],
+         [x + d, y - d],
+        ],
+        '#D8E8F8',
+        '#1A5FA8',
+        1.8,
+       );
+       // 右侧面
+       PL(
+        s,
+        [
+         [x + w, y],
+         [x + w + d, y - d],
+         [x + w + d, y + h - d],
+         [x + w, y + h],
+        ],
+        '#C0D8F4',
+        '#1A5FA8',
+        1.8,
+       );
+       // 正面（最前，最后画）
+       PL(
+        s,
+        [
+         [x, y],
+         [x + w, y],
+         [x + w, y + h],
+         [x, y + h],
+        ],
+        '#E8F1FB',
+        '#1A5FA8',
+        1.8,
+       );
+       if (t > 0.48) {
+        const tx = lerp(
+         x + w + d + 8,
+         238,
+         ease(Math.min(1, (t - 0.48) / 0.52)),
+        );
+        R(s, tx, y, w, h, '#FCEAF2', '#A03060', 2, 4);
+       }
+       if (t > 0.92) T(s, 295, y + h + 20, '描面→长方形', '#701040', 12);
+      },
+     },
+     {
+      hint: '这四种立体图形是小学几何的起点，后面的学习从这里出发，层层递进。',
+      formula: '立体图形 → 平面图形 → 周长 → 面积 → 体积',
+      dur: 1200,
+      draw(s, t) {
+       // 长方体
+       if (t > 0.05) {
+        const x = 18,
+         y = 68,
+         w = 78,
+         h = 48,
+         d = 18;
+        PL(
+         s,
+         [
+          [x, y],
+          [x + w, y],
+          [x + w + d, y - d],
+          [x + d, y - d],
+         ],
+         '#D8E8F8',
+         '#1A5FA8',
+         1.5,
+        );
+        PL(
+         s,
+         [
+          [x + w, y],
+          [x + w + d, y - d],
+          [x + w + d, y + h - d],
+          [x + w, y + h],
+         ],
+         '#C0D4F0',
+         '#1A5FA8',
+         1.5,
+        );
+        PL(
+         s,
+         [
+          [x, y],
+          [x + w, y],
+          [x + w, y + h],
+          [x, y + h],
+         ],
+         '#E8F1FB',
+         '#1A5FA8',
+         1.5,
+        );
+        T(s, x + w / 2, y + h + 16, '长方体', '#0D3F6E', 11, 'middle');
+       }
+       // 正方体
+       if (t > 0.28) {
+        const cx = 148,
+         cy = 72,
+         s2 = 48,
+         d2 = 16;
+        PL(
+         s,
+         [
+          [cx, cy],
+          [cx + s2, cy],
+          [cx + s2 + d2, cy - d2],
+          [cx + d2, cy - d2],
+         ],
+         '#DDD8F8',
+         '#5A4AC0',
+         1.5,
+        );
+        PL(
+         s,
+         [
+          [cx + s2, cy],
+          [cx + s2 + d2, cy - d2],
+          [cx + s2 + d2, cy + s2 - d2],
+          [cx + s2, cy + s2],
+         ],
+         '#D0CCEE',
+         '#5A4AC0',
+         1.5,
+        );
+        PL(
+         s,
+         [
+          [cx, cy],
+          [cx + s2, cy],
+          [cx + s2, cy + s2],
+          [cx, cy + s2],
+         ],
+         '#EEECFE',
+         '#5A4AC0',
+         1.5,
+        );
+        T(s, cx + s2 / 2, cy + s2 + 16, '正方体', '#3A2A90', 11, 'middle');
+       }
+       // 圆柱
+       if (t > 0.54) {
+        E(
+         'ellipse',
+         {
+          cx: 272,
+          cy: 74,
+          rx: 28,
+          ry: 9,
+          fill: '#E4F6EE',
+          stroke: '#0A7050',
+          'stroke-width': 1.5,
+         },
+         s,
+        );
+        R(s, 244, 74, 56, 58, '#E4F6EE', '#0A7050', 1.5);
+        E(
+         'ellipse',
+         {
+          cx: 272,
+          cy: 132,
+          rx: 28,
+          ry: 9,
+          fill: '#E4F6EE',
+          stroke: '#0A7050',
+          'stroke-width': 1.5,
+         },
+         s,
+        );
+        E(
+         'ellipse',
+         {
+          cx: 272,
+          cy: 74,
+          rx: 28,
+          ry: 9,
+          fill: '#E4F6EE',
+          stroke: '#0A7050',
+          'stroke-width': 1.5,
+         },
+         s,
+        );
+        T(s, 272, 164, '圆柱', '#064A34', 11, 'middle');
+       }
+       // 球
+       if (t > 0.78) {
+        SPH(s, 404, 100, 34);
+        T(s, 404, 150, '球', '#6A3A00', 11, 'middle');
+       }
+      },
+     },
+    ],
+    a2: [
+     {
+      hint:
+       '平面图形只有长和宽，没有厚度。四种基本平面图形：长方形、正方形、三角形、圆。',
+      formula: '平面图形：二维（长+宽），从立体图形的面得到',
+      dur: 1200,
+      draw(s, t) {
+       if (t > 0.05) R(s, 22, 72, 108, 72, '#E8F1FB', '#1A5FA8', 2, 4);
+       if (t > 0.28) R(s, 155, 80, 66, 66, '#EEECFE', '#5A4AC0', 2, 4);
+       if (t > 0.52)
+        PL(
+         s,
+         [
+          [286, 158],
+          [349, 158],
+          [317, 74],
+         ],
+         '#FEF0DC',
+         '#9A5800',
+         2,
+        );
+       if (t > 0.76) C(s, 398, 112, 40, '#E4F6EE', '#0A7050', 2);
+       [
+        ['长方形', 76, 180, '#0D3F6E', 0.05],
+        ['正方形', 188, 180, '#3A2A90', 0.28],
+        ['三角形', 317, 194, '#6A3A00', 0.52],
+        ['圆', 398, 182, '#064A34', 0.76],
+       ].forEach(([l, x, y, c, th]) => {
+        if (t > th) T(s, x, y, l, c, 12);
+       });
+      },
+     },
+     {
+      hint:
+       '长方形：4个直角，对边相等。正方形：4个直角，四边全等。正方形是特殊长方形。',
+      formula: '长方形：对边相等 | 正方形：四边全等',
+      dur: 1200,
+      draw(s, t) {
+       R(s, 22, 72, 106, 70, '#E8F1FB', '#1A5FA8', 2, 4);
+       if (t > 0.35)
+        [
+         [22, 72],
+         [128, 72],
+         [22, 142],
+         [128, 142],
+        ].forEach(([x, y]) => {
+         const sz = 12;
+         E(
+          'rect',
+          {
+           x: x === 22 ? x : x - sz,
+           y: y === 72 ? y : y - sz,
+           width: sz,
+           height: sz,
+           fill: 'none',
+           stroke: '#C03030',
+           'stroke-width': 1.4,
+          },
+          s,
+         );
+        });
+       if (t > 0.35) T(s, 75, 164, '4直角\n对边相等', '#0D3F6E', 10, 'middle', '600');
+       if (t > 0.6) {
+        R(s, 155, 78, 66, 66, '#EEECFE', '#5A4AC0', 2, 4);
+        [
+         [155, 78],
+         [221, 78],
+         [155, 144],
+         [221, 144],
+        ].forEach(([x, y]) => {
+         if (t > 0.6) {
+          const sz = 12;
+          E(
+           'rect',
+           {
+            x: x === 155 ? x : x - sz,
+            y: y === 78 ? y : y - sz,
+            width: sz,
+            height: sz,
+            fill: 'none',
+            stroke: '#C03030',
+            'stroke-width': 1.4,
+           },
+           s,
+          );
+         }
+        });
+        T(s, 188, 164, '4直角\n四边全等', '#3A2A90', 10, 'middle', '600');
+       }
+       if (t > 0.82) T(s, 335, 108, '正方形 ⊆ 长方形', '#9E9B96', 12, 'middle');
+      },
+     },
+     {
+      hint:
+       '三角形：3边3角，内角和=180°。圆：圆心O、半径r、直径d=2r，所有点到圆心距离相等。',
+      formula: '三角形内角和 = 180° | 圆：d = 2r',
+      dur: 1200,
+      draw(s, t) {
+       PL(
+        s,
+        [
+         [60, 158],
+         [202, 158],
+         [150, 72],
+        ],
+        '#FEF0DC',
+        '#9A5800',
+        2,
+       );
+       if (t > 0.4) {
+        T(s, 54, 168, '∠A', '#6A3A00', 11, 'start');
+        T(s, 208, 168, '∠B', '#6A3A00', 11, 'start');
+        T(s, 150, 62, '∠C', '#6A3A00', 11);
+       }
+       if (t > 0.6) {
+        T(s, 285, 100, '∠A+∠B', '#9A5800', 13, 'middle', '700');
+        T(s, 285, 118, '+∠C=180°', '#9A5800', 13, 'middle', '700');
+       }
+       if (t > 0.78) {
+        C(s, 385, 110, 36, '#E4F6EE', '#0A7050', 2);
+        C(s, 385, 110, 4, '#0A7050', 'none');
+        L(s, 385, 110, 421, 110, '#1A5FA8', 2);
+        T(s, 403, 100, 'r', '#0D3F6E', 13, 'middle', '600');
+        T(s, 385, 162, 'd=2r', '#064A34', 12);
+       }
+      },
+     },
+     {
+      hint:
+       '这四种平面图形是整个小学几何的基础，认识它们之后，接下来学图形运动和面积。',
+      formula: '认识图形 → 图形运动 → 周长面积（循序渐进）',
+      dur: 1000,
+      draw(s, t) {
+       [
+        ['认识图形', 35, 90, 82, 54, '#E8F1FB', '#1A5FA8'],
+        ['图形运动', 152, 90, 82, 54, '#FCEAF2', '#A03060'],
+        ['周长面积', 270, 90, 82, 54, '#EAF6DC', '#3A7010'],
+       ].forEach(([l, x, y, w, h, f, c], i) => {
+        if (i / 3 > t - 0.06) return;
+        R(s, x, y, w, h, f, c, 1.8, 8);
+        T(s, x + w / 2, y + h / 2 + 5, l, c, 12, 'middle', '600');
+        if (i < 2 && t > (i + 1) / 3 + 0.06)
+         L(s, x + w + 4, y + h / 2, x + w + 26, y + h / 2, '#9E9B96', 1.5);
+       });
+      },
+     },
+    ],
+
+    /* ── 二年级 ── */
+    b1: [
+     {
+      hint:
+       '角由一个顶点和从顶点出发的两条射线（边）组成。两条边张开的程度就是角的大小。',
+      formula: '角 = 1个顶点 + 2条射线',
+      dur: 1300,
+      draw(s, t) {
+       const ox = 140,
+        oy = 155;
+       L(s, ox, oy, ox + 130, oy, '#1A5FA8', 2.5);
+       if (t > 0.3) L(s, ox, oy, ox + 90, oy - 110, '#1A5FA8', 2.5);
+       C(s, ox, oy, 6, '#1A5FA8', 'none');
+       T(s, ox - 18, oy + 28, '顶点', '#0D3F6E', 11, 'middle', '600');
+       if (t > 0.6) {
+        T(s, ox + 142, oy + 6, '一条边', '#0D3F6E', 11, 'start');
+        T(s, ox + 98, oy - 118, '另一条边', '#0D3F6E', 11, 'start');
+       }
+       if (t > 0.82) {
+        const angle = Math.atan2(110, 90);
+        const p = `M${ox + 44},${oy} A44,44,0,0,0,${ox + 44 * Math.cos(angle)},${oy - 44 * Math.sin(angle)}`;
+        E(
+         'path',
+         { d: p, fill: 'none', stroke: '#C03030', 'stroke-width': 2 },
+         s,
+        );
+        T(s, ox + 64, oy - 42, '角', '#C03030', 13, 'middle', '700');
+       }
+      },
+     },
+     {
+      hint:
+       '直角 = 90°，用小方框"□"标记。生活中直角随处可见：书角、桌角、黑板角。',
+      formula: '直角 = 90°，用□标记，是最基本的角',
+      dur: 1300,
+      draw(s, t) {
+       L(s, 100, 165, 270, 165, '#1A5FA8', 2.5);
+       L(s, 100, 165, 100, 52, '#1A5FA8', 2.5);
+       E(
+        'rect',
+        {
+         x: 100,
+         y: 153,
+         width: 12,
+         height: 12,
+         fill: 'none',
+         stroke: '#C03030',
+         'stroke-width': 2,
+        },
+        s,
+       );
+       T(s, 242, 120, '直角 = 90°', '#0D3F6E', 17, 'middle', '700');
+       if (t > 0.6) {
+        R(s, 300, 82, 95, 80, '#FEF0DC', '#9A5800', 1.8);
+        [
+         [300, 82],
+         [395, 82],
+         [300, 162],
+         [395, 162],
+        ].forEach(([x, y]) => {
+         const sz = 12;
+         E(
+          'rect',
+          {
+           x: x === 300 ? x : x - sz,
+           y: y === 82 ? y : y - sz,
+           width: sz,
+           height: sz,
+           fill: 'none',
+           stroke: '#C03030',
+           'stroke-width': 1.2,
+          },
+          s,
+         );
+        });
+        T(s, 347, 174, '4个直角', '#6A3A00', 12);
+       }
+      },
+     },
+     {
+      hint:
+       '角的大小只和两条边张开的程度有关，与边的长短无关！边画长了，角本身没变。',
+      formula: '角的大小 = 张开程度（与边长无关）',
+      dur: 1300,
+      draw(s, t) {
+       const ox = 80,
+        oy = 160,
+        ang = (50 * Math.PI) / 180,
+        len = lerp(60, 130, t);
+       L(s, ox, oy, ox + len, oy, '#1A5FA8', 2.5);
+       L(
+        s,
+        ox,
+        oy,
+        ox + len * Math.cos(ang),
+        oy - len * Math.sin(ang),
+        '#1A5FA8',
+        2.5,
+       );
+       C(s, ox, oy, 6, '#1A5FA8', 'none');
+       const ap = `M${ox + 42},${oy} A42,42,0,0,1,${ox + 42 * Math.cos(ang)},${oy - 42 * Math.sin(ang)}`;
+       E(
+        'path',
+        { d: ap, fill: 'none', stroke: '#C03030', 'stroke-width': 2 },
+        s,
+       );
+       T(s, ox + 66, oy - 30, '50°', '#C03030', 14, 'middle', '700');
+       if (t > 0.5) {
+        T(s, 315, 108, '边变长了', '#9E9B96', 13, 'middle');
+        T(s, 315, 128, '但角还是50°', '#1A5FA8', 15, 'middle', '700');
+       }
+      },
+     },
+     {
+      hint:
+       '用三角板可以画直角，也可以判断一个角是否直角。三角板的一个角就是直角。',
+      formula: '直角判断：用三角板的直角比一比',
+      dur: 1100,
+      draw(s, t) {
+       PL(
+        s,
+        [
+         [80, 164],
+         [185, 164],
+         [80, 78],
+        ],
+        '#E8F1FB',
+        '#1A5FA8',
+        2,
+       );
+       E(
+        'rect',
+        {
+         x: 80,
+         y: 152,
+         width: 12,
+         height: 12,
+         fill: 'none',
+         stroke: '#C03030',
+         'stroke-width': 1.5,
+        },
+        s,
+       );
+       T(s, 132, 180, '三角板含有直角', '#0D3F6E', 11);
+       if (t > 0.5) {
+        L(s, 248, 156, 355, 156, '#0A7050', 2.5);
+        L(s, 248, 156, 248, 76, '#0A7050', 2.5);
+        E(
+         'rect',
+         {
+          x: 248,
+          y: 144,
+          width: 12,
+          height: 12,
+          fill: 'none',
+          stroke: '#C03030',
+          'stroke-width': 1.5,
+         },
+         s,
+        );
+        T(s, 300, 172, '用三角板比角', '#064A34', 11);
+       }
+      },
+     },
+    ],
+    b2: [
+     {
+      hint:
+       '长方形：4条边，4个角全是直角（90°），相对的两组边（对边）分别相等。',
+      formula: '长方形：4直角，对边相等',
+      dur: 1300,
+      draw(s, t) {
+       R(s, 52, 68, 210, 112, '#E8F1FB', '#1A5FA8', 2);
+       if (t > 0.38)
+        [
+         [52, 68],
+         [262, 68],
+         [52, 180],
+         [262, 180],
+        ].forEach(([x, y]) => {
+         const sz = 14;
+         E(
+          'rect',
+          {
+           x: x === 52 ? x : x - sz,
+           y: y === 68 ? y : y - sz,
+           width: sz,
+           height: sz,
+           fill: 'none',
+           stroke: '#C03030',
+           'stroke-width': 1.5,
+          },
+          s,
+         );
+        });
+       if (t > 0.7) {
+        L(s, 52, 186, 262, 186, '#1A5FA8', 2.5);
+        L(s, 52, 56, 262, 56, '#1A5FA8', 2.5);
+        T(s, 157, 46, '对边相等', '#0D3F6E', 11);
+       }
+      },
+     },
+     {
+      hint: '正方形：4条边全部相等，4个角全是直角。可以理解为"等边长方形"。',
+      formula: '正方形：4直角，四边全等',
+      dur: 1300,
+      draw(s, t) {
+       // 正方形居中，明确宽=高=120
+       const sx = 125, sy = 50, side = 120;
+       R(s, sx, sy, side, side, '#EEECFE', '#5A4AC0', 2);
+       // 四个直角标记
+       if (t > 0.32)
+        [[sx,sy],[sx+side,sy],[sx,sy+side],[sx+side,sy+side]].forEach(([x,y]) => {
+         const sz = 14;
+         E('rect', {
+          x: x === sx ? x : x - sz,
+          y: y === sy ? y : y - sz,
+          width: sz, height: sz,
+          fill: 'none', stroke: '#C03030', 'stroke-width': 1.5,
+         }, s);
+        });
+       // 四边等长标注（刻度线 + 数字）
+       if (t > 0.65) {
+        // 四条边中点刻度线
+        [[sx+side/2, sy, false],[sx+side, sy+side/2, true],
+         [sx+side/2, sy+side, false],[sx, sy+side/2, true]
+        ].forEach(([x,y,v]) => L(s, v?x-7:x, v?y:y-7, v?x+7:x, v?y:y+7, '#5A4AC0', 2.5));
+        // 边长标注
+        T(s, sx+side/2, sy-14, '6cm', '#3A2A90', 12, 'middle', '600');
+        T(s, sx+side+14, sy+side/2, '6cm', '#3A2A90', 12, 'start', '600');
+        T(s, sx+side/2, sy+side+18, '6cm', '#3A2A90', 12, 'middle', '600');
+        T(s, sx-24, sy+side/2, '6cm', '#3A2A90', 12, 'end', '600');
+        T(s, sx+side/2, sy+side+34, '四条边全相等', '#3A2A90', 12, 'middle', '600');
+       }
+      },
+     },
+     {
+      hint:
+       '区分：量一量边长。长≠宽→长方形；长=宽→正方形。所有正方形都是长方形！',
+      formula: '长≠宽 → 长方形 | 长=宽 → 正方形（特例）',
+      dur: 1200,
+      draw(s, t) {
+       R(s, 30, 80, 144, 84, '#E8F1FB', '#1A5FA8', 2);
+       T(s, 102, 72, '8cm', '#0D3F6E', 12);
+       T(s, 20, 124, '5cm', '#0D3F6E', 12, 'start');
+       T(s, 102, 176, '8≠5，长方形', '#0D3F6E', 11);
+       if (t > 0.5) {
+        R(s, 222, 78, 94, 94, '#EEECFE', '#5A4AC0', 2);
+        T(s, 269, 70, '6cm', '#3A2A90', 12);
+        T(s, 206, 127, '6cm', '#3A2A90', 12);
+        T(s, 269, 184, '6=6，正方形', '#3A2A90', 11);
+       }
+      },
+     },
+     {
+      hint:
+       '正方形满足长方形的所有条件，再加上四边相等。正方形⊆长方形（包含关系）。',
+      formula: '正方形 ⊆ 长方形（正方形是长方形的特例）',
+      dur: 1000,
+      draw(s, t) {
+       E(
+        'ellipse',
+        {
+         cx: 200,
+         cy: 108,
+         rx: 165,
+         ry: 68,
+         fill: '#E8F1FB',
+         stroke: '#1A5FA8',
+         'stroke-width': 1.8,
+        },
+        s,
+       );
+       T(s, 96, 92, '长方形', '#0D3F6E', 15, 'middle', '700');
+       if (t > 0.4) {
+        E(
+         'ellipse',
+         {
+          cx: 265,
+          cy: 112,
+          rx: 78,
+          ry: 46,
+          fill: '#EEECFE',
+          stroke: '#5A4AC0',
+          'stroke-width': 2,
+         },
+         s,
+        );
+        T(s, 265, 116, '正方形', '#3A2A90', 14, 'middle', '700');
+       }
+       if (t > 0.75) T(s, 200, 196, '正方形满足长方形所有性质', '#9E9B96', 11);
+      },
+     },
+    ],
+
+    /* ── 三年级 ── */
+    c1: [
+     {
+      hint:
+       '四边形：4条边+4个角+封闭图形。长方形、正方形、平行四边形都是四边形。',
+      formula: '四边形：4条边 + 4个角 + 封闭',
+      dur: 1200,
+      draw(s, t) {
+       if (t > 0.05) R(s, 18, 78, 100, 68, '#E8F1FB', '#1A5FA8', 1.8, 4);
+       if (t > 0.3) R(s, 144, 84, 62, 62, '#EEECFE', '#5A4AC0', 1.8, 4);
+       if (t > 0.55)
+        PL(
+         s,
+         [
+          [248, 148],
+          [400, 148],
+          [385, 78],
+          [263, 78],
+         ],
+         '#FEF0DC',
+         '#9A5800',
+         1.8,
+        );
+       [
+        ['长方形', 68, 160, '#0D3F6E', 0.05],
+        ['正方形', 175, 160, '#3A2A90', 0.3],
+        ['平行四边形', 325, 162, '#6A3A00', 0.55],
+       ].forEach(([l, x, y, c, th]) => {
+        if (t > th) T(s, x, y, l, c, 11);
+       });
+      },
+     },
+     {
+      hint:
+       '平行四边形：两组对边分别平行且相等，像被"推斜"的长方形。对角相等，4角不是直角。',
+      formula: '平行四边形：对边平行且相等，对角相等',
+      dur: 1300,
+      draw(s, t) {
+       PL(
+        s,
+        [
+         [42, 158],
+         [245, 158],
+         [285, 68],
+         [82, 68],
+        ],
+        '#FEF0DC',
+        '#9A5800',
+        2,
+       );
+       if (t > 0.4) {
+        L(s, 42, 158, 245, 158, '#9A5800', 3);
+        L(s, 82, 68, 285, 68, '#9A5800', 3);
+        T(s, 164, 174, '底边：平行且相等', '#6A3A00', 11);
+       }
+       if (t > 0.7) {
+        L(s, 42, 158, 82, 68, '#A03060', 2.5);
+        L(s, 245, 158, 285, 68, '#A03060', 2.5);
+        T(s, 360, 115, '腰：平行\n且相等', '#701040', 11);
+       }
+      },
+     },
+     {
+      hint:
+       '把长方形框架推斜就变成平行四边形！四边形家族：正方形⊂长方形⊂平行四边形⊂四边形。',
+      formula: '正方形 ⊂ 长方形 ⊂ 平行四边形 ⊂ 四边形',
+      dur: 1400,
+      draw(s, t) {
+       // 四层嵌套韦恩图
+       E(
+        'ellipse',
+        {
+         cx: 220,
+         cy: 108,
+         rx: 206,
+         ry: 86,
+         fill: '#FEF0DC',
+         stroke: '#9A5800',
+         'stroke-width': 1.8,
+        },
+        s,
+       );
+       T(s, 36, 84, '四边形', '#6A3A00', 12, 'start', '600');
+       if (t > 0.25) {
+        E(
+         'ellipse',
+         {
+          cx: 232,
+          cy: 110,
+          rx: 148,
+          ry: 64,
+          fill: '#EEECFE',
+          stroke: '#5A4AC0',
+          'stroke-width': 1.8,
+         },
+         s,
+        );
+        T(s, 100, 96, '平行四边形', '#3A2A90', 11, 'start');
+       }
+       if (t > 0.5) {
+        E(
+         'ellipse',
+         {
+          cx: 248,
+          cy: 112,
+          rx: 98,
+          ry: 46,
+          fill: '#E8F1FB',
+          stroke: '#1A5FA8',
+          'stroke-width': 1.8,
+         },
+         s,
+        );
+        T(s, 168, 102, '长方形', '#0D3F6E', 11, 'start');
+       }
+       if (t > 0.75) {
+        E(
+         'ellipse',
+         {
+          cx: 268,
+          cy: 114,
+          rx: 52,
+          ry: 28,
+          fill: '#FCEAF2',
+          stroke: '#A03060',
+          'stroke-width': 2,
+         },
+         s,
+        );
+        T(s, 268, 118, '正方形', '#701040', 12, 'middle', '700');
+       }
+      },
+     },
+    ],
+    c2: [
+     {
+      hint: '周长：一只蚂蚁沿图形边缘爬一整圈，爬过的总距离就是周长。',
+      formula: '周长 = 围绕图形一整圈的总长度',
+      dur: 1600,
+      draw(s, t) {
+       R(s, 58, 65, 190, 98, '#FEF0DC', '#9A5800', 2);
+       const perim = 2 * (190 + 98),
+        rem0 = t * perim;
+       const starts = [
+        [58, 65],
+        [248, 65],
+        [248, 163],
+        [58, 163],
+       ];
+       const segs = [
+        [190, 0],
+        [0, 98],
+        [-190, 0],
+        [0, -98],
+       ];
+       let rem = rem0,
+        cx = 58,
+        cy = 65;
+       for (let i = 0; i < 4; i++) {
+        const sl = Math.abs(segs[i][0]) || Math.abs(segs[i][1]);
+        if (rem <= 0) break;
+        const go = Math.min(rem, sl),
+         r2 = go / sl;
+        L(
+         s,
+         starts[i][0],
+         starts[i][1],
+         starts[i][0] + segs[i][0] * r2,
+         starts[i][1] + segs[i][1] * r2,
+         '#C03030',
+         3.5,
+        );
+        cx = starts[i][0] + segs[i][0] * r2;
+        cy = starts[i][1] + segs[i][1] * r2;
+        rem -= go;
+       }
+       C(s, cx, cy, 7, '#C03030', 'none');
+       if (t > 0.96) T(s, 153, 182, '蚂蚁走完一圈 = 周长', '#6A3A00', 12);
+      },
+     },
+     {
+      hint: '多边形周长 = 把所有边长加起来。每条边量一量，全部相加就是周长。',
+      formula: '多边形周长 = 各边之和',
+      dur: 1200,
+      draw(s, t) {
+       PL(
+        s,
+        [
+         [60, 152],
+         [210, 152],
+         [252, 92],
+         [162, 56],
+         [70, 90],
+        ],
+        '#E4F6EE',
+        '#0A7050',
+        2,
+       );
+       [
+        ['30', 135, 170, '#064A34'],
+        ['15', 238, 128, '#064A34'],
+        ['20', 220, 68, '#064A34'],
+        ['20', 100, 58, '#064A34'],
+        ['13', 48, 122, '#064A34'],
+       ].forEach(([l, x, y, c], i) => {
+        if (i / 5 < t + 0.06) T(s, x, y, l, c, 12);
+       });
+       if (t > 0.82) {
+        T(s, 350, 102, '合计', '#064A34', 13, 'middle', '600');
+        T(s, 350, 122, '= 98', '#064A34', 16, 'middle', '700');
+       }
+      },
+     },
+     {
+      hint: '正方形4边相等，C = 4a。长方形是两组对边相等，下一节推导公式。',
+      formula: '正方形：C = 4a | 长方形：C = 2(a+b)（下节推导）',
+      dur: 1100,
+      draw(s, t) {
+       R(s, 76, 68, 122, 122, '#EEECFE', '#5A4AC0', 2);
+       T(s, 137, 60, 'a', '#3A2A90', 17, 'middle', '600');
+       T(s, 54, 131, 'a', '#3A2A90', 17, 'middle', '600');
+       T(s, 137, 204, 'a', '#3A2A90', 17, 'middle', '600');
+       T(s, 238, 131, 'a', '#3A2A90', 17, 'middle', '600');
+       if (t > 0.55) {
+        T(s, 365, 95, 'C = 4a', '#5A4AC0', 17, 'middle');
+        T(s, 365, 120, '= 4 × a', '#3A2A90', 20, 'middle', '700');
+       }
+      },
+     },
+     {
+      hint:
+       '周长的单位是cm、m（线性单位），面积单位是cm²（平方单位），注意区分！',
+      formula: '周长：cm、m（线） ≠ 面积：cm²（面）',
+      dur: 1000,
+      draw(s, t) {
+       R(s, 22, 76, 140, 90, 'none', '#1A5FA8', 2.8);
+       T(s, 92, 182, '周长 = 边框（线）', '#0D3F6E', 11);
+       if (t > 0.5) {
+        for (let r = 0; r < 3; r++)
+         for (let c = 0; c < 4; c++)
+          R(s, 222 + c * 32, 76 + r * 30, 32, 30, '#EEECFE', '#5A4AC0', 0.6);
+        R(s, 222, 76, 128, 90, 'none', '#5A4AC0', 2);
+        T(s, 286, 182, '面积 = 内部（面）', '#3A2A90', 11);
+       }
+      },
+     },
+    ],
+    c3: [
+     {
+      hint:
+       '长方形4条边：上下两条长边a，左右两条短边b。周长 = 4条边之和：a+b+a+b。',
+      formula: 'C = a + b + a + b（4条边之和）',
+      dur: 1200,
+      draw(s, t) {
+       R(s, 50, 72, 200, 106, '#E8F1FB', '#1A5FA8', 2);
+       [
+        [150, 62, 'a', '#1A5FA8'],
+        [278, 127, 'b', '#1A5FA8'],
+        [150, 192, 'a', '#1A5FA8'],
+        [28, 127, 'b', '#1A5FA8'],
+       ].forEach(([x, y, l, c], i) => {
+        if (i / 4 < t + 0.06) T(s, x, y, l, c, 18, 'middle', '600');
+       });
+       if (t > 0.82) T(s, 380, 120, 'a+b+a+b', '#0D3F6E', 13, 'middle');
+      },
+     },
+     {
+      hint: '合并同类项：a出现2次→2a，b出现2次→2b，得到 C = 2a + 2b。',
+      formula: 'C = 2a + 2b（合并同类项）',
+      dur: 1300,
+      draw(s, t) {
+       R(s, 36, 76, 192, 98, 'none', '#1A5FA8', 1.5);
+       L(s, 36, 76, 228, 76, '#1A5FA8', 3.5);
+       L(s, 36, 174, 228, 174, '#1A5FA8', 3.5);
+       L(s, 36, 76, 36, 174, '#5A4AC0', 3.5);
+       L(s, 228, 76, 228, 174, '#5A4AC0', 3.5);
+       T(s, 132, 62, 'a × 2', '#0D3F6E', 14, 'middle', '600');
+       T(s, 252, 127, 'b × 2', '#3A2A90', 13, 'middle', '600');
+       if (t > 0.65)
+        T(s, 370, 120, 'C = 2a + 2b', '#0D3F6E', 17, 'middle', '700');
+      },
+     },
+     {
+      hint:
+       '提取公因数2，得最简形式 C = 2(a+b)，这是教材标准写法，也最便于计算。',
+      formula: 'C = 2 × (a + b)（提取公因数2）',
+      dur: 1300,
+      draw(s, t) {
+       R(s, 36, 76, 192, 98, '#E8F1FB', '#1A5FA8', 2);
+       T(s, 132, 66, 'a', '#0D3F6E', 17, 'middle', '600');
+       T(s, 252, 127, 'b', '#3A2A90', 17, 'middle', '600');
+       if (t > 0.28) T(s, 370, 88, '2a + 2b', '#9E9B96', 14, 'middle');
+       if (t > 0.56) T(s, 370, 116, '= 2(a+b)', '#0D3F6E', 17, 'middle', '700');
+       if (t > 0.84) {
+        R(s, 298, 125, 144, 30, '#E8F1FB', '#1A5FA8', 1.5, 6);
+        T(s, 370, 143, 'C = 2(a+b)', '#0D3F6E', 14, 'middle', '600');
+       }
+      },
+     },
+     {
+      hint: '验证：长8cm、宽5cm → C = 2×(8+5) = 2×13 = 26 cm。代入检验正确！',
+      formula: 'C = 2(8+5) = 2×13 = 26 cm ✓',
+      dur: 1200,
+      draw(s, t) {
+       R(s, 36, 88, 134, 78, '#E8F1FB', '#1A5FA8', 2);
+       T(s, 103, 80, '8 cm', '#0D3F6E', 13);
+       T(s, 14, 129, '5 cm', '#0D3F6E', 13);
+       if (t > 0.3) {
+        const ss = [
+         ['2×(8+5)', '#9E9B96'],
+         ['= 2×13', '#9E9B96'],
+         ['= 26 cm', '#1A5FA8'],
+        ];
+        const n = Math.floor(t * 4);
+        ss
+         .slice(0, n)
+         .forEach(([l, c], i) =>
+          T(
+           s,
+           348,
+           84 + i * 28,
+           l,
+           c,
+           i === 2 ? 20 : 14,
+           'middle',
+           i === 2 ? '700' : '400',
+          ),
+         );
+       }
+      },
+     },
+     {
+      hint: '公式总结：长方形 C = 2(a+b)，正方形 C = 4a。两个都要记熟！',
+      formula: '✅  长方形 C = 2(a+b)  |  正方形 C = 4a',
+      dur: 1000,
+      draw(s, t) {
+       R(s, 20, 82, 162, 86, '#E8F1FB', '#1A5FA8', 2);
+       T(s, 101, 74, 'a', '#0D3F6E', 15, 'middle', '600');
+       T(s, 4, 126, 'b', '#1A5FA8', 15, 'middle', '600');
+       if (t > 0.4) {
+        R(s, 296, 80, 95, 95, '#EEECFE', '#5A4AC0', 2);
+        T(s, 344, 72, 'a', '#3A2A90', 15, 'middle', '600');
+       }
+       if (t > 0.68) {
+        T(s, 101, 184, 'C=2(a+b)', '#0D3F6E', 14, 'middle', '600');
+        T(s, 344, 184, 'C=4a', '#3A2A90', 14, 'middle', '600');
+       }
+      },
+     },
+    ],
+    c4: [
+     {
+      hint:
+       '面积是图形内部的大小。用1cm²的小方格铺满，需要多少格面积就是多少。',
+      formula: '面积 = 铺满图形所需小方格数（单位：cm²）',
+      dur: 1500,
+      draw(s, t) {
+       const shown = Math.floor(t * (12 + 0.99));
+       for (let i = 0; i < shown; i++) {
+        const r = Math.floor(i / 4),
+         c = i % 4;
+        R(s, 78 + c * 54, 40 + r * 46, 54, 46, '#EEECFE', '#5A4AC0', 1, 4);
+        if (t > 0.88)
+         T(s, 78 + c * 54 + 27, 40 + r * 46 + 27, String(i + 1), '#5A4AC0', 10);
+       }
+       if (t > 0.9) T(s, 200, 200, '4列 × 3行 = 12格 = 12 cm²', '#3A2A90', 12);
+      },
+     },
+     {
+      hint:
+       '面积和周长的本质区别：周长是边的总长（一维），面积是内部大小（二维）。',
+      formula: '周长：线（cm） | 面积：面（cm²）单位不同！',
+      dur: 1200,
+      draw(s, t) {
+       R(s, 20, 74, 142, 92, 'none', '#1A5FA8', 2.8);
+       T(s, 91, 182, '周长 = 边框', '#0D3F6E', 11);
+       if (t > 0.5) {
+        for (let r = 0; r < 3; r++)
+         for (let c = 0; c < 4; c++)
+          R(s, 222 + c * 32, 74 + r * 30, 32, 30, '#EEECFE', '#5A4AC0', 0.6);
+        R(s, 222, 74, 128, 90, 'none', '#5A4AC0', 2);
+        T(s, 286, 182, '面积 = 内部', '#3A2A90', 11);
+       }
+      },
+     },
+     {
+      hint:
+       '面积单位：1 cm²（边长1cm小正方形），1 dm²，1 m²。换算：1 m² = 100 dm² = 10000 cm²。',
+      formula: '1 m² = 100 dm² = 10000 cm²',
+      dur: 1200,
+      draw(s, t) {
+       R(s, 46, 65, 84, 84, '#EEECFE', '#5A4AC0', 2);
+       T(s, 50, 58, '1cm', '#3A2A90', 11, 'start');
+       T(s, 34, 108, '1cm', '#3A2A90', 11, 'middle');
+       T(s, 88, 164, '1 cm²', '#3A2A90', 14, 'middle', '600');
+       if (t > 0.5) {
+        R(s, 198, 55, 114, 114, '#E4F6EE', '#0A7050', 1.5);
+        T(s, 255, 182, '1 dm²=100 cm²', '#064A34', 11);
+       }
+       if (t > 0.82)
+        T(s, 198, 194, 'cm² → dm² → m² 单位越来越大', '#9E9B96', 11);
+      },
+     },
+     {
+      hint: '建立面积感：手掌≈1dm²，课桌面≈0.4m²，教室地面≈60m²。',
+      formula: '手掌≈1dm² | 课桌≈0.4m² | 教室地面≈60m²',
+      dur: 1000,
+      draw(s, t) {
+       R(s, 20, 68, 90, 120, '#E8F1FB', '#1A5FA8', 1.5, 6);
+       T(s, 65, 200, '手掌\n≈1dm²', '#0D3F6E', 10);
+       if (t > 0.35) {
+        R(s, 140, 80, 122, 84, '#EEECFE', '#5A4AC0', 1.5, 6);
+        T(s, 201, 178, '课桌\n≈0.4m²', '#3A2A90', 10);
+       }
+       if (t > 0.65) {
+        R(s, 298, 58, 102, 130, '#EAF6DC', '#3A7010', 1.5, 6);
+        T(s, 349, 200, '教室\n≈60m²', '#204808', 10);
+       }
+      },
+     },
+    ],
+    c5: [
+     {
+      hint:
+       '方格铺满长方形：每行cols格（=长a），共rows行（=宽b），总格数 = 长×宽 = ab。',
+      formula: 'S = 长 × 宽 = ab（由方格数推导）',
+      dur: 1500,
+      draw(s, t) {
+       const shown = Math.floor(t * (20 + 0.99));
+       for (let i = 0; i < shown; i++) {
+        const r = Math.floor(i / 5),
+         c = i % 5;
+        R(
+         s,
+         36 + c * 48,
+         46 + r * 40,
+         48,
+         40,
+         r === 0 ? '#EEECFE' : '#F8F6FF',
+         '#5A4AC0',
+         1,
+        );
+       }
+       if (t > 0.75) {
+        L(s, 36, 40, 276, 40, '#1A5FA8', 2);
+        T(s, 156, 32, '← 5格（长a）→', '#0D3F6E', 11);
+        L(s, 284, 46, 284, 206, '#C03030', 2);
+        T(s, 302, 128, '4行（宽b）', '#C03030', 11, 'start');
+       }
+      },
+     },
+     {
+      hint: 'S = a×b = ab，正方形边长=a，S = a×a = a²（读"a的平方"）。',
+      formula: '长方形 S = ab | 正方形 S = a²',
+      dur: 1200,
+      draw(s, t) {
+       R(s, 44, 68, 195, 114, '#EEECFE', '#5A4AC0', 2);
+       T(s, 142, 59, 'a（长）', '#5A4AC0', 15, 'middle', '600');
+       T(s, 10, 127, 'b（宽）', '#1A5FA8', 15, 'start', '600');
+       if (t > 0.58) T(s, 372, 110, 'S = ab', '#3A2A90', 24, 'middle', '700');
+      },
+     },
+     {
+      hint:
+       '面积 vs 周长：长=6，宽=4 → 面积=24cm²（平方），周长=20cm（线性）。单位不同！',
+      formula: 'S = ab（cm²） ≠ C = 2(a+b)（cm）',
+      dur: 1200,
+      draw(s, t) {
+       R(s, 30, 84, 134, 82, '#EEECFE', '#5A4AC0', 2);
+       T(s, 97, 76, '6cm', '#3A2A90', 12);
+       T(s, 14, 127, '4cm', '#3A2A90', 12);
+       if (t > 0.3) {
+        T(s, 348, 84, '面积=6×4', '#5A4AC0', 14, 'middle');
+        T(s, 348, 108, '=24 cm²', '#5A4AC0', 20, 'middle', '700');
+       }
+       if (t > 0.65) {
+        T(s, 348, 138, '周长=2×10', '#1A5FA8', 13, 'middle');
+        T(s, 348, 158, '=20 cm', '#1A5FA8', 18, 'middle', '700');
+       }
+      },
+     },
+     {
+      hint:
+       '✅ 公式完成！长方形 S=ab，正方形 S=a²，注意单位是cm²（平方厘米）。',
+      formula: '✅  S = ab（长方形） | S = a²（正方形）',
+      dur: 1000,
+      draw(s, t) {
+       R(s, 20, 86, 140, 82, '#EEECFE', '#5A4AC0', 2);
+       T(s, 90, 78, 'a', '#5A4AC0', 17, 'middle', '600');
+       T(s, 8, 129, 'b', '#1A5FA8', 17, 'start', '600');
+       if (t > 0.45) {
+        R(s, 290, 82, 96, 96, '#EEECFE', '#5A4AC0', 2);
+        T(s, 338, 74, 'a', '#3A2A90', 17, 'middle', '600');
+        const tc = '#C03030', tw = 2;
+        L(s, 338, 76, 338, 83, tc, tw); L(s, 333, 79, 343, 79, tc, tw);
+        L(s, 338, 177, 338, 184, tc, tw); L(s, 333, 181, 343, 181, tc, tw);
+        L(s, 283, 130, 290, 130, tc, tw); L(s, 287, 125, 287, 135, tc, tw);
+        L(s, 386, 130, 393, 130, tc, tw); L(s, 389, 125, 389, 135, tc, tw);
+       }
+       if (t > 0.68) {
+        T(s, 90, 182, 'S = ab', '#5A4AC0', 15, 'middle', '600');
+        T(s, 338, 200, 'S = a²', '#3A2A90', 15, 'middle', '600');
+       }
+      },
+     },
+    ],
+
+    /* ── 四年级 ── */
+    d1: [
+     {
+      hint:
+       '四年级学习角的度量：锐角(<90°)、直角(=90°)、钝角(>90°<180°)、平角(=180°)。',
+      formula: '锐角<90° | 直角=90° | 钝角>90° | 平角=180°',
+      dur: 1300,
+      draw(s, t) {
+       // 两行布局：上行锐角/直角，下行钝角/平角，避免手机屏幕挤压
+       [
+        [95,  88, 38,  '锐角\n<90°',  '#0A7050'],
+        [290, 88, 90,  '直角\n=90°',  '#1A5FA8'],
+        [95,  175, 128, '钝角\n>90°', '#9A5800'],
+        [290, 175, 180, '平角\n=180°','#5A4AC0'],
+       ].forEach(([x, y, deg, lbl, col], i) => {
+        if (i / 4 > t - 0.06) return;
+        const rad = (deg * Math.PI) / 180;
+        if (deg < 180) {
+         L(s, x, y, x + 65, y, col, 2);
+         L(s, x, y, x + 65 * Math.cos(Math.PI - rad), y - 65 * Math.sin(rad), col, 2);
+        } else {
+         // 平角：顶点出发两条反向射线
+         L(s, x, y, x + 65, y, col, 2);
+         L(s, x, y, x - 65, y, col, 2);
+        }
+        C(s, x, y, 4, col, 'none');
+        if (deg === 90)
+         E('rect', { x, y: y - 12, width: 12, height: 12,
+           fill: 'none', stroke: '#C03030', 'stroke-width': 1.5 }, s);
+        lbl.split('\n').forEach((l, j) =>
+         T(s, x + (deg < 180 ? 32 : 0), y + 15 + j * 14, l, col, 10));
+       });
+      },
+     },
+     {
+      hint:
+       '量角器的用法：中心对准顶点，零刻度线对准一条边，另一边所指刻度即角的度数。',
+      formula: '量角：中心→顶点，0线→一边，读另一边刻度',
+      dur: 1600,
+      draw(s, t) {
+       const cx = 185, cy = 162;
+       const targetDeg = 55;
+       const targetRad = (targetDeg * Math.PI) / 180;
+
+       // ── 第一阶段(t<0.35)：先画被测量的角 ──
+       // 角的顶点 = 量角器中心
+       // 一条边向右（0°方向），另一条边向左上55°
+       const edgeLen = 95;
+       // 底边（对准0°）
+       L(s, cx, cy, cx + edgeLen, cy, '#1A5FA8', 2.5);
+       // 另一条边（55°方向）
+       const ex = cx + edgeLen * Math.cos(Math.PI - targetRad);
+       const ey = cy - edgeLen * Math.sin(targetRad);
+       L(s, cx, cy, ex, ey, '#1A5FA8', 2.5);
+       // 角的弧线标注（小弧）
+       if (t < 0.35) {
+        E('path', {
+         d: `M${cx+30},${cy} A30,30,0,0,1,${cx+30*Math.cos(Math.PI-targetRad)},${cy-30*Math.sin(targetRad)}`,
+         fill: 'none', stroke: '#1A5FA8', 'stroke-width': 1.5,
+        }, s);
+        T(s, cx + 8, cy - 38, '?°', '#1A5FA8', 14, 'middle', '700');
+       }
+
+       // ── 第二阶段(t≥0.35)：量角器出现并对准 ──
+       if (t >= 0.35) {
+        const phase = Math.min(1, (t - 0.35) / 0.65);
+
+        // 量角器半圆
+        E('path', {
+         d: `M${cx-85},${cy} A85,85,0,0,1,${cx+85},${cy}`,
+         fill: 'rgba(240,237,230,0.85)', stroke: '#9E9B96', 'stroke-width': 1.5,
+        }, s);
+        L(s, cx - 85, cy, cx + 85, cy, '#9E9B96', 1);
+
+        // 刻度
+        for (let a = 0; a <= 180; a += 10) {
+         const r = (a * Math.PI) / 180;
+         const px = cx + 85 * Math.cos(Math.PI - r);
+         const py = cy - 85 * Math.sin(r);
+         L(s,
+          cx + (85-(a%30===0?10:5)) * Math.cos(Math.PI-r),
+          cy - (85-(a%30===0?10:5)) * Math.sin(r),
+          px, py, '#9E9B96', a%90===0 ? 2 : 0.8);
+         if (a % 30 === 0)
+          T(s, cx+67*Math.cos(Math.PI-r), cy-67*Math.sin(r), String(a), '#6B6760', 9);
+        }
+
+        // 中心点标注
+        C(s, cx, cy, 3, '#C03030', 'none');
+        T(s, cx - 5, cy + 14, '中心', '#C03030', 9, 'middle');
+
+        // 0°对准底边的提示箭头（phase<0.5时）
+        if (phase < 0.5)
+         T(s, cx + 90, cy + 14, '↑ 0°对准', '#0A7050', 10, 'start');
+
+        // 指针从0°扫到55°
+        const sweepDeg = phase * targetDeg;
+        const sweepRad = (sweepDeg * Math.PI) / 180;
+        L(s, cx, cy,
+         cx + 82 * Math.cos(Math.PI - sweepRad),
+         cy - 82 * Math.sin(sweepRad),
+         '#C03030', 2.5);
+
+        // 度数标注跟随指针
+        if (phase > 0.3) {
+         const labelDeg = Math.round(sweepDeg);
+         T(s, cx + 56, cy - 68, labelDeg + '°', '#C03030', 16, 'middle', '700');
+        }
+
+        // 完成时加说明
+        if (phase > 0.9) {
+         T(s, cx, cy - 96, '另一条边指向55°', '#0A7050', 12, 'middle', '600');
+         T(s, cx, cy - 78, '∴ 这个角 = 55°', '#C03030', 14, 'middle', '700');
+        }
+       }
+      },
+     },
+     {
+      hint:
+       '三角形内角和=180°（任意三角形），四边形内角和=360°（=两个三角形×180°）。',
+      formula: '三角形∠和=180° | 四边形∠和=360°',
+      dur: 1300,
+      draw(s, t) {
+       const A = [68, 162],
+        B = [258, 162],
+        Cp = [188, 66];
+       PL(s, [A, B, Cp], '#FEF0DC', '#9A5800', 2);
+       if (t > 0.4) {
+        T(s, A[0] - 14, A[1] + 13, '∠A', '#6A3A00', 12, 'start');
+        T(s, B[0] + 6, B[1] + 13, '∠B', '#6A3A00', 12, 'start');
+        T(s, Cp[0], Cp[1] - 12, '∠C', '#6A3A00', 12);
+       }
+       if (t > 0.72) {
+        T(s, 365, 94, '∠A+∠B+∠C', '#6A3A00', 12, 'middle');
+        T(s, 365, 116, '= 180°', '#9A5800', 21, 'middle', '700');
+       }
+      },
+     },
+     {
+      hint:
+       '锐角三角形：三角均为锐角；直角三角形：一角为直角；钝角三角形：一角为钝角。',
+      formula: '三角形按角分类：锐角/直角/钝角三角形',
+      dur: 1200,
+      draw(s, t) {
+       if (t > 0.05) {
+        PL(
+         s,
+         [
+          [36, 156],
+          [124, 156],
+          [80, 78],
+         ],
+         '#FEF0DC',
+         '#9A5800',
+         1.8,
+        );
+        T(s, 80, 172, '锐角三角形', '#6A3A00', 12);
+       }
+       if (t > 0.35) {
+        PL(
+         s,
+         [
+          [154, 156],
+          [256, 156],
+          [154, 78],
+         ],
+         '#EEECFE',
+         '#5A4AC0',
+         1.8,
+        );
+        E(
+         'rect',
+         {
+          x: 154,
+          y: 144,
+          width: 12,
+          height: 12,
+          fill: 'none',
+          stroke: '#C03030',
+          'stroke-width': 1.5,
+         },
+         s,
+        );
+        T(s, 205, 172, '直角三角形', '#3A2A90', 12);
+       }
+       if (t > 0.65) {
+        PL(
+         s,
+         [
+          [282, 156],
+          [374, 156],
+          [296, 80],
+         ],
+         '#E4F6EE',
+         '#0A7050',
+         1.8,
+        );
+        T(s, 328, 172, '钝角三角形', '#064A34', 12);
+       }
+      },
+     },
+    ],
+    d2: [
+     {
+      hint:
+       '平行四边形：两组对边分别平行且相等。四年级学认识特征，五年级才学面积计算。',
+      formula: '平行四边形：对边平行且相等，对角相等',
+      dur: 1300,
+      draw(s, t) {
+       PL(
+        s,
+        [
+         [42, 160],
+         [240, 160],
+         [280, 70],
+         [82, 70],
+        ],
+        '#EEECFE',
+        '#5A4AC0',
+        2,
+       );
+       if (t > 0.4) {
+        L(s, 42, 160, 240, 160, '#5A4AC0', 3);
+        L(s, 82, 70, 280, 70, '#5A4AC0', 3);
+        T(s, 161, 176, '两底边平行且相等', '#3A2A90', 11);
+       }
+       if (t > 0.72) {
+        L(s, 42, 160, 82, 70, '#A03060', 2.5);
+        L(s, 240, 160, 280, 70, '#A03060', 2.5);
+        T(s, 360, 118, '两侧对边\n平行且相等', '#701040', 11);
+       }
+      },
+     },
+     {
+      hint:
+       '梯形：只有一组对边平行（上底∥下底），另一组不平行。梯形≠平行四边形！',
+      formula: '梯形：仅一组对边平行（上底∥下底）',
+      dur: 1300,
+      draw(s, t) {
+       PL(
+        s,
+        [
+         [72, 160],
+         [292, 160],
+         [254, 75],
+         [118, 75],
+        ],
+        '#FCEAF2',
+        '#A03060',
+        2,
+       );
+       if (t > 0.4) {
+        L(s, 72, 160, 292, 160, '#A03060', 3);
+        L(s, 118, 75, 254, 75, '#A03060', 3);
+        T(s, 182, 176, '上底∥下底（平行）', '#701040', 11);
+       }
+       if (t > 0.72) {
+        T(s, 182, 58, '上底 a', '#701040', 13, 'middle');
+        T(s, 182, 196, '下底 b', '#701040', 13, 'middle');
+       }
+      },
+     },
+     {
+      hint: '特殊梯形：等腰梯形（两腰相等），直角梯形（一腰⊥底边）。',
+      formula: '等腰梯形：两腰相等 | 直角梯形：一腰⊥底',
+      dur: 1200,
+      draw(s, t) {
+       PL(
+        s,
+        [
+         [58, 152],
+         [216, 152],
+         [188, 78],
+         [86, 78],
+        ],
+        '#FCEAF2',
+        '#A03060',
+        2,
+       );
+       T(s, 137, 168, '等腰梯形', '#701040', 12);
+       if (t > 0.45) {
+        PL(
+         s,
+         [
+          [252, 152],
+          [394, 152],
+          [394, 78],
+          [274, 78],
+         ],
+         '#E8F1FB',
+         '#1A5FA8',
+         2,
+        );
+        E(
+         'rect',
+         {
+          x: 382,
+          y: 140,
+          width: 12,
+          height: 12,
+          fill: 'none',
+          stroke: '#C03030',
+          'stroke-width': 1.5,
+         },
+         s,
+        );
+        T(s, 323, 168, '直角梯形', '#0D3F6E', 12);
+       }
+      },
+     },
+     {
+      hint:
+       '平行四边形有2组对边平行；梯形只有1组对边平行。都是四边形，但不同！',
+      formula: '平行四边形：2组∥ | 梯形：1组∥ | 都是四边形',
+      dur: 1200,
+      draw(s, t) {
+       PL(
+        s,
+        [
+         [32, 150],
+         [184, 150],
+         [218, 82],
+         [66, 82],
+        ],
+        '#EEECFE',
+        '#5A4AC0',
+        2,
+       );
+       T(s, 125, 166, '平行四边形\n2组对边平行', '#3A2A90', 10);
+       if (t > 0.5) {
+        PL(
+         s,
+         [
+          [240, 150],
+          [382, 150],
+          [356, 82],
+          [264, 82],
+         ],
+         '#FCEAF2',
+         '#A03060',
+         2,
+        );
+        T(s, 312, 166, '梯形\n1组对边平行', '#701040', 10);
+       }
+      },
+     },
+    ],
+
+    /* ── 五年级 ── */
+    e1: [
+     {
+      hint: '推导平行四边形面积：把它剪拼成已知面积的图形——长方形！',
+      formula: '策略：平行四边形 → 剪拼 → 长方形',
+      dur: 1200,
+      draw(s, t) {
+       PL(
+        s,
+        [
+         [40, 162],
+         [240, 162],
+         [280, 68],
+         [80, 68],
+        ],
+        '#EEECFE',
+        '#5A4AC0',
+        2,
+       );
+       T(s, 160, 180, '平行四边形', '#3A2A90', 12);
+       if (t > 0.55) {
+        T(s, 344, 104, '→', '#9E9B96', 24, 'middle');
+        R(s, 360, 84, 80, 70, '#E8F1FB', '#1A5FA8', 1.5);
+        T(s, 400, 168, '长方形', '#0D3F6E', 11);
+       }
+      },
+     },
+     {
+      hint: '从顶点向底边作垂线（高h），切下左侧直角三角形。',
+      formula: '作高h（⊥底边）→ 切下左侧三角形',
+      dur: 1300,
+      draw(s, t) {
+       PL(
+        s,
+        [
+         [40, 162],
+         [240, 162],
+         [280, 68],
+         [80, 68],
+        ],
+        '#EEECFE',
+        '#5A4AC0',
+        2,
+       );
+       L(s, 80, 68, 80, 162, '#C03030', 2, '5,3');
+       RA(s, 80, 162, 14, '#C03030');
+       T(s, 58, 118, '高 h', '#C03030', 13, 'middle', '600');
+       if (t > 0.45)
+        PL(
+         s,
+         [
+          [40, 162],
+          [80, 162],
+          [80, 68],
+         ],
+         '#FEF0DC',
+         '#9A5800',
+         2,
+        );
+       if (t > 0.78) T(s, 58, 85, '切！', '#C03030', 15, 'middle', '700');
+      },
+     },
+     {
+      hint: '把三角形平移到右边补上——图形完美变成了长方形！底b和高h都没变。',
+      formula: '三角形平移到右侧 → 拼成长方形',
+      dur: 1500,
+      draw(s, t) {
+       const dx = lerp(
+        0,
+        200,
+        ease(Math.min(1, Math.max(0, (t - 0.08) / 0.82))),
+       );
+       PL(
+        s,
+        [
+         [80, 162],
+         [240, 162],
+         [280, 68],
+         [80, 68],
+        ],
+        '#E2E0F6',
+        '#5A4AC0',
+        1.5,
+       );
+       PL(
+        s,
+        [
+         [40 + dx, 162],
+         [80 + dx, 162],
+         [80 + dx, 68],
+        ],
+        '#FEF0DC',
+        '#9A5800',
+        2,
+       );
+       if (t > 0.9) {
+        R(s, 80, 68, 200, 94, '#E8F1FB', '#1A5FA8', 2.5);
+        T(s, 180, 180, '变成长方形！', '#0D3F6E', 13, 'middle', '700');
+       }
+      },
+     },
+     {
+      hint: '长方形面积 = 底b × 高h，与原平行四边形的底和高相同，公式一样！',
+      formula: '平行四边形面积 S = 底 × 高 = bh',
+      dur: 1300,
+      draw(s, t) {
+       R(s, 80, 68, 200, 94, '#E8F1FB', '#1A5FA8', 2);
+       L(s, 80, 174, 280, 174, '#1A5FA8', 2.5);
+       T(s, 180, 187, '底 b', '#0D3F6E', 13, 'middle', '600');
+       L(s, 68, 68, 68, 162, '#C03030', 1.8, '5,3');
+       RA(s, 68, 162, 12, '#C03030');
+       T(s, 48, 118, '高 h', '#C03030', 13, 'middle', '600');
+       if (t > 0.62) {
+        R(s, 302, 97, 104, 28, '#E8F1FB', '#1A5FA8', 1.5, 6);
+        T(s, 354, 114, 'S = bh', '#0D3F6E', 16, 'middle', '700');
+       }
+      },
+     },
+     {
+      hint: '注意：高h必须是底边上的垂直距离。验证：底12、高7 → S = 84 cm²。',
+      formula: '✅  S = bh，高必须⊥底边',
+      dur: 1200,
+      draw(s, t) {
+       PL(
+        s,
+        [
+         [40, 158],
+         [240, 158],
+         [280, 72],
+         [80, 72],
+        ],
+        '#EEECFE',
+        '#5A4AC0',
+        2,
+       );
+       L(s, 80, 72, 80, 158, '#C03030', 1.8, '5,3');
+       RA(s, 80, 158, 12, '#C03030');
+       T(s, 160, 174, '12 cm', '#3A2A90', 12);
+       T(s, 60, 118, '7 cm', '#C03030', 12, 'middle');
+       if (t > 0.42) {
+        const ss = [
+         ['12 × 7', '#9E9B96'],
+         ['= 84 cm²', '#5A4AC0'],
+        ];
+        const n = Math.floor(t * 3);
+        ss
+         .slice(0, n)
+         .forEach(([l, c], i) =>
+          T(
+           s,
+           370,
+           95 + i * 34,
+           l,
+           c,
+           i === 1 ? 21 : 14,
+           'middle',
+           i === 1 ? '700' : '400',
+          ),
+         );
+       }
+      },
+     },
+    ],
+    e2: [
+     {
+      hint:
+       '两个完全相同的三角形可以拼成平行四边形，利用这个推导三角形面积公式。',
+      formula: '策略：三角形 × 2 → 拼成平行四边形',
+      dur: 1200,
+      draw(s, t) {
+       // 橙色三角形: A[70,165] B[250,165] C[210,68]
+       PL(s, [[70,165],[250,165],[210,68]], '#FEF0DC', '#9A5800', 2);
+       // 绿色三角形从橙色位置出发，旋转移动到拼合位置
+       // 起始(与橙色重叠): [70,165],[250,165],[210,68]
+       // 终止(拼合): C→[250,165], A→[430,165], B→[390,68]（紧贴橙色右侧）
+       const te = ease(Math.min(1, t / 0.85));
+       PL(s,
+        [lp([70,165],[250,165],te), lp([250,165],[430,165],te), lp([210,68],[390,68],te)],
+        '#E4F6EE', '#0A7050', 1.8);
+       if (t > 0.88)
+        T(s, 250, 195, '两个三角形完全相同', '#6A3A00', 12, 'middle', '600');
+      },
+     },
+     {
+      hint: '把复制品旋转180°，底边对齐——两个三角形拼成了一个平行四边形！',
+      formula: '旋转180° + 底边对齐 → 平行四边形',
+      dur: 1500,
+      draw(s, t) {
+       const A = [80, 130],
+        B = [252, 130],
+        Cp = [214, 62];
+       PL(s, [A, B, Cp], '#FEF0DC', '#9A5800', 2);
+       const mx = (A[0] + B[0]) / 2,
+        rA = [2 * mx - A[0], A[1]],
+        rB = [2 * mx - B[0], B[1]],
+        rC = [2 * mx - Cp[0], 2 * A[1] - Cp[1]];
+       const te = ease(t);
+       PL(
+        s,
+        [lp(B, rA, te), lp(A, rB, te), lp(Cp, rC, te)],
+        '#E4F6EE',
+        '#0A7050',
+        1.8,
+       );
+       if (t > 0.88)
+        T(s, 346, 212, '拼成平行四边形！', '#6A3A00', 13, 'middle', '700');
+      },
+     },
+     {
+      hint:
+       '平行四边形 = 2个三角形，面积=bh。所以每个三角形面积 = 平行四边形的一半。',
+      formula: '三角形面积 = bh ÷ 2',
+      dur: 1200,
+      draw(s, t) {
+       const A = [78, 128],
+        B = [252, 128],
+        Cp = [214, 58],
+        D = [116, 198];
+       PL(s, [A, B, Cp], '#FEF0DC', '#9A5800', 1.8);
+       PL(s, [B, A, D], '#E4F6EE', '#0A7050', 1.8);
+       L(s, A[0], A[1], B[0], B[1], '#1A5FA8', 2.8);
+       T(s, 168, 144, '底 b', '#0D3F6E', 13, 'middle', '600');
+       // 补高线和h标注
+       if (t > 0.4) {
+        L(s, 214, 58, 214, 128, '#C03030', 1.8, '5,3');
+        RA(s, 214, 128, 12, '#C03030');
+        T(s, 232, 92, '高 h', '#C03030', 12, 'start');
+       }
+       if (t > 0.65) {
+        T(s, 372, 110, '平行四边形', '#9E9B96', 12, 'middle');
+        T(s, 372, 128, '= 2×三角形', '#5A4AC0', 14, 'middle', '700');
+       }
+      },
+     },
+     {
+      hint: 'S = bh÷2 = ½bh。高h必须是底边b上的垂直高度，不能用斜边代替！',
+      formula: '三角形面积 S = bh ÷ 2 = ½bh',
+      dur: 1300,
+      draw(s, t) {
+       const A = [68, 130],
+        B = [244, 130],
+        Cp = [208, 62],
+        D = [106, 198];
+       PL(s, [Cp, B, D, A], '#EEECFE', '#5A4AC0', 2);
+       PL(s, [A, B, Cp], '#FEF0DC', '#9A5800', 1.8);
+       L(s, A[0], A[1], B[0], B[1], '#1A5FA8', 2.5);
+       L(s, 208, 62, 208, 130, '#C03030', 1.8, '5,3');
+       RA(s, 208, 130, 12, '#C03030');
+       T(s, 156, 148, '底 b', '#0D3F6E', 12);
+       T(s, 226, 98, '高 h', '#C03030', 12, 'start');
+       if (t > 0.6) {
+        R(s, 295, 110, 116, 28, '#E8F1FB', '#1A5FA8', 1.5, 6);
+        T(s, 353, 126, 'S=bh÷2', '#0D3F6E', 16, 'middle', '700');
+       }
+      },
+     },
+     {
+      hint: '验证：底10cm、高6cm → S = 10×6÷2 = 30 cm²。高必须垂直于底！',
+      formula: '✅  S = ½bh，高⊥底边',
+      dur: 1200,
+      draw(s, t) {
+       PL(
+        s,
+        [
+         [58, 165],
+         [224, 165],
+         [190, 70],
+        ],
+        '#FEF0DC',
+        '#9A5800',
+        2,
+       );
+       L(s, 190, 70, 190, 165, '#C03030', 1.8, '5,3');
+       RA(s, 190, 165, 12, '#C03030');
+       T(s, 140, 181, '10 cm', '#6A3A00', 12);
+       T(s, 208, 120, '6 cm', '#C03030', 12, 'start');
+       if (t > 0.42) {
+        const ss = [
+         ['10×6÷2', '#9E9B96'],
+         ['=60÷2', '#9E9B96'],
+         ['=30 cm²', '#9A5800'],
+        ];
+        const n = Math.floor(t * 4);
+        ss
+         .slice(0, n)
+         .forEach(([l, c], i) =>
+          T(
+           s,
+           360,
+           85 + i * 28,
+           l,
+           c,
+           i === 2 ? 19 : 14,
+           'middle',
+           i === 2 ? '700' : '400',
+          ),
+         );
+       }
+      },
+     },
+    ],
+    e3: [
+     {
+      hint:
+       '梯形：上底a（短）、下底b（长）、高h（两底间垂直距离）。两个相同梯形可拼成平行四边形。',
+      formula: '梯形：上底a，下底b，高h',
+      dur: 1300,
+      draw(s, t) {
+       PL(
+        s,
+        [
+         [76, 160],
+         [294, 160],
+         [256, 75],
+         [118, 75],
+        ],
+        '#FCEAF2',
+        '#A03060',
+        2,
+       );
+       T(s, 187, 67, '上底 a', '#701040', 13);
+       T(s, 187, 176, '下底 b', '#701040', 13);
+       if (t > 0.52) {
+        L(s, 118, 75, 118, 160, '#C03030', 1.8, '5,3');
+        RA(s, 118, 160, 12, '#C03030');
+        T(s, 96, 120, '高 h', '#C03030', 13, 'middle');
+       }
+      },
+     },
+     {
+      hint: '把一个梯形旋转180°，沿腰拼合，两个梯形变成了一个平行四边形！',
+      formula: '梯形 × 2（旋转180°）= 平行四边形',
+      dur: 1500,
+      draw(s, t) {
+       // 粉色梯形固定: [56,150],[238,150],[204,74],[92,74]
+       PL(s, [[56,150],[238,150],[204,74],[92,74]], '#FCEAF2', '#A03060', 1.8);
+       // 蓝色梯形从粉色位置出发，动画到拼合位置（紧贴粉色右侧）
+       // 起始(与粉色重叠): [56,150],[238,150],[204,74],[92,74]
+       // 终止(拼合，旋转180°后接到粉色右腰): [238,150],[420,150],[386,74],[204,74]
+       const te = ease(t);
+       const A2 = lp([56,150],  [238,150], te);
+       const B2 = lp([238,150], [420,150], te);
+       const C2 = lp([204,74],  [386,74],  te);
+       const D2 = lp([92,74],   [204,74],  te);
+       PL(s, [A2,B2,C2,D2], '#E8F1FB', '#1A5FA8', 1.8);
+       if (t > 0.3)
+        T(s, 238, 35, '旋转180°后拼合 →', '#9E9B96', 12, 'middle');
+       if (t > 0.82)
+        T(s, 238, 185, '拼成平行四边形！', '#0D3F6E', 14, 'middle', '700');
+      },
+     },
+     {
+      hint:
+       '拼成的平行四边形：底=a+b，高=h，面积=(a+b)×h，梯形面积是它的一半。',
+      formula: '平行四边形面积=(a+b)×h，梯形面积=其一半',
+      dur: 1200,
+      draw(s, t) {
+       PL(
+        s,
+        [
+         [44, 150],
+         [264, 150],
+         [236, 74],
+         [72, 74],
+        ],
+        '#EEECFE',
+        '#5A4AC0',
+        2,
+       );
+       T(s, 154, 64, 'a + b', '#3A2A90', 16, 'middle', '700');
+       L(s, 72, 74, 72, 150, '#C03030', 1.8, '5,3');
+       RA(s, 72, 150, 12, '#C03030');
+       T(s, 52, 114, 'h', '#C03030', 18, 'middle', '700');
+       if (t > 0.6) {
+        T(s, 368, 100, '平行四边形面积', '#9E9B96', 11, 'middle');
+        T(s, 368, 118, 'S=(a+b)×h', '#3A2A90', 16, 'middle', '700');
+        T(s, 368, 138, '÷2 → 梯形面积', '#C03030', 11, 'middle');
+       }
+      },
+     },
+     {
+      hint:
+       '梯形面积=(a+b)×h÷2。两个梯形的平行四边形面积再除以2，得一个梯形面积。',
+      formula: '梯形面积 S = (a+b) × h ÷ 2',
+      dur: 1300,
+      draw(s, t) {
+       PL(
+        s,
+        [
+         [56, 150],
+         [238, 150],
+         [204, 74],
+         [92, 74],
+        ],
+        '#FCEAF2',
+        '#A03060',
+        2,
+       );
+       T(s, 148, 118, '①', '#701040', 21, 'middle', '600');
+       PL(
+        s,
+        [
+         [238, 150],
+         [420, 150],
+         [386, 74],
+         [272, 74],
+        ],
+        '#E8F1FB',
+        '#1A5FA8',
+        1.8,
+       );
+       T(s, 325, 118, '②', '#0D3F6E', 21, 'middle', '600');
+       if (t > 0.68) {
+        R(s, 102, 164, 210, 29, '#FCEAF2', '#A03060', 1.5, 6);
+        T(s, 207, 182, 'S=(a+b)×h÷2', '#701040', 14, 'middle', '700');
+       }
+      },
+     },
+     {
+      hint: '验证：上底4、下底8、高5 → S = (4+8)×5÷2 = 30 cm²。',
+      formula: '✅  S = (上底+下底) × 高 ÷ 2',
+      dur: 1200,
+      draw(s, t) {
+       PL(
+        s,
+        [
+         [76, 158],
+         [264, 158],
+         [232, 78],
+         [110, 78],
+        ],
+        '#FCEAF2',
+        '#A03060',
+        2,
+       );
+       T(s, 171, 70, '4 cm', '#701040', 12);
+       T(s, 171, 174, '8 cm', '#701040', 12);
+       L(s, 110, 78, 110, 158, '#C03030', 1.8, '5,3');
+       RA(s, 110, 158, 12, '#C03030');
+       T(s, 88, 120, '5', '#C03030', 17, 'middle', '700');
+       if (t > 0.42) {
+        const ss = [
+         ['(4+8)×5÷2', '#9E9B96'],
+         ['=12×5÷2', '#9E9B96'],
+         ['=30 cm²', '#A03060'],
+        ];
+        const n = Math.floor(t * 4);
+        ss
+         .slice(0, n)
+         .forEach(([l, c], i) =>
+          T(
+           s,
+           368,
+           84 + i * 28,
+           l,
+           c,
+           i === 2 ? 19 : 14,
+           'middle',
+           i === 2 ? '700' : '400',
+          ),
+         );
+       }
+      },
+     },
+    ],
+    e4: [
+     {
+      hint:
+       '组合图形由两个以上基本图形组合而成。有分割法（加法）和补全法（减法）两种思路。',
+      formula: '分割法：S=S₁+S₂ | 补全法：S=S大−S多余',
+      dur: 1200,
+      draw(s, t) {
+       PL(
+        s,
+        [
+         [50, 162],
+         [256, 162],
+         [256, 105],
+         [162, 105],
+         [162, 62],
+         [50, 62],
+        ],
+        '#E4F6EE',
+        '#0A7050',
+        2,
+       );
+       if (t > 0.5) {
+        L(s, 162, 62, 162, 162, '#C03030', 1.8, '5,3');
+        T(s, 105, 118, '①', '#0D3F6E', 21, 'middle', '600');
+        T(s, 210, 138, '②', '#064A34', 21, 'middle', '600');
+       }
+       if (t > 0.8)
+        T(s, 153, 184, '沿虚线分成两个长方形', '#064A34', 11, 'middle');
+      },
+     },
+     {
+      hint: '分割法：沿虚线切成几个基本图形，各算面积再相加。适合凸出型图形。',
+      formula: 'S = S₁ + S₂（分割→各算→相加）',
+      dur: 1200,
+      draw(s, t) {
+       R(s, 50, 62, 112, 100, '#E8F1FB', '#1A5FA8', 2);
+       R(s, 162, 105, 94, 57, '#EEECFE', '#5A4AC0', 2);
+       T(s, 106, 118, 'S₁', '#0D3F6E', 23, 'middle', '700');
+       T(s, 209, 138, 'S₂', '#3A2A90', 23, 'middle', '700');
+       if (t > 0.62)
+        T(s, 165, 184, 'S = S₁ + S₂', '#9E9B96', 14, 'middle', '600');
+      },
+     },
+     {
+      hint:
+       '补全法：补成大长方形，再减去多出来的部分。适合凹进型图形，往往更简便！',
+      formula: 'S = S大矩形 − S多余（补全→整体→减多余）',
+      dur: 1200,
+      draw(s, t) {
+       R(s, 50, 62, 206, 100, 'none', '#9E9B96', 1.5, '6,3');
+       PL(
+        s,
+        [
+         [50, 162],
+         [256, 162],
+         [256, 105],
+         [162, 105],
+         [162, 62],
+         [50, 62],
+        ],
+        '#E4F6EE',
+        '#0A7050',
+        2,
+       );
+       if (t > 0.5) {
+        R(s, 162, 62, 94, 43, '#FDEAEA', '#C03030', 1.8);
+        T(s, 209, 86, '减去', '#C03030', 12, 'middle');
+       }
+       if (t > 0.82)
+        T(s, 153, 184, '大矩形 − 右上角 = 结果', '#064A34', 11, 'middle');
+      },
+     },
+    ],
+
+    /* ── 六年级 ── */
+    f1: [
+     {
+      hint:
+       '把圆放在直线上滚一整圈，滚过的距离就是圆的周长。周长和直径之间有固定关系！',
+      formula: '圆周长 = 圆滚一整圈的距离',
+      dur: 1700,
+      draw(s, t) {
+       const r = 40,
+        circ = 2 * Math.PI * r,
+        cx = 58 + t * circ,
+        cy = 95;
+       L(s, 18, 135, 420, 135, '#9E9B96', 1.5);
+       const rolled = t * circ;
+       L(s, 58, 137, 58 + rolled, 137, '#C03030', 4);
+       C(s, cx, cy, r, '#FCEAF2', '#A03060', 2.2);
+       const dotX = cx + r * Math.sin(-t * 2 * Math.PI),
+        dotY = cy - r * Math.cos(-t * 2 * Math.PI);
+       C(s, dotX, dotY, 6, '#C03030', 'none');
+       L(s, cx, cy, dotX, dotY, '#A03060', 1.5, '3,2');
+       if (t > 0.97)
+        T(s, 230, 164, '一圈 ≈ 3.14 × 直径！', '#701040', 13, 'middle', '700');
+      },
+     },
+     {
+      hint: '无论圆大小，周长÷直径始终是同一常数，人类将它命名为 π（圆周率）。',
+      formula: 'π = 周长 ÷ 直径 ≈ 3.14159…（无限不循环小数）',
+      dur: 1300,
+      draw(s, t) {
+       [
+        [72, 104, 32, '#A03060', '#FCEAF2'],
+        [200, 100, 48, '#1A5FA8', '#E8F1FB'],
+        [328, 104, 28, '#0A7050', '#E4F6EE'],
+       ].forEach(([cx, cy, r, col, bg], i) => {
+        if (i / 3 > t - 0.05) return;
+        C(s, cx, cy, r, bg, col, 1.8);
+        L(s, cx - r, cy, cx + r, cy, col, 1.5, '4,2');
+        T(s, cx, cy + r + 15, 'C÷d=π', col, 10);
+       });
+       if (t > 0.72) {
+        R(s, 153, 166, 120, 26, '#FCEAF2', '#A03060', 1.5, 6);
+        T(s, 213, 182, 'π ≈ 3.14', '#701040', 16, 'middle', '700');
+       }
+      },
+     },
+     {
+      hint:
+       '直径d=2r，所以周长公式有两种等价写法。祖冲之将π精确到3.1415926，领先世界千年！',
+      formula: 'C = πd = 2πr（两种等价写法）',
+      dur: 1300,
+      draw(s, t) {
+       C(s, 162, 104, 72, '#FCEAF2', '#A03060', 2.2);
+       C(s, 162, 104, 5, '#A03060', 'none');
+       L(s, 90, 104, 234, 104, '#C03030', 2.5);
+       T(s, 162, 91, 'd', '#C03030', 22, 'middle', '700');
+       if (t > 0.45) {
+        L(s, 162, 104, 234, 104, '#1A5FA8', 2.2);
+        T(s, 200, 81, 'r', '#0D3F6E', 20, 'middle', '700');
+       }
+       if (t > 0.72) {
+        T(s, 358, 86, 'C = πd', '#701040', 18, 'middle', '700');
+        T(s, 358, 110, '= 2πr', '#701040', 17, 'middle');
+        T(s, 358, 130, '（等价）', '#9E9B96', 11);
+       }
+      },
+     },
+     {
+      hint: '计算时π取3.14。例：r=6cm → C = 2×3.14×6 = 37.68 cm。',
+      formula: '代入π≈3.14：C = 2 × 3.14 × r（单位cm）',
+      dur: 1200,
+      draw(s, t) {
+       C(s, 152, 104, 66, '#FCEAF2', '#A03060', 2);
+       L(s, 152, 104, 218, 104, '#1A5FA8', 2.2);
+       T(s, 186, 91, 'r=6', '#0D3F6E', 13);
+       if (t > 0.32) {
+        const ss = [
+         ['C = 2πr', '#9E9B96'],
+         ['= 2×3.14×6', '#9E9B96'],
+         ['= 37.68 cm', '#A03060'],
+        ];
+        const n = Math.floor(t * 4);
+        ss
+         .slice(0, n)
+         .forEach(([l, c], i) =>
+          T(
+           s,
+           368,
+           78 + i * 30,
+           l,
+           c,
+           i === 2 ? 18 : 14,
+           'middle',
+           i === 2 ? '700' : '400',
+          ),
+         );
+       }
+      },
+     },
+     {
+      hint: '✅ 公式完整推导！圆周长 C = 2πr，π≈3.14。祖冲之精确到3.1415926！',
+      formula: '✅  C = 2πr，π≈3.14（祖冲之：3.1415926）',
+      dur: 1100,
+      draw(s, t) {
+       for (let i = 0; i < 16; i++) {
+        const a = (i / 16) * 2 * Math.PI,
+         r1 = 48,
+         r2 = 74;
+        L(
+         s,
+         215 + r1 * Math.cos(a),
+         104 + r1 * Math.sin(a),
+         215 + r2 * Math.cos(a),
+         104 + r2 * Math.sin(a),
+         '#A03060',
+         1.5,
+        );
+       }
+       C(s, 215, 104, 48, '#FCEAF2', '#A03060', 2.2);
+       T(s, 215, 112, 'π', '#A03060', 30, 'middle', '700');
+       if (t > 0.5) {
+        R(s, 138, 166, 154, 26, '#FCEAF2', '#A03060', 1.5, 6);
+        T(s, 215, 182, 'C = 2πr', '#701040', 16, 'middle', '700');
+       }
+      },
+     },
+    ],
+    f2: [
+     {
+      hint:
+       '圆面积推导：把圆切成若干扇形，重新拼排，近似成已知面积的图形推导公式。',
+      formula: '策略：扇形切割 → 重新拼排 → 近似长方形',
+      dur: 1300,
+      draw(s, t) {
+       const n = 8,
+        cx = 155,
+        cy = 104,
+        r = 72;
+       for (let i = 0; i < n; i++) {
+        const a1 = (i / n) * 2 * Math.PI - Math.PI / 2,
+         a2 = ((i + 1) / n) * 2 * Math.PI - Math.PI / 2;
+        E(
+         'path',
+         {
+          d: `M${cx},${cy} L${cx + r * Math.cos(a1)},${cy + r * Math.sin(a1)} A${r},${r},0,0,1,${cx + r * Math.cos(a2)},${cy + r * Math.sin(a2)} Z`,
+          fill: i % 2 === 0 ? '#FCEAF2' : '#EEECFE',
+          stroke: i % 2 === 0 ? '#A03060' : '#5A4AC0',
+          'stroke-width': 1,
+         },
+         s,
+        );
+       }
+       if (t > 0.62)
+        T(s, 348, 104, '切成扇形\n重新拼排', '#9E9B96', 12, 'middle');
+      },
+     },
+     {
+      hint:
+       '扇形越切越细，拼出来的形状越来越接近长方形。这是极限思想——化曲为直！',
+      formula: '扇形越多 → 越接近长方形（极限思想）',
+      dur: 1600,
+      draw(s, t) {
+       const n = Math.max(8, Math.round(8 + t * 36)),
+        cx = 210,
+        cy = 98,
+        r = 58;
+       for (let i = 0; i < n; i++) {
+        const a1 = (i / n) * 2 * Math.PI - Math.PI / 2,
+         a2 = ((i + 1) / n) * 2 * Math.PI - Math.PI / 2;
+        E(
+         'path',
+         {
+          d: `M${cx},${cy} L${cx + r * Math.cos(a1)},${cy + r * Math.sin(a1)} A${r},${r},0,0,1,${cx + r * Math.cos(a2)},${cy + r * Math.sin(a2)} Z`,
+          fill: i % 2 === 0 ? '#FCEAF2' : '#EEECFE',
+          stroke: i % 2 === 0 ? '#A03060' : '#5A4AC0',
+          'stroke-width': 0.7,
+         },
+         s,
+        );
+       }
+       T(
+        s,
+        cx,
+        cy + r + 18,
+        `${n}个扇形，越来越像长方形`,
+        '#9E9B96',
+        11,
+        'middle',
+       );
+      },
+     },
+     {
+      hint: '近似长方形：宽=r（扇形的腰），长=πr（半周长），面积≈πr×r = πr²。',
+      formula: '近似长方形：宽=r，长=πr → S ≈ πr²',
+      dur: 1400,
+      draw(s, t) {
+       const W = 190,
+        H = 68,
+        x = 50,
+        y = 68;
+       for (let i = 0; i < 18; i++) {
+        const f = i % 2,
+         bw = W / 18;
+        PL(
+         s,
+         [
+          [x + i * bw, y + (f ? H : 0)],
+          [x + (i + 1) * bw, y + (f ? H : 0)],
+          [x + (i + 1) * bw - 2, y + (f ? 0 : H)],
+          [x + i * bw + 2, y + (f ? 0 : H)],
+         ],
+         f ? '#EEECFE' : '#FCEAF2',
+         f ? '#5A4AC0' : '#A03060',
+         0.8,
+        );
+       }
+       L(s, x, y + H + 17, x + W, y + H + 17, '#1A5FA8', 2);
+       T(s, x + W / 2, y + H + 32, 'πr（半周长）', '#0D3F6E', 12);
+       L(s, x + W + 15, y, x + W + 15, y + H, '#C03030', 2);
+       T(s, x + W + 30, y + H / 2, 'r', '#C03030', 19, 'start', '700');
+       if (t > 0.65)
+        T(
+         s,
+         x + W / 2,
+         y - 15,
+         'S ≈ πr × r = πr²',
+         '#3A2A90',
+         14,
+         'middle',
+         '700',
+        );
+      },
+     },
+     {
+      hint:
+       '切得无限细时误差趋向于零，面积恰好等于πr²，这是圆面积公式的严格推导！',
+      formula: 'S = πr²（无限细分时精确成立）',
+      dur: 1300,
+      draw(s, t) {
+       C(s, 162, 104, 72, '#FCEAF2', '#A03060', 2.2);
+       L(s, 162, 104, 234, 104, '#1A5FA8', 2.2);
+       C(s, 162, 104, 5, '#A03060', 'none');
+       T(s, 199, 91, 'r', '#0D3F6E', 19, 'middle', '700');
+       if (t > 0.52) {
+        R(s, 274, 91, 120, 29, '#FCEAF2', '#A03060', 1.5, 6);
+        T(s, 334, 109, 'S = πr²', '#701040', 18, 'middle', '700');
+       }
+      },
+     },
+     {
+      hint: '验证：r=5cm → S = 3.14×5² = 3.14×25 = 78.5 cm²。注意r²要先计算！',
+      formula: '✅  S = πr²，r先平方再乘π',
+      dur: 1200,
+      draw(s, t) {
+       C(s, 134, 104, 70, '#FCEAF2', '#A03060', 2.2);
+       L(s, 134, 104, 204, 104, '#1A5FA8', 2);
+       T(s, 170, 91, 'r=5', '#0D3F6E', 13);
+       if (t > 0.38) {
+        const ss = [
+         ['π×5²', '#9E9B96'],
+         ['=3.14×25', '#9E9B96'],
+         ['=78.5 cm²', '#A03060'],
+        ];
+        const n = Math.floor(t * 4);
+        ss
+         .slice(0, n)
+         .forEach(([l, c], i) =>
+          T(
+           s,
+           360,
+           79 + i * 30,
+           l,
+           c,
+           i === 2 ? 19 : 14,
+           'middle',
+           i === 2 ? '700' : '400',
+          ),
+         );
+       }
+      },
+     },
+    ],
+    f3: [
+     {
+      hint:
+       '圆柱侧面沿母线剪开展开，得到一个长方形：长=2πr（底面周长），宽=h（高）。',
+      formula: '侧面展开 = 长方形（长=2πr，宽=h）',
+      dur: 1400,
+      draw(s, t) {
+       E(
+        'ellipse',
+        {
+         cx: 200,
+         cy: 68,
+         rx: 68,
+         ry: 20,
+         fill: '#E4F6EE',
+         stroke: '#0A7050',
+         'stroke-width': 2,
+        },
+        s,
+       );
+       R(s, 132, 68, 136, 92, '#E4F6EE', '#0A7050', 1.8);
+       E(
+        'ellipse',
+        {
+         cx: 200,
+         cy: 160,
+         rx: 68,
+         ry: 20,
+         fill: '#E4F6EE',
+         stroke: '#0A7050',
+         'stroke-width': 2,
+        },
+        s,
+       );
+       E(
+        'ellipse',
+        {
+         cx: 200,
+         cy: 68,
+         rx: 68,
+         ry: 20,
+         fill: '#E4F6EE',
+         stroke: '#0A7050',
+         'stroke-width': 2,
+        },
+        s,
+       );
+       if (t > 0.52) {
+        const te = ease(Math.min(1, (t - 0.52) / 0.48)),
+         rw = lerp(0, 180, te),
+         rx = lerp(200, 158, te);
+        R(s, rx, 66, rw, 72, '#FEF0DC', '#9A5800', 1.5);
+        if (t > 0.9) {
+         T(s, 248, 47, '2πr', '#6A3A00', 13, 'middle', '600');
+         T(s, 365, 102, 'h', '#9A5800', 18, 'start', '700');
+        }
+       }
+      },
+     },
+     {
+      hint: '表面积 = 2个底面（圆）+ 侧面（长方形）。底面积=πr²，侧面积=2πrh。',
+      formula: 'S表 = 2πr² + 2πrh = 2πr(r+h)',
+      dur: 1300,
+      draw(s, t) {
+       E(
+        'ellipse',
+        {
+         cx: 80,
+         cy: 100,
+         rx: 58,
+         ry: 19,
+         fill: '#E4F6EE',
+         stroke: '#0A7050',
+         'stroke-width': 2,
+        },
+        s,
+       );
+       T(s, 80, 132, '底面 πr²', '#064A34', 12);
+       T(s, 80, 148, '×2', '#064A34', 12);
+       if (t > 0.4) {
+        R(s, 180, 65, 158, 80, '#FEF0DC', '#9A5800', 1.5);
+        T(s, 259, 63, '2πr', '#6A3A00', 12, 'middle');
+        T(s, 355, 106, 'h', '#9A5800', 14, 'start', '600');
+        T(s, 259, 158, '侧面 2πrh', '#6A3A00', 12);
+       }
+       if (t > 0.75)
+        T(s, 215, 190, 'S = 2πr² + 2πrh', '#064A34', 14, 'middle', '600');
+      },
+     },
+     {
+      hint: '提取公因数2πr：S = 2πr(r+h)，这是最简洁的形式。两个公式都要会用！',
+      formula: 'S = 2πr(r+h)（提取公因数）',
+      dur: 1200,
+      draw(s, t) {
+       T(s, 215, 65, '2πr² + 2πrh', '#9E9B96', 16, 'middle');
+       if (t > 0.4)
+        T(s, 215, 102, '= 2πr × r + 2πr × h', '#9E9B96', 13, 'middle');
+       if (t > 0.7)
+        T(s, 215, 140, '= 2πr(r + h)', '#0A7050', 19, 'middle', '700');
+       if (t > 0.88) {
+        R(s, 118, 152, 194, 30, '#E4F6EE', '#0A7050', 1.5, 6);
+        T(s, 215, 170, 'S = 2πr(r+h)', '#064A34', 15, 'middle', '700');
+       }
+      },
+     },
+     {
+      hint:
+       '验证：r=3cm、h=10cm → S = 2×3.14×3×(3+10) = 2×3.14×3×13 = 244.92 cm²。',
+      formula: '✅  S = 2πr(r+h)，先算括号内',
+      dur: 1200,
+      draw(s, t) {
+       E('ellipse', {cx:155, cy:156, rx:58, ry:18, fill:'#E4F6EE', stroke:'#0A7050', 'stroke-width':2}, s);
+       R(s, 97, 68, 116, 88, '#E4F6EE', '#0A7050', 1.5);
+       E('ellipse', {cx:155, cy:68, rx:58, ry:18, fill:'#E4F6EE', stroke:'#0A7050', 'stroke-width':2}, s);
+       L(s, 95, 68, 95, 156, '#C03030', 1.8, '5,3');
+       T(s, 74, 114, 'h=10', '#C03030', 12, 'middle');
+       T(s, 155, 55, 'r=3', '#064A34', 13);
+       if (t > 0.4) {
+        const ss = [
+         ['2×3.14×3×(3+10)', '#9E9B96'],
+         ['=6.28×3×13', '#9E9B96'],
+         ['=244.92 cm²', '#0A7050'],
+        ];
+        const n = Math.floor(t * 4);
+        ss
+         .slice(0, n)
+         .forEach(([l, c], i) =>
+          T(
+           s,
+           348,
+           79 + i * 28,
+           l,
+           c,
+           i === 2 ? 16 : 12,
+           'middle',
+           i === 2 ? '700' : '400',
+          ),
+         );
+       }
+      },
+     },
+    ],
+    f4: [
+     {
+      hint:
+       '圆柱体积：底面铺一层（面积=πr²），叠高h层，V=πr²h。与长方体V=lwh结构相同！',
+      formula: 'V = πr²h（底面积 × 高）',
+      dur: 1300,
+      draw(s, t) {
+       E('ellipse', {cx:200, cy:158, rx:68, ry:20, fill:'#E4F6EE', stroke:'#0A7050', 'stroke-width':2}, s);
+       R(s, 132, 68, 136, 90, '#E4F6EE', '#0A7050', 1.5);
+       E('ellipse', {cx:200, cy:68, rx:68, ry:20, fill:'#E4F6EE', stroke:'#0A7050', 'stroke-width':2}, s);
+       L(s, 130, 68, 130, 158, '#C03030', 1.8, '5,3');
+       T(s, 109, 115, 'h', '#C03030', 19, 'middle', '700');
+       L(s, 200, 68, 268, 68, '#064A34', 1.5);
+       T(s, 236, 58, 'r', '#064A34', 14, 'middle', '700');
+       if (t > 0.58) {
+        R(s, 296, 100, 120, 30, '#E4F6EE', '#0A7050', 1.5, 6);
+        T(s, 356, 118, 'V = πr²h', '#064A34', 17, 'middle', '700');
+       }
+      },
+     },
+     {
+      hint:
+       '对比：长方体V=lwh（底面积l×w×高h），圆柱V=πr²h（底面积πr²×高h）。本质相同！',
+      formula: '长方体V=lwh | 圆柱V=πr²h（都是底面积×高）',
+      dur: 1300,
+      draw(s, t) {
+       const x=28, y=55, w=90, h=70, d=24;
+       PL(s,[[x,y+h],[x+w,y+h],[x+w+d,y+h-d],[x+d,y+h-d]],'#D0E4F8','#1A5FA8',1.5);
+       PL(s,[[x,y],[x+w,y],[x+w,y+h],[x,y+h]],'#E8F1FB','#1A5FA8',1.5);
+       PL(s,[[x+w,y],[x+w+d,y-d],[x+w+d,y+h-d],[x+w,y+h]],'#C8DCF4','#1A5FA8',1.5);
+       PL(s,[[x,y],[x+d,y-d],[x+w+d,y-d],[x+w,y]],'#EAF2FC','#1A5FA8',1.5);
+       T(s, x+w/2, y+h+16, 'V = lwh', '#0D3F6E', 13, 'middle', '600');
+       if (t > 0.4) {
+        const cx=305, topY=55, cr=52, cRy=16;
+        E('ellipse',{cx, cy:topY+h, rx:cr, ry:cRy, fill:'#E4F6EE', stroke:'#0A7050','stroke-width':1.5},s);
+        R(s, cx-cr, topY, cr*2, h, '#E4F6EE','#0A7050',1.5);
+        E('ellipse',{cx, cy:topY, rx:cr, ry:cRy, fill:'#E4F6EE', stroke:'#0A7050','stroke-width':1.5},s);
+        L(s, cx-cr-10, topY, cx-cr-10, topY+h, '#C03030', 1.5, '4,3');
+        T(s, cx-cr-22, topY+h/2, 'h', '#C03030', 14, 'middle', '700');
+        T(s, cx, topY+h+16, 'V = πr²h', '#064A34', 13, 'middle', '600');
+       }
+       if (t > 0.65)
+        T(s, 185, 200, '本质：底面积 × 高', '#9E9B96', 12, 'middle');
+      },
+     },
+     {
+      hint:
+       '区分侧面积和体积：侧面积=2πrh（cm²），体积=πr²h（cm³）。单位不同！',
+      formula: '侧面积2πrh（cm²）≠ 体积πr²h（cm³）',
+      dur: 1200,
+      draw(s, t) {
+       E('ellipse', {cx:160, cy:160, rx:58, ry:18, fill:'#E4F6EE', stroke:'#0A7050', 'stroke-width':2}, s);
+       R(s, 102, 82, 116, 78, '#E4F6EE', '#0A7050', 1.5);
+       E('ellipse', {cx:160, cy:82, rx:58, ry:18, fill:'#E4F6EE', stroke:'#0A7050', 'stroke-width':2}, s);
+       if (t > 0.4) {
+        T(s, 344, 92, '侧面积', '#064A34', 13, 'middle');
+        T(s, 344, 112, '= 2πrh（cm²）', '#0A7050', 14, 'middle', '600');
+       }
+       if (t > 0.72) {
+        T(s, 344, 142, '体积', '#064A34', 13, 'middle');
+        T(s, 344, 162, '= πr²h（cm³）', '#3A7010', 14, 'middle', '600');
+       }
+      },
+     },
+     {
+      hint: '验证：r=3cm、h=10cm → V = 3.14×9×10 = 282.6 cm³。r先平方！',
+      formula: '✅  V = πr²h，单位cm³（立方厘米）',
+      dur: 1200,
+      draw(s, t) {
+       E('ellipse', {cx:155, cy:154, rx:58, ry:18, fill:'#E4F6EE', stroke:'#0A7050', 'stroke-width':2}, s);
+       R(s, 97, 68, 116, 86, '#E4F6EE', '#0A7050', 1.5);
+       E('ellipse', {cx:155, cy:68, rx:58, ry:18, fill:'#E4F6EE', stroke:'#0A7050', 'stroke-width':2}, s);
+       L(s, 95, 68, 95, 154, '#C03030', 1.8, '5,3');
+       T(s, 74, 113, 'h=10', '#C03030', 12, 'middle');
+       T(s, 155, 55, 'r=3', '#064A34', 13);
+       if (t > 0.42) {
+        const ss = [
+         ['π×3²×10', '#9E9B96'],
+         ['=3.14×9×10', '#9E9B96'],
+         ['=282.6 cm³', '#0A7050'],
+        ];
+        const n = Math.floor(t * 4);
+        ss
+         .slice(0, n)
+         .forEach(([l, c], i) =>
+          T(
+           s,
+           358,
+           79 + i * 28,
+           l,
+           c,
+           i === 2 ? 17 : 13,
+           'middle',
+           i === 2 ? '700' : '400',
+          ),
+         );
+       }
+      },
+     },
+    ],
+    f5: [
+     {
+      hint: '圆锥有1个圆形底面、1个顶点、1条高（顶点到底面圆心的垂直线段）。',
+      formula: '圆锥 = 圆形底面 + 顶点 + 弯曲侧面',
+      dur: 1200,
+      draw(s, t) {
+       PL(
+        s,
+        [
+         [210, 46],
+         [136, 162],
+         [284, 162],
+        ],
+        '#E8F1FB',
+        '#1A5FA8',
+        2,
+       );
+       E(
+        'ellipse',
+        {
+         cx: 210,
+         cy: 162,
+         rx: 74,
+         ry: 21,
+         fill: '#E8F1FB',
+         stroke: '#1A5FA8',
+         'stroke-width': 2,
+        },
+        s,
+       );
+       C(s, 210, 46, 5, '#1A5FA8', 'none');
+       T(s, 210, 36, '顶点', '#0D3F6E', 12);
+       if (t > 0.52) {
+        L(s, 210, 46, 210, 162, '#C03030', 1.8, '5,3');
+        T(s, 228, 106, '高 h', '#C03030', 13, 'start');
+       }
+       if (t > 0.78) {
+        L(s, 210, 162, 284, 162, '#0A7050', 2);
+        T(s, 248, 153, 'r', '#064A34', 17, 'middle', '700');
+       }
+      },
+     },
+     {
+      hint:
+       '关键实验：等底等高的圆锥倒入圆柱，需要3次才能装满，因此V圆锥=V圆柱÷3！',
+      formula: '实验：圆锥倒满圆柱需3次 → V圆锥=⅓V圆柱',
+      dur: 1400,
+      draw(s, t) {
+       PL(
+        s,
+        [
+         [112, 50],
+         [62, 152],
+         [162, 152],
+        ],
+        '#E8F1FB',
+        '#1A5FA8',
+        1.8,
+       );
+       E(
+        'ellipse',
+        {
+         cx: 112,
+         cy: 152,
+         rx: 50,
+         ry: 15,
+         fill: '#E8F1FB',
+         stroke: '#1A5FA8',
+         'stroke-width': 1.8,
+        },
+        s,
+       );
+       T(s, 112, 184, '圆锥', '#0D3F6E', 11);
+       E(
+        'ellipse',
+        {
+         cx: 300,
+         cy: 70,
+         rx: 52,
+         ry: 16,
+         fill: '#E4F6EE',
+         stroke: '#0A7050',
+         'stroke-width': 1.8,
+        },
+        s,
+       );
+       R(s, 248, 70, 104, 82, '#E4F6EE', '#0A7050', 1.8);
+       E(
+        'ellipse',
+        {
+         cx: 300,
+         cy: 152,
+         rx: 52,
+         ry: 16,
+         fill: '#E4F6EE',
+         stroke: '#0A7050',
+         'stroke-width': 1.8,
+        },
+        s,
+       );
+       E(
+        'ellipse',
+        {
+         cx: 300,
+         cy: 70,
+         rx: 52,
+         ry: 16,
+         fill: '#E4F6EE',
+         stroke: '#0A7050',
+         'stroke-width': 1.8,
+        },
+        s,
+       );
+       T(s, 300, 186, '圆柱（等底等高）', '#064A34', 10);
+       if (t > 0.45) {
+        const totalFillH = 82;
+        const poured = Math.min(3, (t - 0.45) / 0.18);
+        const fillH = Math.min(totalFillH, (poured / 3) * totalFillH);
+        const fillY = 70 + totalFillH - fillH;
+        E('ellipse', {cx:300, cy:fillY, rx:50, ry:15, fill:'rgba(147,197,253,0.5)', stroke:'none'}, s);
+        R(s, 250, fillY, 100, fillH, 'rgba(147,197,253,0.35)', 'none', 0);
+        E('ellipse', {cx:300, cy:fillY, rx:50, ry:15, fill:'rgba(147,197,253,0.6)', stroke:'#1A5FA8', 'stroke-width':1}, s);
+        const n = Math.min(3, Math.ceil((t - 0.45) / 0.18));
+        T(s, 206, 100, `已倒 ${n} 次`, '#C03030', 17, 'middle', '700');
+        if (t > 0.98) T(s, 206, 122, '= V圆柱', '#0A7050', 13, 'middle', '600');
+       }
+      },
+     },
+     {
+      hint: '推出公式：圆锥体积 = ⅓ × 底面积 × 高 = ⅓πr²h。这个"⅓"来自实验！',
+      formula: 'V = ⅓ × πr²h = ⅓πr²h',
+      dur: 1300,
+      draw(s, t) {
+       PL(
+        s,
+        [
+         [176, 44],
+         [100, 154],
+         [252, 154],
+        ],
+        '#E8F1FB',
+        '#1A5FA8',
+        2,
+       );
+       E(
+        'ellipse',
+        {
+         cx: 176,
+         cy: 154,
+         rx: 76,
+         ry: 22,
+         fill: '#E8F1FB',
+         stroke: '#1A5FA8',
+         'stroke-width': 2,
+        },
+        s,
+       );
+       L(s, 176, 44, 176, 154, '#C03030', 1.8, '5,3');
+       T(s, 194, 101, 'h', '#C03030', 19, 'start', '700');
+       L(s, 176, 154, 252, 154, '#0A7050', 2);
+       T(s, 215, 146, 'r', '#064A34', 17, 'middle', '700');
+       if (t > 0.6) {
+        R(s, 286, 100, 130, 30, '#E8F1FB', '#1A5FA8', 1.5, 6);
+        T(s, 351, 118, 'V=⅓πr²h', '#0D3F6E', 17, 'middle', '700');
+       }
+      },
+     },
+     {
+      hint: '验证：r=3cm、h=8cm → V = ⅓×3.14×9×8 = ⅓×226.08 = 75.36 cm³。',
+      formula: '✅  V圆锥=⅓V圆柱（等底等高），V=⅓πr²h',
+      dur: 1200,
+      draw(s, t) {
+       PL(
+        s,
+        [
+         [172, 46],
+         [104, 156],
+         [240, 156],
+        ],
+        '#E8F1FB',
+        '#1A5FA8',
+        2,
+       );
+       E(
+        'ellipse',
+        {
+         cx: 172,
+         cy: 156,
+         rx: 68,
+         ry: 20,
+         fill: '#E8F1FB',
+         stroke: '#1A5FA8',
+         'stroke-width': 2,
+        },
+        s,
+       );
+       L(s, 172, 46, 172, 156, '#C03030', 1.8, '5,3');
+       T(s, 190, 103, 'h=8', '#C03030', 13, 'start');
+       T(s, 172, 36, 'r=3', '#0D3F6E', 13);
+       if (t > 0.42) {
+        const ss = [
+         ['⅓×π×3²×8', '#9E9B96'],
+         ['=⅓×3.14×9×8', '#9E9B96'],
+         ['=75.36 cm³', '#1A5FA8'],
+        ];
+        const n = Math.floor(t * 4);
+        ss
+         .slice(0, n)
+         .forEach(([l, c], i) =>
+          T(
+           s,
+           362,
+           80 + i * 28,
+           l,
+           c,
+           i === 2 ? 17 : 13,
+           'middle',
+           i === 2 ? '700' : '400',
+          ),
+         );
+       }
+      },
+     },
+    ],
+
+    /* ── 运动主题 ── */
+    p_b1: [
+     {
+      hint:
+       '轴对称图形：沿一条直线折叠，两侧能完全重合。这条直线叫做对称轴。蝴蝶、枫叶都是轴对称图形。',
+      formula: '轴对称图形：沿对称轴对折 → 两侧完全重合',
+      dur: 2200,
+      draw(s, t) {
+       const ax = 218;
+       const apex = [218, 54],
+        right = [295, 160],
+        bottom = [218, 142],
+        left = [141, 160];
+       // 底层：完整图形淡色，表示对折后两半重合的最终位置
+       PL(s, [apex, right, bottom, left], '#FBEEF4', '#E0B8C8', 1.2);
+       // 对称轴（折痕）始终显示
+       L(s, ax, 44, ax, 178, '#C03030', 2, '5,3');
+       T(s, ax, 192, '对称轴（折痕）', '#C03030', 12);
+       // 左半边：固定不动
+       PL(s, [apex, bottom, left], '#FCEAF2', '#A03060', 2);
+       // 右半边：绕对称轴翻折，cos 从 1→-1 模拟对折盖过去
+       const fold = ease(Math.min(1, t / 0.82)),
+        angle = fold * Math.PI,
+        ca = Math.cos(angle);
+       const fpts = [apex, right, bottom].map(([x, y]) => [
+        ax + (x - ax) * ca,
+        y,
+       ]);
+       // 翻折中半透明，让"盖上去"的过程看得见
+       E(
+        'polygon',
+        {
+         points: fpts.map((p) => p.join(',')).join(' '),
+         fill: '#F6C9DC',
+         stroke: '#A03060',
+         'stroke-width': 2,
+         opacity: fold < 0.95 ? 0.78 : 1,
+        },
+        s,
+       );
+       // 提示文字（放右侧空白，避开图形）
+       if (t < 0.45) T(s, 372, 92, '沿折痕对折…', '#9E9B96', 13, 'middle');
+       else if (t < 0.82) T(s, 372, 92, '正在对折…', '#9A5800', 13, 'middle', '600');
+       if (t > 0.92) {
+        T(s, 372, 100, '两侧', '#701040', 14, 'middle', '700');
+        T(s, 372, 120, '完全重合！', '#701040', 14, 'middle', '700');
+       }
+      },
+     },
+     {
+      hint:
+       '生活中轴对称图形很多：等腰三角形（1条对称轴）、长方形（2条）、正方形（4条）、圆（无数条）。',
+      formula: '等腰三角形1条 | 长方形2条 | 正方形4条 | 圆无数条',
+      dur: 1300,
+      draw(s, t) {
+       if (t > 0.05) {
+        PL(s, [[42, 148], [86, 148], [64, 82]], '#FCEAF2', '#A03060', 1.8);
+        L(s, 64, 76, 64, 154, '#C03030', 1.5, '4,2');
+        T(s, 64, 164, '等腰△1条', '#701040', 10);
+       }
+       if (t > 0.28) {
+        R(s, 108, 90, 84, 58, '#E8F1FB', '#1A5FA8', 1.8);
+        L(s, 108, 82, 192, 82, '#C03030', 1.5, '4,2');
+        L(s, 150, 90, 150, 148, '#C03030', 1.5, '4,2');
+        T(s, 150, 162, '长方形2条', '#0D3F6E', 10);
+       }
+       if (t > 0.52) {
+        R(s, 222, 88, 62, 62, '#EEECFE', '#5A4AC0', 1.8);
+        L(s, 253, 80, 253, 158, '#C03030', 1.5, '4,2');
+        L(s, 214, 119, 292, 119, '#C03030', 1.5, '4,2');
+        L(s, 222, 88, 284, 150, '#C03030', 1, '4,2');
+        L(s, 222, 150, 284, 88, '#C03030', 1, '4,2');
+        T(s, 253, 164, '正方形4条', '#3A2A90', 10);
+       }
+       if (t > 0.76) {
+        C(s, 385, 112, 40, '#E4F6EE', '#0A7050', 1.8);
+        for (let i = 0; i < 4; i++) {
+         const a = (i * Math.PI) / 4;
+         L(
+          s,
+          385 + 40 * Math.cos(a),
+          112 + 40 * Math.sin(a),
+          385 - 40 * Math.cos(a),
+          112 - 40 * Math.sin(a),
+          '#C03030',
+          1,
+          '3,2',
+         );
+        }
+        T(s, 385, 162, '圆无数条', '#064A34', 10);
+       }
+      },
+     },
+     {
+      hint:
+       '判断是否是轴对称图形：能找到一条折叠线使两侧完全重合→是；找不到→不是。',
+      formula: '判断：能找到对称轴使两侧重合 → 是',
+      dur: 1200,
+      draw(s, t) {
+       T(s, 115, 92, 'A', '#1A5FA8', 72, 'middle', '700');
+       if (t > 0.4) L(s, 115, 44, 115, 172, '#C03030', 2, '5,3');
+       if (t > 0.7) T(s, 115, 186, '✓ 是', '#3A7010', 15, 'middle', '700');
+       T(s, 315, 92, 'B', '#A03060', 72, 'middle', '700');
+       if (t > 0.55) L(s, 315, 44, 315, 172, '#C03030', 1.5, '5,3');
+       if (t > 0.8) T(s, 315, 186, '✗ 否', '#C03030', 15, 'middle', '700');
+      },
+     },
+     {
+      hint:
+       '轴对称在美术、建筑、自然界中无处不在。它体现了数学的对称美，也是图形变换的基础。',
+      formula: '✅  轴对称：对折重合，对称轴是那条折叠线',
+      dur: 1000,
+      draw(s, t) {
+       // 蝴蝶（1条对称轴）
+       if (t > 0.02) {
+        const bx = 86, by = 104, col = '#A03060', f = '#FCEAF2';
+        E('ellipse', { cx: bx - 17, cy: by - 13, rx: 16, ry: 12, fill: f, stroke: col, 'stroke-width': 1.6 }, s);
+        E('ellipse', { cx: bx + 17, cy: by - 13, rx: 16, ry: 12, fill: f, stroke: col, 'stroke-width': 1.6 }, s);
+        E('ellipse', { cx: bx - 14, cy: by + 15, rx: 13, ry: 14, fill: f, stroke: col, 'stroke-width': 1.6 }, s);
+        E('ellipse', { cx: bx + 14, cy: by + 15, rx: 13, ry: 14, fill: f, stroke: col, 'stroke-width': 1.6 }, s);
+        L(s, bx, by - 22, bx, by + 26, col, 2.5);
+        L(s, bx, by - 36, bx, by + 36, '#C03030', 1.5, '4,2');
+        T(s, bx, by + 58, '蝴蝶 1条', col, 11);
+       }
+       // 雪花（6条对称轴）
+       if (t > 0.34) {
+        const sx = 230, sy = 104, col = '#1A5FA8', r = 36;
+        for (let i = 0; i < 6; i++) {
+         const a = (i * Math.PI) / 3;
+         L(s, sx, sy, sx + r * Math.cos(a), sy + r * Math.sin(a), col, 2);
+         const bx = sx + r * 0.55 * Math.cos(a), by = sy + r * 0.55 * Math.sin(a);
+         L(s, bx, by, bx + 9 * Math.cos(a + 0.6), by + 9 * Math.sin(a + 0.6), col, 1.5);
+         L(s, bx, by, bx + 9 * Math.cos(a - 0.6), by + 9 * Math.sin(a - 0.6), col, 1.5);
+        }
+        T(s, sx, sy + 58, '雪花 6条', col, 11);
+       }
+       // 正方形（4条对称轴）
+       if (t > 0.68) {
+        const qx = 374, qy = 104, h = 30, col = '#5A4AC0';
+        R(s, qx - h, qy - h, h * 2, h * 2, '#EEECFE', col, 1.8);
+        L(s, qx, qy - h - 5, qx, qy + h + 5, '#C03030', 1.4, '4,2');
+        L(s, qx - h - 5, qy, qx + h + 5, qy, '#C03030', 1.4, '4,2');
+        L(s, qx - h, qy - h, qx + h, qy + h, '#C03030', 1, '4,2');
+        L(s, qx - h, qy + h, qx + h, qy - h, '#C03030', 1, '4,2');
+        T(s, qx, qy + 58, '正方形 4条', col, 11);
+       }
+      },
+     },
+    ],
+    p_b2: [
+     {
+      hint:
+       '图形运动有三种：平移（沿直线滑动）、旋转（绕固定点转动）、翻折（轴对称）。',
+      formula: '图形运动：平移 + 旋转 + 翻折（轴对称）',
+      dur: 1300,
+      draw(s, t) {
+       [
+        ['平移', 72, 100, '#1A5FA8', '#E8F1FB', '→'],
+        ['旋转', 218, 100, '#9A5800', '#FEF0DC', '↻'],
+        ['翻折', 364, 100, '#A03060', '#FCEAF2', '⟺'],
+       ].forEach(([l, cx, cy, col, bg, sym], i) => {
+        if (i / 3 > t - 0.06) return;
+        C(s, cx, cy, 44, bg, col, 1.8);
+        T(s, cx, cy + 6, sym, col, 24, 'middle', '700');
+        T(s, cx, cy + 60, l, col, 12);
+       });
+      },
+     },
+     {
+      hint:
+       '平移：图形沿直线方向移动，形状、大小、方向全部不变，只有位置改变。',
+      formula: '平移：形状大小方向不变，只有位置改变',
+      dur: 1400,
+      draw(s, t) {
+       const dx = lerp(0, 148, t);
+       R(s, 28 + dx, 82, 86, 72, '#E8F1FB', '#1A5FA8', 2, 4);
+       if (t > 0.08) {
+        L(s, 71, 168, lerp(71, 219, t), 168, '#C03030', 2);
+        C(s, lerp(71, 219, t), 168, 5, '#C03030', 'none');
+       }
+       if (t > 0.5) {
+        R(s, 28, 82, 86, 72, 'none', '#1A5FA8', 1, '4,2', 4);
+        T(s, 71, 182, '向右平移', '#0D3F6E', 12);
+       }
+       if (t > 0.85)
+        T(s, 348, 118, '形状大小\n方向不变', '#9E9B96', 12, 'middle');
+      },
+     },
+     {
+      hint:
+       '旋转：图形绕一个固定点（旋转中心）转动，形状大小不变，但方向改变了。',
+      formula: '旋转：绕固定点转动，形状大小不变，方向改变',
+      dur: 1400,
+      draw(s, t) {
+       const cx = 190,
+        cy = 118,
+        angle = lerp(0, Math.PI * 1.5, t);
+       C(s, cx, cy, 5, '#1A5FA8', 'none');
+       const pts = [
+        [40, 0],
+        [40, 50],
+        [0, 50],
+        [0, 0],
+       ].map(([rx, ry]) => {
+        const rotX = rx - 20,
+         rotY = ry - 60;
+        return [
+         cx + rotX * Math.cos(angle) - rotY * Math.sin(angle) + 40,
+         cy + rotX * Math.sin(angle) + rotY * Math.cos(angle) - 25,
+        ];
+       });
+       PL(s, pts, '#FEF0DC', '#9A5800', 2);
+       const ap = `M${cx + 58},${cy} A58,58,0,${angle > Math.PI ? 1 : 0},1,${cx + 58 * Math.cos(-angle)},${cy - 58 * Math.sin(angle)}`;
+       E(
+        'path',
+        {
+         d: ap,
+         fill: 'none',
+         stroke: '#C03030',
+         'stroke-width': 1.5,
+         'stroke-dasharray': '4,3',
+        },
+        s,
+       );
+       if (t > 0.5)
+        T(
+         s,
+         358,
+         118,
+         `${Math.round((angle * 180) / Math.PI)}°`,
+         '#C03030',
+         17,
+         'middle',
+         '700',
+        );
+      },
+     },
+     {
+      hint:
+       '区分平移和旋转：平移后方向不变（房子朝向相同）；旋转后方向改变（房子转了）。',
+      formula: '平移：方向不变 | 旋转：方向改变',
+      dur: 1300,
+      draw(s, t) {
+       PL(
+        s,
+        [
+         [28, 142],
+         [92, 142],
+         [92, 96],
+         [60, 72],
+         [28, 96],
+        ],
+        '#E8F1FB',
+        '#1A5FA8',
+        2,
+       );
+       T(s, 60, 160, '原图形', '#0D3F6E', 11);
+       if (t > 0.4) {
+        PL(
+         s,
+         [
+          [162, 142],
+          [226, 142],
+          [226, 96],
+          [194, 72],
+          [162, 96],
+         ],
+         '#E8F1FB',
+         '#1A5FA8',
+         1.8,
+         '3,2',
+        );
+        T(s, 194, 160, '平移后（朝向不变）', '#0D3F6E', 11);
+       }
+       if (t > 0.72) {
+        const a = (-30 * Math.PI) / 180,
+         cx = 340,
+         cy = 112;
+        const hpts = [
+         [28, 142],
+         [92, 142],
+         [92, 96],
+         [60, 72],
+         [28, 96],
+        ].map(([px, py]) => [
+         cx + (px - 60) * Math.cos(a) - (py - 112) * Math.sin(a),
+         cy + (px - 60) * Math.sin(a) + (py - 112) * Math.cos(a),
+        ]);
+        PL(s, hpts, '#FEF0DC', '#9A5800', 1.8, '3,2');
+        T(s, 340, 174, '旋转后（朝向改变）', '#6A3A00', 11);
+       }
+      },
+     },
+    ],
+    p_d1: [
+     {
+      hint:
+       '轴对称深化：在方格纸上画对称图形。对应点到对称轴的距离相等，且在轴的两侧。',
+      formula: '对应点到对称轴距离相等，且在轴两侧',
+      dur: 1400,
+      draw(s, t) {
+       for (let r = 0; r < 6; r++)
+        for (let c = 0; c < 10; c++)
+         R(s, 28 + c * 40, 22 + r * 28, 40, 28, 'none', '#F0EDE6', 0.6);
+       const pts = [
+        [28 + 40, 22 + 28],
+        [28 + 80, 22 + 28],
+        [28 + 80, 22 + 112],
+        [28 + 40, 22 + 112],
+       ];
+       PL(s, pts, '#E8F1FB', '#1A5FA8', 1.8);
+       L(s, 28 + 4 * 40, 18, 28 + 4 * 40, 22 + 6 * 28 + 4, '#C03030', 2, '5,3');
+       T(s, 28 + 4 * 40 + 4, 17, '对称轴', '#C03030', 11, 'start');
+       if (t > 0.55) {
+        const mpts = pts.map(([x, y]) => [28 * 2 + 4 * 40 * 2 - x, y]);
+        PL(s, mpts, '#EAF6DC', '#3A7010', 1.8);
+       }
+       if (t > 0.85) {
+        L(
+         s,
+         pts[0][0],
+         pts[0][1],
+         28 * 2 + 4 * 40 * 2 - pts[0][0],
+         pts[0][1],
+         '#9E9B96',
+         1,
+         '4,2',
+        );
+        T(
+         s,
+         28 + 4 * 40,
+         204,
+         '左右两侧到对称轴距离相等',
+         '#9E9B96',
+         10,
+         'middle',
+        );
+       }
+      },
+     },
+     {
+      hint:
+       '有的图形有多条对称轴：正方形4条，等边三角形3条，长方形2条，等腰三角形1条。',
+      formula: '对称轴条数：圆>正方形>等边三角形>长方形',
+      dur: 1300,
+      draw(s, t) {
+       R(s, 22, 72, 82, 82, '#EEECFE', '#5A4AC0', 1.8);
+       if (t > 0.2) {
+        L(s, 63, 64, 63, 162, '#C03030', 1.5, '4,2');
+        L(s, 14, 113, 110, 113, '#C03030', 1.5, '4,2');
+        L(s, 22, 72, 104, 154, '#C03030', 1, '4,2');
+        L(s, 22, 154, 104, 72, '#C03030', 1, '4,2');
+        T(s, 63, 170, '正方形4条', '#3A2A90', 11);
+       }
+       if (t > 0.45) {
+        C(s, 218, 113, 50, '#FCEAF2', '#A03060', 1.8);
+        for (let i = 0; i < 5; i++) {
+         const a = (i * Math.PI) / 5;
+         L(
+          s,
+          218 + 50 * Math.cos(a),
+          113 + 50 * Math.sin(a),
+          218 - 50 * Math.cos(a),
+          113 - 50 * Math.sin(a),
+          '#C03030',
+          1,
+          '3,2',
+         );
+        }
+        T(s, 218, 184, '圆：无数条', '#701040', 11);
+       }
+       if (t > 0.72) {
+        R(s, 300, 74, 94, 70, '#E8F1FB', '#1A5FA8', 1.8);
+        L(s, 347, 66, 347, 152, '#C03030', 1.5, '4,2');
+        L(s, 292, 109, 400, 109, '#C03030', 1.5, '4,2');
+        T(s, 347, 164, '长方形2条', '#0D3F6E', 11);
+       }
+      },
+     },
+     {
+      hint:
+       '画轴对称图形步骤：①确定对称轴 ②找原图形关键点 ③画各点的对应点（到对称轴距离相等）④连接成图。',
+      formula: '找关键点 → 找对应点 → 连接成对称图形',
+      dur: 1200,
+      draw(s, t) {
+       for (let r = 0; r < 6; r++)
+        for (let c = 0; c < 10; c++)
+         R(s, 22 + c * 42, 28 + r * 30, 42, 30, 'none', '#F0EDE6', 0.6);
+       PL(
+        s,
+        [
+         [22 + 42, 28 + 30],
+         [22 + 84, 28 + 30],
+         [22 + 84, 28 + 90],
+         [22 + 42, 28 + 90],
+        ],
+        '#E8F1FB',
+        '#1A5FA8',
+        1.8,
+       );
+       L(s, 22 + 4 * 42, 22, 22 + 4 * 42, 28 + 7 * 30, '#C03030', 2, '5,3');
+       if (t > 0.5) {
+        const ox = 22 + 4 * 42;
+        [
+         [22 + 42, 28 + 30],
+         [22 + 84, 28 + 30],
+         [22 + 84, 28 + 90],
+         [22 + 42, 28 + 90],
+        ].forEach(([px, py]) => {
+         const mpx = 2 * ox - px;
+         C(s, mpx, py, 4, '#3A7010', 'none');
+         L(s, px, py, mpx, py, '#9E9B96', 0.8, '3,2');
+        });
+        PL(
+         s,
+         [
+          [2 * (22 + 4 * 42) - (22 + 42), 28 + 30],
+          [2 * (22 + 4 * 42) - (22 + 84), 28 + 30],
+          [2 * (22 + 4 * 42) - (22 + 84), 28 + 90],
+          [2 * (22 + 4 * 42) - (22 + 42), 28 + 90],
+         ],
+         '#EAF6DC',
+         '#3A7010',
+         1.8,
+        );
+       }
+      },
+     },
+     {
+      hint:
+       '轴对称在生活中到处都是：建筑正面、蝴蝶、雪花、汉字。欣赏数学中的对称美！',
+      formula: '✅  掌握：找对称轴 → 在方格纸上画对称图形',
+      dur: 1000,
+      draw(s, t) {
+       PL(
+        s,
+        [
+         [68, 104],
+         [44, 158],
+         [92, 158],
+        ],
+        '#FCEAF2',
+        '#A03060',
+        1.8,
+       );
+       PL(
+        s,
+        [
+         [68, 70],
+         [68, 104],
+         [88, 104],
+         [80, 70],
+        ],
+        '#FCEAF2',
+        '#A03060',
+        1.8,
+       );
+       L(s, 68, 58, 68, 166, '#C03030', 1.5, '4,2');
+       if (t > 0.45) {
+        R(s, 180, 82, 94, 70, '#E8F1FB', '#1A5FA8', 1.8);
+        // 长方形2条对称轴：横向中线 + 纵向中线（对角线不是对称轴！）
+        L(s, 172, 117, 282, 117, '#C03030', 1.5, '4,2'); // 横向中线
+        L(s, 227, 74, 227, 160, '#C03030', 1.5, '4,2');  // 纵向中线
+        T(s, 227, 170, '2条对称轴', '#0D3F6E', 11);
+       }
+       if (t > 0.75)
+        T(s, 368, 114, '对称美\n无处不在', '#9E9B96', 13, 'middle');
+      },
+     },
+    ],
+    p_d2: [
+     {
+      hint:
+       '平移深化：在方格纸上精确描述平移，要说明"方向（上/下/左/右）"和"格数"两个要素。',
+      formula: '平移描述：方向 + 格数（两个要素缺一不可）',
+      dur: 1400,
+      draw(s, t) {
+       for (let r = 0; r < 6; r++)
+        for (let c = 0; c < 11; c++)
+         R(s, 22 + c * 38, 22 + r * 28, 38, 28, 'none', '#F0EDE6', 0.6);
+       const dx = Math.round(lerp(0, 5, t)) * 38;
+       PL(
+        s,
+        [
+         [22 + 38, 22 + 56],
+         [22 + 76, 22 + 56],
+         [22 + 76, 22 + 112],
+         [22 + 38, 22 + 112],
+        ],
+        'none',
+        '#1A5FA8',
+        1,
+        '4,2',
+       );
+       PL(
+        s,
+        [
+         [22 + 38 + dx, 22 + 56],
+         [22 + 76 + dx, 22 + 56],
+         [22 + 76 + dx, 22 + 112],
+         [22 + 38 + dx, 22 + 112],
+        ],
+        '#E8F1FB',
+        '#1A5FA8',
+        2,
+       );
+       if (t > 0.2) {
+        const n = Math.round(lerp(0, 5, t));
+        L(s, 22 + 57, 22 + 136, 22 + 57 + dx, 22 + 136, '#C03030', 2);
+        if (n > 0)
+         T(
+          s,
+          22 + 57 + dx / 2,
+          22 + 184,
+          `向右移${n}格`,
+          '#C03030',
+          12,
+          'middle',
+          '700',
+         );
+       }
+      },
+     },
+     {
+      hint:
+       '平移特征：图形移动后形状、大小、方向均不变，只有位置改变。每个点都移动了相同距离。',
+      formula: '平移：形状大小方向不变，位置改变',
+      dur: 1300,
+      draw(s, t) {
+       for (let r = 0; r < 6; r++)
+        for (let c = 0; c < 11; c++)
+         R(s, 22 + c * 38, 22 + r * 28, 38, 28, 'none', '#F0EDE6', 0.6);
+       // 原位置：淡色填充+虚线边框，表示"原来在这里"
+       PL(
+        s,
+        [
+         [22 + 38, 22 + 56],
+         [22 + 76, 22 + 56],
+         [22 + 76, 22 + 112],
+         [22 + 38, 22 + 112],
+        ],
+        '#EFF4FC',
+        '#9E9B96',
+        1,
+        '4,2',
+       );
+       T(s, 60, 134, '原位置', '#9E9B96', 9, 'middle');
+       const dx = 190;
+       PL(
+        s,
+        [
+         [22 + 38 + dx, 22 + 56],
+         [22 + 76 + dx, 22 + 56],
+         [22 + 76 + dx, 22 + 112],
+         [22 + 38 + dx, 22 + 112],
+        ],
+        '#E8F1FB',
+        '#1A5FA8',
+        2,
+       );
+       if (t > 0.4)
+        [
+         [22 + 57, 22 + 84],
+         [22 + 57, 22 + 56],
+         [22 + 57, 22 + 112],
+        ].forEach(([px, py]) => {
+         L(s, px, py, px + dx, py, '#9E9B96', 1, '4,2');
+         C(s, px + dx, py, 4, '#C03030', 'none');
+        });
+       if (t > 0.75)
+        T(s, 230, 204, '每个点都移动了相同距离', '#9E9B96', 11, 'middle');
+      },
+     },
+     {
+      hint:
+       '在方格纸上画平移：把图形的每个顶点都向同一方向移动相同格数，再连接各顶点。',
+      formula: '每个顶点同方向同格数移动 → 连接成图',
+      dur: 1200,
+      draw(s, t) {
+       for (let r = 0; r < 6; r++)
+        for (let c = 0; c < 10; c++)
+         R(s, 22 + c * 40, 22 + r * 28, 40, 28, 'none', '#F0EDE6', 0.6);
+       const pts = [
+        [22 + 40, 22 + 56],
+        [22 + 120, 22 + 56],
+        [22 + 120, 22 + 140],
+        [22 + 40, 22 + 140],
+       ];
+       PL(s, pts, '#E8F1FB', '#1A5FA8', 1.8);
+       const dx = 4 * 40;
+       if (t > 0.45) {
+        pts.forEach(([px, py]) => {
+         L(
+          s,
+          px,
+          py,
+          px + lerp(0, dx, Math.min(1, (t - 0.45) / 0.55)),
+          py,
+          '#C03030',
+          1,
+          '3,2',
+         );
+         C(
+          s,
+          px + lerp(0, dx, Math.min(1, (t - 0.45) / 0.55)),
+          py,
+          4,
+          '#3A7010',
+          'none',
+         );
+        });
+       }
+       if (t > 0.92)
+        PL(
+         s,
+         pts.map(([px, py]) => [px + dx, py]),
+         '#EAF6DC',
+         '#3A7010',
+         1.8,
+        );
+      },
+     },
+     {
+      hint:
+       '连续平移：先后顺序不影响最终结果。先右移再下移，等于右下方移动，位置相同。',
+      formula: '连续平移：顺序不影响最终位置',
+      dur: 1200,
+      draw(s, t) {
+       for (let r = 0; r < 6; r++)
+        for (let c = 0; c < 10; c++)
+         R(s, 22 + c * 40, 22 + r * 28, 40, 28, 'none', '#F0EDE6', 0.6);
+       R(s, 22 + 40, 22 + 28, 80, 56, '#E8F1FB', '#1A5FA8', 1.8);
+       T(s, 62 + 40, 22 + 28 + 78, '原图形', '#0D3F6E', 10);
+       if (t > 0.3) {
+        R(s, 22 + 40 + 3 * 40, 22 + 28, 80, 56, 'none', '#1A5FA8', 1, '4,2');
+        T(s, 62 + 40 + 3 * 40, 22 + 28 + 78, '右移3格', '#1A5FA8', 10);
+       }
+       if (t > 0.65) {
+        R(
+         s,
+         22 + 40 + 3 * 40,
+         22 + 28 + 3 * 28,
+         80,
+         56,
+         '#EAF6DC',
+         '#3A7010',
+         1.8,
+        );
+        T(
+         s,
+         62 + 40 + 3 * 40,
+         22 + 28 + 3 * 28 + 80,
+         '再下移3格',
+         '#3A7010',
+         10,
+        );
+       }
+      },
+     },
+    ],
+    p_d3: [
+     {
+      hint:
+       '旋转深化：图形绕固定点（旋转中心）转动。要说明：旋转中心 + 方向（顺/逆时针）+ 角度。',
+      formula: '旋转三要素：中心点 + 方向 + 角度',
+      dur: 1400,
+      draw(s, t) {
+       // 旋转中心 O 在画布中央偏左
+       const cx = 185, cy = 120;
+       // 顺时针 = SVG坐标系中角度增大（Y轴向下）
+       const angle = lerp(0, Math.PI / 2, t);
+
+       // 正方形初始位置：以 O 为圆心，左上角在 O 右上方
+       // 定义正方形4个顶点相对 O 的初始偏移（初始在右上象限）
+       const sq = [[-50,-70],[0,-70],[0,-20],[-50,-20]]; // 左上、右上、右下、左下
+
+       // 顺时针旋转：x' = x*cos + y*sin, y' = -x*sin + y*cos（SVG Y向下，顺时针为正）
+       const rotPts = sq.map(([rx, ry]) => [
+        cx + rx * Math.cos(angle) + ry * Math.sin(angle),
+        cy - rx * Math.sin(angle) + ry * Math.cos(angle),
+       ]);
+
+       // 画原始位置（淡色轮廓参考）
+       if (t < 0.95) {
+        const origPts = sq.map(([rx, ry]) => [cx + rx, cy + ry]);
+        PL(s, origPts, 'none', '#D0C0A0', 1);
+       }
+
+       // 画旋转中的正方形
+       PL(s, rotPts, '#FEF0DC', '#9A5800', 2.2);
+
+       // 旋转中心 O
+       C(s, cx, cy, 5, '#1A5FA8', 'none');
+       T(s, cx - 16, cy + 14, 'O', '#0D3F6E', 12, 'start');
+
+       // 弧线：从初始右上角位置扫到当前位置
+       // 右上角初始相对坐标 (0, -70)，距 O = 70
+       const r = 70;
+       const startX = cx + 0, startY = cy - r; // 初始右上角
+       const endX = cx + 0 * Math.cos(angle) + (-r) * Math.sin(angle);
+       const endY = cy - 0 * Math.sin(angle) + (-r) * Math.cos(angle);
+       if (angle > 0.01) {
+        const large = angle > Math.PI ? 1 : 0;
+        E('path', {
+         d: `M${startX},${startY} A${r},${r},0,${large},1,${endX},${endY}`,
+         fill: 'none', stroke: '#C03030', 'stroke-width': 1.8,
+        }, s);
+       }
+
+       // 角度标注
+       if (t > 0.4) {
+        const deg = Math.round(angle * 180 / Math.PI);
+        const labelR = r + 18;
+        const midA = angle / 2;
+        const lx = cx + labelR * Math.sin(midA);
+        const ly = cy - labelR * Math.cos(midA);
+        T(s, lx, ly, deg + '°', '#C03030', 13, 'middle', '700');
+       }
+       if (t > 0.5)
+        T(s, 348, 120, '顺时针\n旋转90°', '#6A3A00', 12, 'middle', '600');
+      },
+     },
+     {
+      hint:
+       '旋转90°：图形转四分之一圈。在方格纸上，每个顶点到旋转中心的距离不变，方向转90°。',
+      formula: '旋转90° = 转四分之一圈',
+      dur: 1400,
+      noAutoFit: true,
+      bg(s) {
+       for (let r = 0; r < 6; r++)
+        for (let c = 0; c < 10; c++)
+         R(s, 22 + c * 38, 22 + r * 28, 38, 28, 'none', '#F0EDE6', 0.6);
+      },
+      draw(s, t) {
+       const ox = 22 + 4 * 38 + 19,
+        oy = 22 + 4 * 28;
+       C(s, ox, oy, 5, '#1A5FA8', 'none');
+       T(s, ox + 6, oy + 12, 'O', '#0D3F6E', 11, 'start');
+       PL(
+        s,
+        [
+         [ox - 76, oy - 56],
+         [ox, oy - 56],
+         [ox, oy],
+        ],
+        '#FEF0DC',
+        '#9A5800',
+        1.8,
+       );
+       const angle = lerp(0, Math.PI / 2, t);
+       PL(
+        s,
+        [
+         [ox - 76, oy - 56],
+         [ox, oy - 56],
+         [ox, oy],
+        ].map(([px, py]) => {
+         const dx = px - ox,
+          dy = py - oy;
+         return [
+          ox + dx * Math.cos(angle) - dy * Math.sin(angle),
+          oy + dx * Math.sin(angle) + dy * Math.cos(angle),
+         ];
+        }),
+        '#E4F6EE',
+        '#0A7050',
+        1.8,
+       );
+       if (t > 0.5)
+        T(s, ox, oy + 52, '绕O点顺时针旋转90°', '#9E9B96', 11, 'middle');
+      },
+     },
+     {
+      hint:
+       '旋转180°：图形翻个身；旋转360°：转回原位。旋转后形状大小不变，方向改变。',
+      formula: '旋转后：形状大小不变，方向改变',
+      dur: 1300,
+      draw(s, t) {
+       const cx = 210,
+        cy = 106;
+       C(s, cx, cy, 5, '#1A5FA8', 'none');
+       PL(
+        s,
+        [
+         [cx, cy],
+         [cx - 64, cy - 42],
+         [cx - 64, cy],
+        ],
+        '#FEF0DC',
+        '#9A5800',
+        2,
+       );
+       T(s, cx - 48, cy + 16, '原图', '#6A3A00', 11);
+       if (t > 0.35) {
+        PL(
+         s,
+         [
+          [cx, cy],
+          [cx + 64, cy + 42],
+          [cx + 64, cy],
+         ],
+         '#EEECFE',
+         '#5A4AC0',
+         1.8,
+         '4,2',
+        );
+        T(s, cx + 52, cy - 8, '旋转180°', '#3A2A90', 11);
+       }
+       if (t > 0.7) {
+        E(
+         'path',
+         {
+          d: `M${cx},${cy - 28} A28,28,0,1,1,${cx + 0.01},${cy - 28}`,
+          fill: 'none',
+          stroke: '#C03030',
+          'stroke-width': 1.5,
+          'stroke-dasharray': '4,3',
+         },
+         s,
+        );
+       }
+      },
+     },
+     {
+      hint:
+       '平移、旋转、轴对称三种运动都不改变图形的形状和大小，这是它们的共同特征。',
+      formula: '✅  三种运动：平移（滑）旋转（转）轴对称（翻）',
+      dur: 1100,
+      draw(s, t) {
+       [
+        ['平移', 72, 102, '#1A5FA8', '#E8F1FB', '→'],
+        ['旋转', 218, 102, '#9A5800', '#FEF0DC', '↻'],
+        ['轴对称', 365, 102, '#A03060', '#FCEAF2', '⟺'],
+       ].forEach(([l, cx, cy, col, bg, sym], i) => {
+        if (i / 3 > t - 0.06) return;
+        C(s, cx, cy, 44, bg, col, 1.8);
+        T(s, cx, cy + 6, sym, col, 24, 'middle', '700');
+        T(s, cx, cy + 60, l, col, 12);
+       });
+       if (t > 0.85)
+        T(s, 218, 178, '三种运动均不改变形状和大小', '#9E9B96', 10, 'middle');
+      },
+     },
+    ],
+    p_e1: [
+     {
+      hint:
+       '图形放大：把图形的每条边都按相同比例增大，形状不变（相似图形），只是更大了。',
+      formula: '放大：各边同比例增大，形状不变（相似）',
+      dur: 1400,
+      draw(s, t) {
+       R(s, 42, 95, 64, 48, '#E8F1FB', '#1A5FA8', 1.8);
+       T(s, 74, 155, '原图', '#0D3F6E', 11);
+       const scale = lerp(1, 2, t);
+       R(s, 152, 74, 64 * scale, 48 * scale, '#FEF0DC', '#9A5800', 1.8);
+       T(
+        s,
+        152 + 32 * scale,
+        154 + 48 * (scale - 1),
+        '放大' + scale.toFixed(1) + '倍',
+        '#6A3A00',
+        11,
+       );
+       if (t > 0.6)
+        T(s, 365, 110, '各边变为\n原来2倍', '#9A5800', 13, 'middle', '600');
+      },
+     },
+     {
+      hint:
+       '图形缩小：把每条边都按相同比例缩小，形状不变，大小变小。缩小到½即各边×½。',
+      formula: '缩小：各边同比例缩小，形状不变（相似）',
+      dur: 1400,
+      draw(s, t) {
+       R(s, 28, 74, 136, 94, '#E8F1FB', '#1A5FA8', 1.8);
+       T(s, 96, 178, '原图', '#0D3F6E', 11);
+       const scale = lerp(1, 0.5, t);
+       R(s, 218, 74, 136 * scale, 94 * scale, '#EAF6DC', '#3A7010', 1.8);
+       T(
+        s,
+        218 + (136 * scale) / 2,
+        180,
+        '缩小到' + scale.toFixed(1),
+        '#204808',
+        11,
+       );
+       if (t > 0.6)
+        T(s, 400, 110, '各边变为\n原来½', '#3A7010', 13, 'middle', '600');
+      },
+     },
+     {
+      hint: '放大或缩小的倍数叫比例。如放大2倍，比例=2:1；缩小到¼，比例=1:4。',
+      formula: '比例 = 新图形边长 : 原图形边长',
+      dur: 1300,
+      draw(s, t) {
+       R(s, 28, 74, 82, 54, '#E8F1FB', '#1A5FA8', 1.8);
+       T(s, 69, 140, '原图\n1×1', '#0D3F6E', 10);
+       if (t > 0.35) {
+        R(s, 148, 60, 164, 108, '#FEF0DC', '#9A5800', 1.8);
+        T(s, 230, 178, '放大2倍\n比=2:1', '#6A3A00', 10);
+       }
+       if (t > 0.7) {
+        R(s, 348, 82, 42, 28, '#EAF6DC', '#3A7010', 1.5);
+        T(s, 369, 124, '缩小½\n比=1:2', '#204808', 10);
+       }
+      },
+     },
+     {
+      hint:
+       '实际应用：地图的比例尺。图上距离:实际距离=比例尺。如1:100000表示图上1cm=实际1km。',
+      formula: '比例尺 = 图上距离 : 实际距离（缩小的比例）',
+      dur: 1200,
+      draw(s, t) {
+       R(s, 28, 62, 184, 124, '#E8F1FB', '#1A5FA8', 1.5, 4);
+       T(s, 120, 52, '地图（缩小版）', '#0D3F6E', 12);
+       if (t > 0.4) T(s, 120, 112, '图上 2 cm', '#1A5FA8', 15, 'middle', '700');
+       if (t > 0.65) {
+        T(s, 315, 97, '实际距离', '#9E9B96', 13, 'middle');
+        T(s, 315, 117, '= 2×50000 cm', '#9E9B96', 12, 'middle');
+        T(s, 315, 137, '= 1 km', '#9A5800', 17, 'middle', '700');
+       }
+       if (t > 0.82)
+        T(s, 120, 198, '比例尺 1:50000', '#0D3F6E', 13, 'middle', '600');
+      },
+     },
+    ],
+   };
+
+   /* ─── 互动练习题 ─── */
+   const QUIZZES = {
+    // 一年级 - 图形认识与测量
+    a1: [
+     { q: '以下哪个是立体图形？', opts: ['长方形', '正方体', '三角形', '圆形'], a:1, hint:'正方体有长宽高三个维度，是立体图形' },
+     { q: '球是什么形状？', opts: ['平面图形', '立体图形', '线条', '点'], a:1, hint:'球有三维空间，是立体图形' },
+     { q: '圆柱有几个面？', opts: ['1个', '2个', '3个', '4个'], a:2, hint:'圆柱有2个底面和1个侧面，共3个面' },
+    ],
+    a2: [
+     { q: '平面图形有几个维度？', opts: ['3个', '1个', '2个', '0个'], a:2, hint:'平面图形只有长和宽，是二维的' },
+     { q: '以下哪个是平面图形？', opts: ['长方体', '圆柱', '三角形', '球'], a:2, hint:'三角形只有长和宽，是平面图形' },
+     { q: '从立体图形的面可以得到什么？', opts: ['立体图形', '平面图形', '线条', '点'], a:1, hint:'把立体图形的面描绘下来，就得到平面图形' },
+    ],
+    // 二年级 - 图形认识与测量
+    b1: [
+     { q: '直角等于多少度？', opts: ['45°', '60°', '90°', '180°'], a:2, hint:'直角是90°，用□标记' },
+     { q: '角是由什么组成的？', opts: ['一条线', '两条射线', '三条线', '四个点'], a:1, hint:'角是由一个顶点和两条射线组成的' },
+     { q: '比直角小的角叫什么？', opts: ['钝角', '锐角', '平角', '周角'], a:1, hint:'小于90°的角是锐角' },
+    ],
+    b2: [
+     { q: '正方形有几条对称轴？', opts: ['1条', '2条', '3条', '4条'], a:3, hint:'正方形有4条对称轴' },
+     { q: '长方形有几条对称轴？', opts: ['1条', '2条', '3条', '4条'], a:1, hint:'长方形有2条对称轴' },
+     { q: '正方形和长方形有什么关系？', opts: ['长方形是特殊的正方形', '正方形是特殊的长方形', '它们没关系', '它们完全相同'], a:1, hint:'正方形满足长方形的所有特征，是特殊的长方形' },
+    ],
+    // 二年级 - 图形位置与运动
+    p_b1: [
+     { q: '轴对称图形有什么特点？', opts: ['可以旋转', '对折后两边完全重合', '只能平移', '没有对称轴'], a:1, hint:'轴对称图形沿对称轴对折，两边完全重合' },
+     { q: '对称轴是什么？', opts: ['一条曲线', '使图形对折重合的直线', '图形的边', '图形的角'], a:1, hint:'对称轴是使图形对折后完全重合的那条直线' },
+     { q: '以下哪个是轴对称图形？', opts: ['不等边三角形', '平行四边形', '等腰三角形', '任意四边形'], a:2, hint:'等腰三角形沿中线对折，两边完全重合' },
+    ],
+    p_b2: [
+     { q: '平移时图形的什么不变？', opts: ['位置', '形状和大小', '方向', '颜色'], a:1, hint:'平移只改变位置，形状大小方向都不变' },
+     { q: '旋转时图形绕什么转动？', opts: ['一条边', '一个固定点', '一条直线', '整个平面'], a:1, hint:'旋转是图形绕一个固定点（旋转中心）转动' },
+     { q: '以下哪个是平移现象？', opts: ['时钟指针转动', '电梯上下移动', '风扇转动', '开门转动'], a:1, hint:'电梯上下移动是平移，位置改变但方向不变' },
+    ],
+    // 三年级 - 图形认识与测量
+    c1: [
+     { q: '平行四边形有几组对边平行？', opts: ['1组', '2组', '0组', '3组'], a:1, hint:'平行四边形两组对边分别平行' },
+     { q: '平行四边形的对边有什么特点？', opts: ['不等长', '相等且平行', '只相等', '只平行'], a:1, hint:'平行四边形两组对边分别相等且平行' },
+     { q: '四边形至少有几条边？', opts: ['3条', '4条', '5条', '6条'], a:1, hint:'四边形由四条边组成' },
+    ],
+    c2: [
+     { q: '周长是指什么？', opts: ['图形内部大小', '图形边缘一圈的长度', '图形的高度', '图形的颜色'], a:1, hint:'周长是围绕图形一整圈的总长度' },
+     { q: '测量周长用什么工具？', opts: ['量角器', '直尺', '天平', '温度计'], a:1, hint:'用直尺测量各边长度，再相加得到周长' },
+     { q: '正方形周长公式是？', opts: ['C=2a', 'C=4a', 'C=a²', 'C=2a+b'], a:1, hint:'正方形四条边相等，周长=边长×4' },
+    ],
+    c3: [
+     { q: '长方形周长公式是？', opts: ['C=ab', 'C=2(a+b)', 'C=a+b', 'C=4a'], a:1, hint:'C=2(a+b)，先算括号内' },
+     { q: '长方形长5cm宽3cm，周长是？', opts: ['8cm', '15cm', '16cm', '30cm'], a:2, hint:'C=2(5+3)=2×8=16cm' },
+     { q: '为什么长方形周长是2(a+b)？', opts: ['有2条边', '有2条长和2条宽', '面积公式', '没有原因'], a:1, hint:'长方形有2条长和2条宽，所以周长=长+长+宽+宽=2(a+b)' },
+    ],
+    c4: [
+     { q: '面积单位是？', opts: ['cm', 'm', 'cm²', 'g'], a:2, hint:'面积是二维的，单位用平方' },
+     { q: '面积是指什么？', opts: ['边的长度', '图形所占平面的大小', '图形的重量', '图形的高度'], a:1, hint:'面积是图形在平面上所占的大小' },
+     { q: '1平方厘米有多大？', opts: ['边长1cm的正方形面积', '边长1cm的正方形周长', '长度1cm', '体积1cm³'], a:0, hint:'1cm²是边长1cm的正方形面积' },
+    ],
+    c5: [
+     { q: '长方形面积公式是？', opts: ['S=2(a+b)', 'S=ab', 'S=a+b', 'S=4a'], a:1, hint:'长×宽=面积' },
+     { q: '长方形长6cm宽4cm，面积是？', opts: ['10cm²', '20cm²', '24cm²', '48cm²'], a:2, hint:'S=6×4=24cm²' },
+     { q: '为什么长方形面积是长×宽？', opts: ['铺方格的数量', '周长公式', '没有原因', '老师规定的'], a:0, hint:'长方形面积等于铺满的方格数量，长×宽格' },
+    ],
+    // 四年级 - 图形认识与测量
+    d1: [
+     { q: '三角形内角和等于？', opts: ['90°', '180°', '270°', '360°'], a:1, hint:'任意三角形内角和都是180°' },
+     { q: '钝角是多少度？', opts: ['小于90°', '等于90°', '大于90°小于180°', '等于180°'], a:2, hint:'钝角大于90°且小于180°' },
+     { q: '量角器测量的是什么？', opts: ['长度', '角度', '面积', '重量'], a:1, hint:'量角器用于测量角的大小（角度）' },
+    ],
+    d2: [
+     { q: '梯形有几组对边平行？', opts: ['0组', '1组', '2组', '3组'], a:1, hint:'梯形只有一组对边平行' },
+     { q: '平行四边形和梯形有什么区别？', opts: ['都是梯形', '平行四边形两组对边平行，梯形只有一组', '都是平行四边形', '没有区别'], a:1, hint:'平行四边形两组对边平行，梯形只有一组' },
+     { q: '梯形的平行边叫什么？', opts: ['腰', '上底和下底', '高', '对角线'], a:1, hint:'梯形平行的一组对边叫上底和下底' },
+    ],
+    // 四年级 - 图形位置与运动
+    p_d1: [
+     { q: '画轴对称图形需要什么？', opts: ['只要一条线', '对称轴和一半图形', '整个图形', '任意线条'], a:1, hint:'先画对称轴，再画一半图形，对折描出另一半' },
+     { q: '轴对称图形的对称点有什么特点？', opts: ['在对称轴同侧', '到对称轴距离相等', '没有关系', '在同一位置'], a:1, hint:'对称点到对称轴的距离相等' },
+     { q: '在方格纸上画轴对称图形，对称点相距几格？', opts: ['1格', '对称轴两侧相同格数', '任意格数', '不相同'], a:1, hint:'对称点到对称轴的格数相同' },
+    ],
+    p_d2: [
+     { q: '描述平移需要说明什么？', opts: ['方向和距离', '方向和角度', '距离和速度', '角度和时间'], a:0, hint:'平移要说明方向（上下左右）和距离（格数）' },
+     { q: '图形向右平移3格，各点怎么移动？', opts: ['向右移动任意距离', '都向右移动3格', '只有部分点移动', '不移动'], a:1, hint:'平移时图形各点都向相同方向移动相同距离' },
+     { q: '平移后图形的什么改变了？', opts: ['形状', '大小', '位置', '方向'], a:2, hint:'平移只改变位置，形状大小方向都不变' },
+    ],
+    p_d3: [
+     { q: '旋转三要素是什么？', opts: ['方向、距离、时间', '中心点、方向、角度', '距离、速度、角度', '位置、大小、形状'], a:1, hint:'旋转要说明中心点、方向（顺/逆时针）、角度' },
+     { q: '图形绕点O顺时针旋转90°，每个点怎么动？', opts: ['向右移动', '绕O点顺时针转90°', '不动', '任意移动'], a:1, hint:'旋转时每个点都绕旋转中心转动相同角度' },
+     { q: '旋转180°图形会怎样？', opts: ['回到原位', '方向相反', '形状改变', '大小改变'], a:1, hint:'旋转180°图形方向相反，但形状大小不变' },
+    ],
+    // 五年级 - 图形认识与测量
+    e1: [
+     { q: '平行四边形面积公式是？', opts: ['S=ab÷2', 'S=bh', 'S=(a+b)h÷2', 'S=πr²'], a:1, hint:'底×高，等于剪拼后的长方形面积' },
+     { q: '平行四边形面积为什么是底×高？', opts: ['老师规定', '可剪拼成长方形', '周长公式', '没有原因'], a:1, hint:'平行四边形可剪拼成等面积的长方形' },
+     { q: '平行四边形底8cm高5cm，面积是？', opts: ['13cm²', '40cm²', '26cm²', '80cm²'], a:1, hint:'S=8×5=40cm²' },
+     // 变式题：考应用，不只是公式本身
+     { q: '一个平行四边形底10cm，面积50cm²，高是多少？', opts: ['5cm', '4cm', '6cm', '40cm'], a:0, hint:'高=面积÷底=50÷10=5cm，反推高' },
+     { q: '下图中平行四边形的"高"指哪段？', opts: ['斜边', '底边', '底边到对边的垂直距离', '对角线'], a:2, hint:'高必须是底边与对边之间的垂直线段，不是斜边' },
+     { q: '一块平行四边形土地，底12m，高7m，种草坪每平方米25元，共需多少元？', opts: ['475元', '2100元', '1050元', '350元'], a:1, hint:'面积=12×7=84m²，费用=84×25=2100元' },
+    ],
+    e2: [
+     { q: '三角形面积公式是？', opts: ['S=bh', 'S=bh÷2', 'S=ab', 'S=(a+b)h÷2'], a:1, hint:'底×高÷2，两个三角形拼成平行四边形' },
+     { q: '三角形面积为什么要÷2？', opts: ['没有原因', '两个三角形拼成平行四边形', '老师规定', '公式简化'], a:1, hint:'两个相同三角形可拼成平行四边形，所以三角形面积是一半' },
+     { q: '三角形底6cm高4cm，面积是？', opts: ['24cm²', '12cm²', '10cm²', '20cm²'], a:1, hint:'S=6×4÷2=12cm²' },
+     // 变式题：钝角三角形的高在哪里？这是最常考、最容易错的
+     { q: '钝角三角形的高在哪里？', opts: ['只在内部', '可能在图形外部', '不存在', '只有一条'], a:1, hint:'钝角三角形的某些高要延长底边才能画出，高在图形外部' },
+     { q: '一个三角形面积24cm²，底8cm，高是多少？', opts: ['3cm', '6cm', '16cm', '12cm'], a:1, hint:'高=面积×2÷底=24×2÷8=6cm' },
+     { q: '等底等高的三角形和平行四边形，面积关系是？', opts: ['相等', '三角形是平行四边形的一半', '平行四边形是三角形的一半', '无关'], a:1, hint:'两个相同三角形拼成平行四边形，所以三角形面积=平行四边形÷2' },
+    ],
+    e3: [
+     { q: '梯形面积公式是？', opts: ['S=bh÷2', 'S=ab', 'S=(a+b)×h÷2', 'S=πr²'], a:2, hint:'(上底+下底)×高÷2' },
+     { q: '梯形上底3cm下底5cm高4cm，面积是？', opts: ['12cm²', '16cm²', '20cm²', '32cm²'], a:1, hint:'S=(3+5)×4÷2=8×4÷2=16cm²' },
+     { q: '梯形面积为什么要÷2？', opts: ['没有原因', '两个梯形拼成平行四边形', '老师规定', '公式简化'], a:1, hint:'两个相同梯形可拼成平行四边形，所以梯形面积是一半' },
+     // 变式题
+     { q: '梯形面积30cm²，高6cm，上底4cm，下底是多少？', opts: ['6cm', '10cm', '8cm', '5cm'], a:0, hint:'上底+下底=面积×2÷高=30×2÷6=10，下底=10-4=6cm' },
+     { q: '当梯形的上底缩短为0时，梯形变成了什么图形？', opts: ['长方形', '平行四边形', '三角形', '圆'], a:2, hint:'上底为0时，梯形就变成了三角形，所以三角形面积公式与梯形一致' },
+    ],
+    e4: [
+     { q: '组合图形面积怎么算？', opts: ['只能用公式', '分割或补全成简单图形', '不用算', '估测即可'], a:1, hint:'组合图形可分割成三角形、长方形等，分别计算再相加' },
+     { q: '求组合图形面积用什么方法？', opts: ['分割法', '补全法', '两种都可以', '无法计算'], a:2, hint:'分割法是把图形分成几个简单图形；补全法是补成大图形再减去多余部分' },
+     // 变式题
+     { q: '一个L形图案，大长方形8×6，缺掉小长方形3×2，面积是？', opts: ['48cm²', '42cm²', '36cm²', '54cm²'], a:1, hint:'用补全法：大长方形面积-小长方形面积=8×6-3×2=48-6=42cm²' },
+    ],
+    // 五年级 - 图形位置与运动
+    p_e1: [
+     { q: '图形放大2倍，各边长度变为原来的几倍？', opts: ['1倍', '2倍', '4倍', '不变'], a:1, hint:'放大2倍，各边都变为原来2倍' },
+     { q: '图形缩小到½，面积变为原来的几分之几？', opts: ['½', '¼', '不变', '2倍'], a:1, hint:'面积与边长平方成正比，边长½则面积¼' },
+     { q: '比例尺1:1000表示什么？', opts: ['图上1cm等于实际1000cm', '图上1000cm等于实际1cm', '面积比例', '没有意义'], a:0, hint:'比例尺=图上距离:实际距离，1:1000表示图上1cm=实际1000cm=10m' },
+     // 变式题
+     { q: '地图比例尺1:50000，图上2cm对应实际距离多少？', opts: ['1km', '10km', '100km', '0.1km'], a:0, hint:'实际=图上×50000=2×50000=100000cm=1km' },
+     { q: '正方形边长放大3倍，面积变为原来几倍？', opts: ['3倍', '6倍', '9倍', '不变'], a:2, hint:'边长3倍，面积=边长²，所以面积变为3²=9倍' },
+    ],
+    // 六年级 - 图形认识与测量
+    f1: [
+     { q: 'π约等于多少？', opts: ['2.14', '3.14', '4.14', '1.14'], a:1, hint:'π≈3.14159…，通常取3.14' },
+     { q: '圆的周长公式是？', opts: ['C=πr', 'C=2πr', 'C=πr²', 'C=2r'], a:1, hint:'圆周长=直径×π=2πr' },
+     { q: '圆的半径3cm，周长约是？', opts: ['9.42cm', '18.84cm', '28.26cm', '6cm'], a:1, hint:'C=2×3.14×3≈18.84cm' },
+     // 变式题
+     { q: '一个圆形操场跑道直径80m，绕一圈约多少米？', opts: ['125.6m', '251.2m', '502.4m', '80m'], a:1, hint:'C=π×d=3.14×80≈251.2m，注意这里用直径' },
+     { q: '圆的周长是62.8cm，半径是多少？', opts: ['5cm', '10cm', '20cm', '31.4cm'], a:1, hint:'r=C÷(2π)=62.8÷(2×3.14)=62.8÷6.28=10cm' },
+    ],
+    f2: [
+     { q: '圆的面积公式是？', opts: ['S=2πr', 'S=πd', 'S=πr²', 'S=πr'], a:2, hint:'扇形切拼近似长方形：长=πr，宽=r，面积=πr²' },
+     { q: '圆的半径4cm，面积约是？', opts: ['12.56cm²', '25.12cm²', '50.24cm²', '16cm²'], a:2, hint:'S=3.14×4²≈50.24cm²' },
+     { q: '圆面积公式是怎么推导的？', opts: ['老师规定', '扇形切拼成近似长方形', '周长公式', '没有推导'], a:1, hint:'把圆切成很多扇形，拼成近似长方形，长=πr，宽=r' },
+     // 变式题
+     { q: '半径扩大2倍，圆的面积变为原来几倍？', opts: ['2倍', '4倍', '8倍', '不变'], a:1, hint:'面积=πr²，r扩大2倍，面积=π(2r)²=4πr²，变为4倍' },
+     { q: '一块圆形草坪半径5m，面积约是多少？', opts: ['15.7m²', '31.4m²', '78.5m²', '157m²'], a:2, hint:'S=3.14×5²=3.14×25≈78.5m²' },
+    ],
+    f3: [
+     { q: '圆柱表面积公式是？', opts: ['S=πr²h', 'S=2πr(r+h)', 'S=2πrh', 'S=πr²'], a:1, hint:'2个底面+侧面：2πr²+2πrh=2πr(r+h)' },
+     { q: '圆柱侧面展开是什么形状？', opts: ['圆形', '长方形', '三角形', '正方形'], a:1, hint:'圆柱侧面展开是长方形，长=底面周长，宽=圆柱高' },
+     { q: '圆柱表面积包括哪些部分？', opts: ['只有侧面', '两个底面', '两个底面和侧面', '只有底面'], a:2, hint:'圆柱表面积=2个底面积+侧面积' },
+     // 变式题：只算侧面积的情况
+     { q: '一个没有盖子的圆柱形水桶，需要计算哪些面的面积？', opts: ['两个底面+侧面', '一个底面+侧面', '只有侧面', '两个底面'], a:1, hint:'没有盖子=只有一个底面+侧面，这是实际应用中常见的变式' },
+     { q: '圆柱侧面展开后长方形的长等于什么？', opts: ['圆柱的高', '圆的直径', '圆的周长', '圆的半径'], a:2, hint:'侧面展开后，长方形的长=底面圆的周长=2πr，宽=圆柱的高' },
+    ],
+    f4: [
+     { q: '圆柱体积公式是？', opts: ['V=2πrh', 'V=πr²', 'V=πr²h', 'V=⅓πr²h'], a:2, hint:'底面积×高=πr²h' },
+     { q: '圆柱体积公式的原理是？', opts: ['老师规定', '底面积×高', '周长公式', '面积公式'], a:1, hint:'圆柱体积=底面积×高，和长方体体积公式原理相同' },
+     { q: '圆柱半径2cm高5cm，体积约是？', opts: ['20cm³', '31.4cm³', '62.8cm³', '125.6cm³'], a:2, hint:'V=3.14×2²×5≈62.8cm³' },
+     // 变式题
+     { q: '一桶水，圆柱形，底面积78.5cm²，高20cm，能装多少水（ml）？', opts: ['785ml', '1570ml', '392.5ml', '3140ml'], a:1, hint:'V=底面积×高=78.5×20=1570cm³=1570ml（1cm³=1ml）' },
+    ],
+    f5: [
+     { q: '等底等高的圆锥体积是圆柱的？', opts: ['½', '¼', '⅓', '相等'], a:2, hint:'圆锥倒满圆柱需要3次，V圆锥=⅓V圆柱' },
+     { q: '圆锥体积公式是？', opts: ['V=πr²h', 'V=2πr²h', 'V=⅓πr²h', 'V=πrh'], a:2, hint:'V圆锥=⅓V圆柱=⅓πr²h' },
+     { q: '为什么圆锥体积是圆柱的⅓？', opts: ['老师规定', '实验发现倒3次装满', '公式推导', '没有原因'], a:1, hint:'用圆锥装沙子倒进等底等高圆柱，需要3次才能装满' },
+     // 变式题
+     { q: '圆锥形沙堆，底面半径3m，高4m，体积约是多少？', opts: ['12.56m³', '37.68m³', '113.04m³', '25.12m³'], a:1, hint:'V=⅓×3.14×3²×4=⅓×3.14×9×4≈37.68m³' },
+     { q: '等底等高的圆柱和圆锥，体积差是圆锥的几倍？', opts: ['1倍', '2倍', '3倍', '⅓倍'], a:1, hint:'圆柱=3×圆锥，体积差=2×圆锥，差是圆锥的2倍' },
+    ],
+   };
+   let quizState = { active: false, correct: 0, total: 0 };
+
+   function renderQuiz() {
+    const wrap = document.getElementById('quizWrap');
+    const quizBtn = document.getElementById('quizBtn');
+    if (!ct || !QUIZZES[ct.id]) {
+     wrap.style.display = 'none';
+     if (quizBtn) quizBtn.style.display = 'none';
+     return;
+    }
+    if (quizBtn) quizBtn.style.display = '';
+    const qs = QUIZZES[ct.id];
+    if (!qs.length) { wrap.style.display = 'none'; return; }
+    const qi = Math.floor(Math.random() * qs.length);
+    const q = qs[qi];
+    wrap.style.display = 'block';
+    wrap.style.animation = 'fadeSlideIn 0.3s ease';
+    wrap.innerHTML = `<div style="font-weight:600;font-size:13px;color:var(--text);margin-bottom:10px;">📝 小练习：${q.q}</div>
+     <div style="display:flex;flex-direction:column;gap:6px;" id="quizOpts">
+      ${q.opts.map((o,i)=>`<button class="quiz-opt" onclick="answerQuiz(${i},${q.a},'${q.hint.replace(/'/g,"\\'")}')">${'ABCD'[i]}. ${o}</button>`).join('')}
+     </div>
+     <div id="quizFeedback" style="margin-top:8px;font-size:12px;min-height:20px;"></div>`;
+    quizState.active = true;
+   }
+
+   function answerQuiz(chosen, correct, hint) {
+    if (!quizState.active) return;
+    quizState.active = false;
+    quizState.total++;
+    const isCorrect = chosen === correct;
+    track('quiz_answer', ct ? ct.id : '', isCorrect); // 埋点：答题结果
+    const fb = document.getElementById('quizFeedback');
+    const btns = document.querySelectorAll('.quiz-opt');
+    btns.forEach((b,i) => { b.disabled = true; if (i === correct) b.style.background = 'var(--grl)'; });
+    if (isCorrect) {
+     quizState.correct++;
+     fb.innerHTML = '<span style="color:var(--gr)">✅ 正确！' + hint + '</span>';
+    } else {
+     fb.innerHTML = '<span style="color:var(--rd)">❌ 不对哦。' + hint + '</span>';
+     btns[chosen].style.background = 'var(--rdl)';
+    }
+    // 答完后显示"再来一题"按钮
+    const nextBtn = document.createElement('button');
+    nextBtn.className = 'cbtn';
+    nextBtn.style.cssText = 'margin-top:10px;font-size:12px;padding:7px 14px;';
+    nextBtn.innerHTML = '<i class="ti ti-refresh"></i> 再来一题';
+    nextBtn.onclick = renderQuiz;
+    fb.appendChild(nextBtn);
+   }
+
+   /* ─── AI 功能 ─── */
+   let aiHistory = [];
+
+   function getApiKey() {
+    return localStorage.getItem('geo_ai_key') || '';
+   }
+   function updateApiStatus() {
+    // AI 已默认启用，不再需要状态更新
+   }
+
+   function openSettings() {
+    document.getElementById('apiKeyInput').value = getApiKey();
+    document.getElementById('settingsModal').classList.add('open');
+   }
+   function closeSettings() {
+    document.getElementById('settingsModal').classList.remove('open');
+   }
+   function saveSettings() {
+    const k = document.getElementById('apiKeyInput').value.trim();
+    if (k) localStorage.setItem('geo_ai_key', k);
+    else localStorage.removeItem('geo_ai_key');
+    updateApiStatus();
+    closeSettings();
+   }
+
+   function toggleAI() {
+    const panel = document.getElementById('aiPanel');
+    const isOpen = panel.classList.contains('open');
+    if (isOpen) {
+     closeAI();
+     return;
+    }
+    panel.classList.add('open');
+    document.getElementById('openAIBtn').style.display = 'none';
+    // 如果没有消息，自动发一条欢迎
+    if (aiHistory.length === 0 && ct) {
+     appendMsg(
+      'bot',
+      '👋 我是AI老师！你正在学习「' + ct.title + '」，有什么不明白的尽管问我～',
+     );
+    }
+    document.getElementById('aiInput').focus();
+   }
+
+   function closeAI() {
+    document.getElementById('aiPanel').classList.remove('open');
+    document.getElementById('openAIBtn').style.display = '';
+   }
+
+   function appendMsg(role, text) {
+    const box = document.getElementById('aiMsgs');
+    const div = document.createElement('div');
+    div.className = 'ai-msg ' + role;
+    const avatar = document.createElement('div');
+    avatar.className = 'ai-avatar';
+    avatar.textContent = role === 'bot' ? '🤖' : '👦';
+    const bubble = document.createElement('div');
+    bubble.className = 'ai-bubble';
+    bubble.textContent = text;
+    div.appendChild(avatar);
+    div.appendChild(bubble);
+    box.appendChild(div);
+    box.scrollTop = box.scrollHeight;
+    if (role === 'user') aiHistory.push({ role: 'user', content: text });
+    else aiHistory.push({ role: 'assistant', content: text });
+   }
+
+   async function sendAI() {
+    const input = document.getElementById('aiInput');
+    const q = input.value.trim();
+    if (!q) return;
+    input.value = '';
+    document.getElementById('aiSend').disabled = true;
+
+    appendMsg('user', q);
+
+    // 构建系统提示
+    const currentHint =
+     ct && ANIMS[ct.id] && ANIMS[ct.id][cs] ? ANIMS[ct.id][cs].hint : '';
+    const currentFormula =
+     ct && ANIMS[ct.id] && ANIMS[ct.id][cs] ? ANIMS[ct.id][cs].formula : '';
+    const sysPrompt = `你是一位耐心友好的小学数学老师，正在给三到六年级学生讲几何知识。
+当前知识点：${ct ? ct.title : ''}（${ct ? ct.sub : ''}）
+当前学习步骤提示：${currentHint}
+当前公式：${currentFormula}
+请用简洁易懂的语言回答学生问题，多用比喻和生活例子，避免使用复杂数学符号，回答控制在150字以内。`;
+
+    document.getElementById('aiThinking').style.display = 'flex';
+
+    try {
+     let reply = '';
+     // 使用本地代理 API（Key 已在 nginx 配置中隐藏）
+     const messages = [
+      { role: 'system', content: sysPrompt },
+      ...aiHistory.filter((m) => m.role !== 'system').slice(-6),
+     ];
+     const res = await fetch('/api/chat', {
+      method: 'POST',
+      headers: {
+       'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+       model: 'deepseek-chat',
+       messages,
+       temperature: 0.7,
+       max_tokens: 300,
+      }),
+     });
+     if (!res.ok) {
+      // 如果代理失败，使用 mock 回复
+      await new Promise((r) => setTimeout(r, 900));
+      reply = getMockAIReply(q, ct ? ct.title : '');
+     } else {
+      const data = await res.json();
+      reply = data.choices[0].message.content.trim();
+     }
+     document.getElementById('aiThinking').style.display = 'none';
+     appendMsg('bot', reply);
+    } catch (e) {
+     document.getElementById('aiThinking').style.display = 'none';
+     // 网络错误时使用 mock 回复
+     await new Promise((r) => setTimeout(r, 900));
+     appendMsg('bot', getMockAIReply(q, ct ? ct.title : ''));
+    }
+    document.getElementById('aiSend').disabled = false;
+    document.getElementById('aiInput').focus();
+   }
+
+   function getMockAIReply(q, topicTitle) {
+    const stepHint = (ct && ANIMS[ct.id] && ANIMS[ct.id][cs]) ? ANIMS[ct.id][cs].hint : '';
+    const stepFormula = (ct && ANIMS[ct.id] && ANIMS[ct.id][cs]) ? ANIMS[ct.id][cs].formula : '';
+    const lq = q.toLowerCase();
+    if (lq.includes('为什么') || lq.includes('怎么') || lq.includes('÷') || lq.includes('除'))
+     return `好问题！当前这步说的是：${stepHint}。简单说，${stepFormula ? '公式「' + stepFormula + '」的背后道理就是：' : ''}把复杂图形变成已知图形来算，这是数学里最重要的思想之一～`;
+    if (lq.includes('不懂') || lq.includes('不明白') || lq.includes('难'))
+     return `慢慢来～你正在学「${topicTitle}」的第${cs+1}步。当前${stepHint}。建议反复看动画，把图形在脑子里画出来，理解会更深！`;
+    if (lq.includes('例题') || lq.includes('例子') || lq.includes('练习'))
+     return `好！以「${topicTitle}」为例，公式 ${stepFormula || ''}。你可以把图形画在纸上，标出已知数据，然后代入公式一步步算。`;
+    if (lq.includes('你好') || lq.includes('老师'))
+     return `你好！我是AI老师～我们正在学「${topicTitle}」，已经到第${cs+1}步了。有什么不明白的尽管问！`;
+    return `你问的很好！当前我们学到了「${topicTitle}」的第${cs+1}/${ct.steps}步。这一步的关键：${stepHint}。需要我再详细讲讲吗？`;
+   }
+
+   /* ─── 键盘快捷键 ─── */
+   document.addEventListener('keydown', (e) => {
+    if (document.getElementById('ascreen').classList.contains('active')) {
+     if (e.key === 'ArrowRight' || e.key === ' ') {
+      e.preventDefault();
+      next();
+     }
+     if (e.key === 'ArrowLeft') prev();
+     if (e.key === 'r' || e.key === 'R') replay();
+     if (e.key === 'f' || e.key === 'F') togglePresent();
+     if (e.key === 'Escape' && !document.fullscreenElement) goHome();
+    }
+   });
+
+   /* ─── 移动端软键盘遮挡修复 ─── */
+   if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', () => {
+     const panel = document.getElementById('aiPanel');
+     if (panel && panel.classList.contains('open') && window.innerWidth <= 640) {
+      const offset = window.innerHeight - window.visualViewport.height;
+      panel.style.bottom = offset + 'px';
+     }
+    });
+    window.visualViewport.addEventListener('scroll', () => {
+     const panel = document.getElementById('aiPanel');
+     if (panel && panel.classList.contains('open') && window.innerWidth <= 640) {
+      const offset = window.innerHeight - window.visualViewport.height;
+      panel.style.bottom = offset + 'px';
+     }
+    });
+   }
+
+   /* ─── 学习进度持久化 ─── */
+   const VISITED_KEY = 'geo_visited';
+   function loadVisited() {
+    try { return new Set(JSON.parse(localStorage.getItem(VISITED_KEY)) || []); }
+    catch (_) { return new Set(); }
+   }
+   function saveVisited(s) {
+    localStorage.setItem(VISITED_KEY, JSON.stringify([...s]));
+   }
+   function saveGrade(g) {
+    localStorage.setItem('geo_grade', String(g));
+   }
+   function loadGrade() {
+    const g = parseInt(localStorage.getItem('geo_grade'));
+    return (g >= 1 && g <= 6) ? g : null;
+   }
+
+   const visitedSet = loadVisited();
+   // 恢复上次年级
+   const savedGrade = loadGrade();
+   if (savedGrade) cg = savedGrade;
+
+   // 初始化（AI 已默认启用）
+   renderGrade();
+   renderTopics();
+
+   /* ─── 匿名数据埋点 ─── */
+   function track(event, topicId, correct) {
+    try {
+     fetch('/api/track', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ event, topicId, grade: cg, correct: !!correct }),
+     }).catch(() => {}); // 失败静默
+    } catch (_) {}
+   }
+
+   /* ─── 学生反馈弹窗 ─── */
+   function openFeedback() {
+    document.getElementById('feedbackModal').style.display = 'flex';
+   }
+   function closeFeedback() {
+    document.getElementById('feedbackModal').style.display = 'none';
+   }
+   let feedbackRating = 0;
+   function setRating(n) {
+    feedbackRating = n;
+    document.querySelectorAll('.fb-star').forEach((s, i) => {
+     s.style.color = i < n ? '#f5a623' : '#ccc';
+    });
+   }
+   async function submitFeedback() {
+    if (!feedbackRating) { alert('请先选择星级'); return; }
+    const grade = document.getElementById('fbGrade').value;
+    const hardest = document.getElementById('fbHardest').value;
+    const comment = document.getElementById('fbComment').value.trim();
+    const btn = document.getElementById('fbSubmitBtn');
+    btn.disabled = true;
+    btn.textContent = '提交中…';
+    try {
+     await fetch('/api/feedback', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ grade, rating: feedbackRating, hardest, comment }),
+     });
+     document.getElementById('feedbackModal').innerHTML = `
+      <div style="background:#fff;border-radius:16px;padding:32px 24px;text-align:center;max-width:320px;width:90%">
+       <div style="font-size:40px;margin-bottom:12px">🎉</div>
+       <div style="font-size:16px;font-weight:600;color:#1a1a2e;margin-bottom:8px">谢谢你的反馈！</div>
+       <div style="font-size:13px;color:#666;margin-bottom:20px">你的意见帮助我们做得更好</div>
+       <button onclick="closeFeedback()" style="background:#4361ee;color:#fff;border:none;border-radius:8px;padding:10px 24px;font-size:14px;cursor:pointer">关闭</button>
+      </div>`;
+    } catch(e) {
+     btn.disabled = false;
+     btn.textContent = '提交';
+     alert('提交失败，请稍后再试');
+    }
+   }
+  </script>
+
+  <!-- 反馈弹窗 -->
+  <div id="feedbackModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:9999;align-items:center;justify-content:center;">
+   <div style="background:#fff;border-radius:16px;padding:24px;max-width:340px;width:90%;box-shadow:0 8px 32px rgba(0,0,0,0.18);">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+     <span style="font-size:15px;font-weight:600;color:#1a1a2e">📝 使用反馈</span>
+     <button onclick="closeFeedback()" style="background:none;border:none;font-size:20px;color:#999;cursor:pointer;line-height:1">×</button>
+    </div>
+    <div style="margin-bottom:14px;">
+     <div style="font-size:13px;color:#555;margin-bottom:6px">你觉得这个工具好用吗？</div>
+     <div style="display:flex;gap:8px;">
+      <button class="fb-star" onclick="setRating(1)" style="background:none;border:none;font-size:28px;color:#ccc;cursor:pointer;padding:0">★</button>
+      <button class="fb-star" onclick="setRating(2)" style="background:none;border:none;font-size:28px;color:#ccc;cursor:pointer;padding:0">★</button>
+      <button class="fb-star" onclick="setRating(3)" style="background:none;border:none;font-size:28px;color:#ccc;cursor:pointer;padding:0">★</button>
+      <button class="fb-star" onclick="setRating(4)" style="background:none;border:none;font-size:28px;color:#ccc;cursor:pointer;padding:0">★</button>
+      <button class="fb-star" onclick="setRating(5)" style="background:none;border:none;font-size:28px;color:#ccc;cursor:pointer;padding:0">★</button>
+     </div>
+    </div>
+    <div style="margin-bottom:14px;">
+     <div style="font-size:13px;color:#555;margin-bottom:6px">你是几年级？</div>
+     <select id="fbGrade" style="width:100%;padding:8px 10px;border:1.5px solid #e0e0e0;border-radius:8px;font-size:13px;color:#333;">
+      <option value="">请选择</option>
+      <option>一年级</option><option>二年级</option><option>三年级</option>
+      <option>四年级</option><option>五年级</option><option>六年级</option>
+      <option>老师/家长</option>
+     </select>
+    </div>
+    <div style="margin-bottom:14px;">
+     <div style="font-size:13px;color:#555;margin-bottom:6px">哪个知识点最难懂？（可不填）</div>
+     <input id="fbHardest" type="text" placeholder="如：圆锥体积、梯形面积…" style="width:100%;padding:8px 10px;border:1.5px solid #e0e0e0;border-radius:8px;font-size:13px;color:#333;box-sizing:border-box;">
+    </div>
+    <div style="margin-bottom:18px;">
+     <div style="font-size:13px;color:#555;margin-bottom:6px">其他建议（可不填）</div>
+     <textarea id="fbComment" rows="2" placeholder="说说你的想法…" style="width:100%;padding:8px 10px;border:1.5px solid #e0e0e0;border-radius:8px;font-size:13px;color:#333;box-sizing:border-box;resize:none;"></textarea>
+    </div>
+    <button id="fbSubmitBtn" onclick="submitFeedback()" style="width:100%;background:#4361ee;color:#fff;border:none;border-radius:10px;padding:12px;font-size:14px;font-weight:600;cursor:pointer;">提交反馈</button>
+   </div>
+  </div>
+ </body>
+</html>
+
+
