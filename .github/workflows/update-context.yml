@@ -2,7 +2,7 @@ name: 自动更新 CONTEXT.md
 
 on:
   push:
-    branches: [main]
+    branches: ["**"]
     paths-ignore:
       - 'CONTEXT.md'
 
