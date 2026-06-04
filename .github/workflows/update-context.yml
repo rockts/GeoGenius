@@ -26,8 +26,8 @@ jobs:
           echo "COMMIT_AUTHOR=$(git log -1 --pretty=%an)" >> $GITHUB_ENV
           echo "FILE_SIZE=$(wc -c < index.html | tr -d ' ')" >> $GITHUB_ENV
           echo "FILE_LINES=$(wc -l < index.html | tr -d ' ')" >> $GITHUB_ENV
-          echo "TOPIC_COUNT=$(grep -o 'stat-n\">[0-9]*' index.html | head -1 | grep -o '[0-9]*')" >> $GITHUB_ENV
-          echo "STEP_COUNT=$(grep -o 'stat-n\">[0-9]*' index.html | sed -n '2p' | grep -o '[0-9]*')" >> $GITHUB_ENV
+	  echo "TOPIC_COUNT=$(grep -o 'stat-n\">[0-9]*' index.html | sed -n '2p' | grep -o '[0-9]*')" >> $GITHUB_ENV
+	  echo "STEP_COUNT=$(grep -o 'stat-n\">[0-9]*' index.html | sed -n '3p' | grep -o '[0-9]*')" >> $GITHUB_ENV
 
       - name: 写入 CONTEXT.md
         run: |
