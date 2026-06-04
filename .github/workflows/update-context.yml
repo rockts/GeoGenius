@@ -18,7 +18,7 @@ jobs:
         with:
           fetch-depth: 2
 
-      - name: 更新 CONTEXT.md
+      - name: 收集信息
         run: |
           echo "COMMIT_SHA=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
           echo "COMMIT_MSG=$(git log -1 --pretty=%s)" >> $GITHUB_ENV
@@ -26,29 +26,33 @@ jobs:
           echo "COMMIT_AUTHOR=$(git log -1 --pretty=%an)" >> $GITHUB_ENV
           echo "FILE_SIZE=$(wc -c < index.html | tr -d ' ')" >> $GITHUB_ENV
           echo "FILE_LINES=$(wc -l < index.html | tr -d ' ')" >> $GITHUB_ENV
-	  echo "TOPIC_COUNT=$(grep -o 'stat-n\">[0-9]*' index.html | sed -n '2p' | grep -o '[0-9]*')" >> $GITHUB_ENV
-	  echo "STEP_COUNT=$(grep -o 'stat-n\">[0-9]*' index.html | sed -n '3p' | grep -o '[0-9]*')" >> $GITHUB_ENV
+          echo "TOPIC_COUNT=$(grep -o 'stat-n\">[0-9]*' index.html | sed -n '2p' | grep -o '[0-9]*')" >> $GITHUB_ENV
+          echo "STEP_COUNT=$(grep -o 'stat-n\">[0-9]*' index.html | sed -n '3p' | grep -o '[0-9]*')" >> $GITHUB_ENV
 
       - name: 写入 CONTEXT.md
         run: |
-          python3 - << 'PYEOF'
+          python3 -c "
           import re, os
-          sha     = os.environ['COMMIT_SHA']
-          msg     = os.environ['COMMIT_MSG']
-          time    = os.environ['COMMIT_TIME']
-          author  = os.environ['COMMIT_AUTHOR']
-          size    = os.environ['FILE_SIZE']
-          lines   = os.environ['FILE_LINES']
-          topics  = os.environ['TOPIC_COUNT']
-          steps   = os.environ['STEP_COUNT']
-          with open('CONTEXT.md', 'r') as f:
-              content = f.read()
-          new_status = f"""## 当前状态（最后更新：{time}）\n\n- **知识点**：{topics} 个，{steps} 个动画步骤\n- **main 分支最新 commit**：`{sha}` — {msg}\n- **index.html 大小**：{size} 字节 / {lines} 行\n- **Cloudflare 部署分支**：`main`\n- **最后提交者**：{author} @ {time}"""
-          content = re.sub(r'## 当前状态.*?(?=\n## )', new_status + '\n\n', content, flags=re.DOTALL)
-          with open('CONTEXT.md', 'w') as f:
-              f.write(content)
-          print("✅ CONTEXT.md 更新成功")
-          PYEOF
+          sha    = os.environ['COMMIT_SHA']
+          msg    = os.environ['COMMIT_MSG']
+          time   = os.environ['COMMIT_TIME']
+          author = os.environ['COMMIT_AUTHOR']
+          size   = os.environ['FILE_SIZE']
+          lines  = os.environ['FILE_LINES']
+          topics = os.environ['TOPIC_COUNT']
+          steps  = os.environ['STEP_COUNT']
+          with open('CONTEXT.md') as f:
+              c = f.read()
+          ns = ('## 当前状态（最后更新：' + time + '）\n\n'
+              + '- **知识点**：' + topics + ' 个，' + steps + ' 个动画步骤\n'
+              + '- **main 分支最新 commit**：' + sha + ' — ' + msg + '\n'
+              + '- **index.html 大小**：' + size + ' 字节 / ' + lines + ' 行\n'
+              + '- **Cloudflare 部署分支**：main\n'
+              + '- **最后提交者**：' + author + ' @ ' + time)
+          c = re.sub(r'## 当前状态.*?(?=\n## )', ns + '\n\n', c, flags=re.DOTALL)
+          open('CONTEXT.md','w').write(c)
+          print('done')
+          "
 
       - name: Commit & Push
         run: |
@@ -56,7 +60,7 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add CONTEXT.md
           if git diff --staged --quiet; then
-            echo "无变化，跳过"
+            echo "无变化"
           else
             git commit -m "docs(auto): 自动更新 CONTEXT.md [skip ci]"
             git push
