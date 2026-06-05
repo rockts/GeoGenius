@@ -18,43 +18,42 @@ jobs:
         with:
           fetch-depth: 2
 
-      - name: 收集信息
+      - name: 更新 CONTEXT.md
         run: |
-          echo "COMMIT_SHA=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
-          echo "COMMIT_MSG=$(git log -1 --pretty=%s)" >> $GITHUB_ENV
-          echo "COMMIT_TIME=$(git log -1 --pretty=%cd --date=format:'%Y-%m-%d %H:%M')" >> $GITHUB_ENV
-          echo "COMMIT_AUTHOR=$(git log -1 --pretty=%an)" >> $GITHUB_ENV
-          echo "BRANCH_NAME=${GITHUB_REF_NAME}" >> $GITHUB_ENV
-          echo "FILE_SIZE=$(wc -c < index.html | tr -d ' ')" >> $GITHUB_ENV
-          echo "FILE_LINES=$(wc -l < index.html | tr -d ' ')" >> $GITHUB_ENV
-          echo "TOPIC_COUNT=$(python3 -c \"import re; s=open('index.html').read(); print(len(re.findall(r\\\"id: '[^']+'\\\", s)))\")" >> $GITHUB_ENV
-          echo "STEP_COUNT=$(python3 -c \"import re; s=open('index.html').read(); print(sum(map(int, re.findall(r\\\"steps: (\\\\d+)\\\", s))))\")" >> $GITHUB_ENV
+          python3 << 'PYEOF'
+          import re, subprocess, os
 
-      - name: 写入 CONTEXT.md
-        run: |
-          python3 -c "
-          import re, os
-          sha    = os.environ['COMMIT_SHA']
-          msg    = os.environ['COMMIT_MSG']
-          time   = os.environ['COMMIT_TIME']
-          author = os.environ['COMMIT_AUTHOR']
-          branch = os.environ['BRANCH_NAME']
-          size   = os.environ['FILE_SIZE']
-          lines  = os.environ['FILE_LINES']
-          topics = os.environ['TOPIC_COUNT']
-          steps  = os.environ['STEP_COUNT']
-          with open('CONTEXT.md') as f:
+          def sh(cmd):
+              return subprocess.check_output(cmd, shell=True).decode().strip()
+
+          sha    = sh("git rev-parse --short HEAD")
+          msg    = sh("git log -1 --pretty=%s")
+          time   = sh("git log -1 --pretty=%cd --date=format:'%Y-%m-%d %H:%M'")
+          author = sh("git log -1 --pretty=%an")
+          branch = os.environ.get("GITHUB_REF_NAME", "main")
+          size   = sh("wc -c < index.html | tr -d ' '")
+          lines  = sh("wc -l < index.html | tr -d ' '")
+
+          html = open("index.html").read()
+          topics = str(len(re.findall(r"id: '[a-z_0-9]+'", html)))
+          steps  = str(sum(int(x) for x in re.findall(r"steps:\s*(\d+)", html)))
+
+          with open("CONTEXT.md") as f:
               c = f.read()
-          ns = ('## 当前状态（最后更新：' + time + '）\n\n'
-              + '- **知识点**：' + topics + ' 个，' + steps + ' 个动画步骤\n'
-              + '- **当前分支最新 commit**：' + branch + ' / ' + sha + ' — ' + msg + '\n'
-              + '- **index.html 大小**：' + size + ' 字节 / ' + lines + ' 行\n'
-              + '- **Cloudflare 部署分支**：main\n'
-              + '- **最后提交者**：' + author + ' @ ' + time)
-          c = re.sub(r'## 当前状态.*?(?=\n## )', ns + '\n\n', c, flags=re.DOTALL)
-          open('CONTEXT.md','w').write(c)
-          print('done')
-          "
+
+          ns = (
+              f"## 当前状态（最后更新：{time}）\n\n"
+              f"- **知识点**：{topics} 个，{steps} 个动画步骤\n"
+              f"- **当前分支**：{branch} / `{sha}` — {msg}\n"
+              f"- **index.html 大小**：{size} 字节 / {lines} 行\n"
+              f"- **Cloudflare 部署分支**：main\n"
+              f"- **最后提交者**：{author} @ {time}"
+          )
+
+          c = re.sub(r"## 当前状态.*?(?=\n## )", ns + "\n\n", c, flags=re.DOTALL)
+          open("CONTEXT.md", "w").write(c)
+          print("CONTEXT.md 更新成功")
+          PYEOF
 
       - name: Commit & Push
         run: |
