@@ -107,9 +107,17 @@
     padding: 4px 10px;
     background: var(--bll);
     color: var(--bldk);
-    border-radius: 20px;
-    font-weight: 500;
-   }
+   border-radius: 20px;
+   font-weight: 500;
+  }
+  .header-badge.ai-online {
+   background: var(--grl);
+   color: var(--grdk);
+  }
+  .header-badge.ai-basic {
+   background: var(--aml);
+   color: var(--amdk);
+  }
 
    /* ── LAYOUT ── */
    .container {
@@ -287,9 +295,31 @@
     font-size: 10px;
     font-weight: 600;
     padding: 3px 8px;
-    border-radius: 20px;
-    letter-spacing: 0.04em;
-   }
+   border-radius: 20px;
+   letter-spacing: 0.04em;
+  }
+  .tcard-progress {
+   display: flex;
+   gap: 6px;
+   flex-wrap: wrap;
+  }
+  .tcard-progress-badge {
+   display: inline-flex;
+   align-items: center;
+   gap: 4px;
+   padding: 3px 7px;
+   border-radius: 20px;
+   border: 1px solid var(--border);
+   background: var(--surface);
+   color: var(--text3);
+   font-size: 10px;
+   font-weight: 600;
+  }
+  .tcard-progress-badge.done {
+   border-color: transparent;
+   background: var(--grl);
+   color: var(--grdk);
+  }
    .tcard-title {
     font-size: 14px;
     font-weight: 600;
@@ -439,11 +469,66 @@
      border-color 0.3s,
      color 0.3s;
    }
-   .formula-card.highlight {
-    background: var(--bll);
-    border-color: var(--bl);
-    color: var(--bldk);
-   }
+  .formula-card.highlight {
+   background: var(--bll);
+   border-color: var(--bl);
+   color: var(--bldk);
+  }
+  .formula-card.pending {
+   background: var(--aml);
+   border-color: #f4c27a;
+   color: var(--amdk);
+  }
+  .prediction-card {
+   background: var(--surface);
+   border: 1.5px dashed #d7a85d;
+   border-radius: var(--r);
+   padding: 12px 14px;
+   margin-bottom: 10px;
+   display: none;
+   align-items: flex-start;
+   justify-content: space-between;
+   gap: 12px;
+   color: var(--text2);
+  }
+  .prediction-card.open {
+   display: flex;
+  }
+  .prediction-main {
+   flex: 1;
+   min-width: 0;
+  }
+  .prediction-title {
+   font-size: 12px;
+   font-weight: 700;
+   color: var(--amdk);
+   margin-bottom: 4px;
+  }
+  .prediction-question {
+   font-size: 13px;
+   line-height: 1.6;
+  }
+  .prediction-answer {
+   margin-top: 6px;
+   font-size: 12px;
+   color: var(--text3);
+   display: none;
+  }
+  .prediction-card.revealed .prediction-answer {
+   display: block;
+  }
+  .prediction-btn {
+   flex-shrink: 0;
+   border: 1px solid #e2b66f;
+   background: var(--aml);
+   color: var(--amdk);
+   border-radius: 8px;
+   padding: 7px 10px;
+   font-size: 12px;
+   font-weight: 600;
+   cursor: pointer;
+   font-family: inherit;
+  }
 
    .ctrl-row {
     display: flex;
@@ -476,9 +561,14 @@
     border-color: var(--bl);
     color: #fff;
    }
-   .cbtn.primary:hover {
-    background: var(--bldk);
-   }
+  .cbtn.primary:hover {
+   background: var(--bldk);
+  }
+  .cbtn.active {
+   border-color: var(--bl);
+   color: var(--bl);
+   background: var(--bll);
+  }
    .ctrl-spacer {
     flex: 1;
    }
@@ -880,8 +970,8 @@
     </div>
    </div>
    <div style="display: flex; align-items: center; gap: 10px">
-    <span class="header-badge">2022版课标</span>
-    <span class="header-badge" style="background:var(--grl);color:var(--gr);"><i class="ti ti-robot" style="font-size:12px;"></i> AI已启用</span>
+   <span class="header-badge">2022版课标</span>
+    <span class="header-badge ai-online" id="aiModeBadge"><i class="ti ti-robot" style="font-size:12px;"></i> AI在线讲解</span>
    </div>
   </header>
 
@@ -921,8 +1011,12 @@
 
     <div class="footer-info">
      <i class="ti ti-info-circle" style="font-size: 15px; flex-shrink: 0"></i>
-     每个知识点包含逐步推导动画，可随时暂停重播 ·
+     每个知识点包含逐步推导动画，可暂停、慢速播放和重播 ·
      内容依据义务教育数学课程标准（2022年版）
+    </div>
+    <div class="footer-info">
+     <i class="ti ti-shield-check" style="font-size: 15px; flex-shrink: 0"></i>
+     仅收集匿名学习数据用于改进工具，不收集姓名、学校和联系方式
     </div>
     <div style="text-align:center;margin:18px 0 4px;">
      <button onclick="openFeedback()" style="background:none;border:1.5px solid #c7cfe8;border-radius:20px;padding:7px 18px;font-size:12px;color:#666;cursor:pointer;display:inline-flex;align-items:center;gap:6px;">
@@ -956,9 +1050,17 @@
      >
       <g id="asvg-bg"></g>
       <g id="asvg-anim"></g>
-     </svg>
-    </div>
+    </svg>
+   </div>
     <div class="dot-row" id="dotrow"></div>
+    <div class="prediction-card" id="predictionCard">
+     <div class="prediction-main">
+      <div class="prediction-title">先想一想</div>
+      <div class="prediction-question" id="predictionQuestion"></div>
+      <div class="prediction-answer" id="predictionAnswer"></div>
+     </div>
+     <button class="prediction-btn" id="predictionBtn" onclick="revealPrediction()">我想好了</button>
+    </div>
     <div class="hint-card" id="shint"></div>
     <div class="formula-card" id="sform"></div>
     <div class="ctrl-row">
@@ -966,7 +1068,13 @@
       <i class="ti ti-arrow-left"></i> 上一步
      </button>
      <button class="cbtn" id="breplay" onclick="replay()">
-      <i class="ti ti-refresh"></i> 重播
+     <i class="ti ti-refresh"></i> 重播
+     </button>
+     <button class="cbtn" id="bpause" onclick="togglePause()">
+      <i class="ti ti-player-pause"></i> 暂停
+     </button>
+     <button class="cbtn" id="bspeed" onclick="toggleSlow()">
+      <i class="ti ti-player-play"></i> 慢速
      </button>
      <button class="cbtn" id="bpresent" onclick="togglePresent()">
       <i class="ti ti-presentation"></i> 投影模式
@@ -1041,36 +1149,6 @@
      <button onclick="openFeedback()" style="background:none;border:1px solid #dde3f0;border-radius:20px;padding:6px 18px;font-size:11px;color:#999;cursor:pointer;display:inline-flex;align-items:center;gap:5px;transition:border-color 0.2s,color 0.2s;" onmouseover="this.style.borderColor='#a5b4fc';this.style.color='#6366f1';" onmouseout="this.style.borderColor='#dde3f0';this.style.color='#999';">
       <i class="ti ti-message-circle" style="font-size:13px;"></i> 反馈这个知识点
      </button>
-    </div>
-   </div>
-  </div>
-
-  <!-- 设置弹窗 -->
-  <div class="modal-overlay" id="settingsModal">
-   <div class="modal">
-    <h3>🤖 AI老师设置</h3>
-    <p>
-     输入 DeepSeek API Key，即可启用真实 AI 讲解功能。<br />Key
-     仅存储在本地浏览器，不会上传到任何服务器。
-    </p>
-    <label>DeepSeek API Key</label>
-    <input
-     type="password"
-     id="apiKeyInput"
-     placeholder="sk-xxxxxxxxxxxxxxxxxxxxxxxx"
-    />
-    <div class="modal-hint">
-     获取免费 Key：<a
-      href="https://platform.deepseek.com/"
-      target="_blank"
-      style="color: var(--bl)"
-      >platform.deepseek.com</a
-     >（注册后在控制台创建）<br />
-     不填写则使用本地模拟回复，功能照常可用。
-    </div>
-    <div class="modal-btns">
-     <button class="modal-cancel" onclick="closeSettings()">取消</button>
-     <button class="modal-confirm" onclick="saveSettings()">保存</button>
     </div>
    </div>
   </div>
@@ -1348,6 +1426,55 @@
     ct = null,
     cs = 0,
     af = null;
+   let slowMode = false;
+   const animState = {
+    paused: false,
+    done: true,
+    start: 0,
+    pausedAt: 0,
+    pausedMs: 0,
+    duration: 0,
+    sd: null,
+    bgGroup: null,
+    animGroup: null,
+   };
+   let predictionState = { item: null, revealed: false };
+   const PREDICTIONS = {
+    e1: {
+     1: {
+      q: '你觉得剪下来的三角形会移到哪里，才能拼成一个长方形？',
+      a: '它会补到另一侧的空缺处，底和高就能对应成长方形的长和宽。',
+     },
+    },
+    e2: {
+     1: {
+      q: '两个完全一样的三角形拼在一起，会变成什么熟悉的图形？',
+      a: '会拼成一个平行四边形，所以一个三角形只占拼成图形的一半。',
+     },
+     2: {
+      q: '为什么三角形面积公式最后要除以2？',
+      a: '因为两个一样的三角形才拼成一个平行四边形，一个三角形只有它的一半。',
+     },
+    },
+    e3: {
+     1: {
+      q: '你觉得梯形怎样变形，才能借用平行四边形的面积来算？',
+      a: '把两个完全一样的梯形反向拼合，就能得到一个平行四边形。',
+     },
+    },
+    f2: {
+     1: {
+      q: '圆被切成许多小扇形后，重新排列会越来越像什么图形？',
+      a: '会越来越像长方形，长接近圆周长的一半，也就是 πr，宽是 r。',
+     },
+    },
+    f5: {
+     1: {
+      q: '如果用等底等高的圆锥往圆柱里倒沙子，你猜几次能倒满？',
+      a: '正好需要3次，所以圆锥体积是等底等高圆柱体积的三分之一。',
+     },
+    },
+   };
    const lerp = (a, b, t) => a + (b - a) * t;
    const lp = (p, q, t) => [lerp(p[0], q[0], t), lerp(p[1], q[1], t)];
    const ease = (t) => (t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2);
@@ -1548,12 +1675,16 @@
     const icon = ICONS[t.tag] || 'ti-math-function';
     const dc = GCD[cg] || c;
     const isVisited = visitedSet.has(t.id);
-    const tagText = t.tag + (isVisited ? ' ✓' : '');
+    const isQuizPassed = quizPassedSet.has(t.id);
     d.innerHTML = `<div class="tcard-top">
     <div class="tcard-icon" style="background:${bg};"><i class="ti ${icon}" style="color:${dc};"></i></div>
-    <span class="tcard-badge" style="background:${bg};color:${dc};">${tagText}</span></div>
+    <span class="tcard-badge" style="background:${bg};color:${dc};">${t.tag}</span></div>
   <div class="tcard-title">${t.title}</div>
   <div class="tcard-sub">${t.sub}</div>
+  <div class="tcard-progress">
+   <span class="tcard-progress-badge ${isVisited ? 'done' : ''}"><i class="ti ${isVisited ? 'ti-check' : 'ti-eye'}"></i> 看完</span>
+   <span class="tcard-progress-badge ${isQuizPassed ? 'done' : ''}"><i class="ti ${isQuizPassed ? 'ti-check' : 'ti-pencil'}"></i> 练习</span>
+  </div>
   <div class="tcard-steps">${Array.from({ length: t.steps }, (_, i) => `<div class="tcard-step" style="background:${i === 0 ? c : '#E0DDD6'};"></div>`).join('')}</div>`;
     d.onclick = () => openT(t);
     return d;
@@ -1640,12 +1771,89 @@
      ? '<i class="ti ti-check"></i> 完成'
      : '下一步 <i class="ti ti-arrow-right"></i>';
     // 走到最后一步才算完成，记录进度
-    if (last && ct) {
+   if (last && ct) {
      if (!visitedSet.has(ct.id)) {
       visitedSet.add(ct.id);
-      localStorage.setItem('geo_visited', JSON.stringify([...visitedSet]));
+      saveVisited(visitedSet);
       track('topic_complete', ct.id); // 首次完成才上报
      }
+    }
+   }
+   function getPrediction() {
+    return ct && PREDICTIONS[ct.id] ? PREDICTIONS[ct.id][cs] || null : null;
+   }
+   function renderPrediction(sd) {
+    const card = document.getElementById('predictionCard');
+    const q = document.getElementById('predictionQuestion');
+    const a = document.getElementById('predictionAnswer');
+    const btn = document.getElementById('predictionBtn');
+    const fc = document.getElementById('sform');
+    const item = getPrediction();
+    predictionState = { item, revealed: !item };
+    if (!item) {
+     card.className = 'prediction-card';
+     card.style.display = 'none';
+     fc.textContent = sd.formula;
+     return;
+    }
+    q.textContent = item.q;
+    a.textContent = item.a;
+    btn.textContent = '我想好了';
+    btn.disabled = false;
+    card.style.display = '';
+    card.className = 'prediction-card open';
+    fc.textContent = '先别急着看结论，预测一下图形接下来会怎样变化。';
+    fc.className = 'formula-card pending';
+   }
+   function revealPrediction() {
+    if (!predictionState.item) return;
+    predictionState.revealed = true;
+    const card = document.getElementById('predictionCard');
+    const btn = document.getElementById('predictionBtn');
+    const sd = animState.sd;
+    const fc = document.getElementById('sform');
+    card.className = 'prediction-card open revealed';
+    btn.textContent = '已思考';
+    btn.disabled = true;
+    if (sd) {
+     fc.textContent = sd.formula;
+     fc.className = 'formula-card' + (cs === ct.steps - 1 ? ' highlight' : '');
+    }
+   }
+   function updatePauseButton() {
+    const btn = document.getElementById('bpause');
+    if (!btn) return;
+    btn.disabled = !animState.sd || animState.done;
+    btn.classList.toggle('active', animState.paused);
+    btn.innerHTML = animState.paused
+     ? '<i class="ti ti-player-play"></i> 继续'
+     : '<i class="ti ti-player-pause"></i> 暂停';
+   }
+   function updateSpeedButton() {
+    const btn = document.getElementById('bspeed');
+    if (!btn) return;
+    btn.classList.toggle('active', slowMode);
+    btn.innerHTML = slowMode
+     ? '<i class="ti ti-player-play"></i> 慢速中'
+     : '<i class="ti ti-player-play"></i> 慢速';
+   }
+   function drawAnimFrame(p) {
+    if (!animState.sd || !animState.animGroup) return;
+    clr(animState.animGroup);
+    animState.sd.draw(animState.animGroup, ease(p));
+    fitAnimContent(animState.bgGroup, animState.animGroup, animState.sd);
+   }
+   function animTick(now) {
+    if (animState.paused) return;
+    const elapsed = now - animState.start - animState.pausedMs;
+    const p = Math.min(1, elapsed / animState.duration);
+    drawAnimFrame(p);
+    if (p < 1) {
+     af = requestAnimationFrame(animTick);
+    } else {
+     af = null;
+     animState.done = true;
+     updatePauseButton();
     }
    }
    function run(step) {
@@ -1655,6 +1863,7 @@
     }
     const A = ANIMS[ct.id];
     if (!A || !A[step]) return;
+    cs = step;
     const sd = A[step];
     document.getElementById('shint').textContent = sd.hint;
     const fc = document.getElementById('sform');
@@ -1667,28 +1876,49 @@
     clr(bgGroup); clr(animGroup);
     animGroup.removeAttribute('transform'); // 每次都清除，防止noAutoFit步骤的transform残留
     if (sd.bg) sd.bg(bgGroup);
-    const dur = sd.dur || 1400,
-     t0 = performance.now();
-    function tick(now) {
-     const p = Math.min(1, (now - t0) / dur);
-     clr(animGroup);
-     sd.draw(animGroup, ease(p));
-     fitAnimContent(bgGroup, animGroup, sd);
-     if (p < 1) af = requestAnimationFrame(tick);
-     else af = null;
+    animState.paused = false;
+    animState.done = false;
+    animState.start = performance.now();
+    animState.pausedAt = 0;
+    animState.pausedMs = 0;
+    animState.duration = (sd.dur || 1400) * (slowMode ? 1.9 : 1);
+    animState.sd = sd;
+    animState.bgGroup = bgGroup;
+    animState.animGroup = animGroup;
+    renderPrediction(sd);
+    updatePauseButton();
+    updateSpeedButton();
+    drawAnimFrame(0);
+    af = requestAnimationFrame(animTick);
+   }
+   function togglePause() {
+    if (!animState.sd || animState.done) return;
+    if (animState.paused) {
+     animState.paused = false;
+     animState.pausedMs += performance.now() - animState.pausedAt;
+     animState.pausedAt = 0;
+     af = requestAnimationFrame(animTick);
+    } else {
+     if (af) cancelAnimationFrame(af);
+     af = null;
+     animState.paused = true;
+     animState.pausedAt = performance.now();
     }
-    af = requestAnimationFrame(tick);
+    updatePauseButton();
+   }
+   function toggleSlow() {
+    slowMode = !slowMode;
+    updateSpeedButton();
+    if (ct) run(cs);
    }
    function next() {
     if (ct && cs < ct.steps - 1) {
-     cs++;
-     run(cs);
+     run(cs + 1);
     }
    }
    function prev() {
     if (ct && cs > 0) {
-     cs--;
-     run(cs);
+     run(cs - 1);
     }
    }
    function replay() {
@@ -6145,6 +6375,12 @@
     btns.forEach((b,i) => { b.disabled = true; if (i === correct) b.style.background = 'var(--grl)'; });
     if (isCorrect) {
      quizState.correct++;
+     if (ct && !quizPassedSet.has(ct.id)) {
+      quizPassedSet.add(ct.id);
+      saveQuizPassed(quizPassedSet);
+      track('quiz_passed', ct.id, true);
+      renderTopics();
+     }
      fb.innerHTML = '<span style="color:var(--gr)">✅ 正确！' + hint + '</span>';
     } else {
      fb.innerHTML = '<span style="color:var(--rd)">❌ 不对哦。' + hint + '</span>';
@@ -6162,26 +6398,14 @@
    /* ─── AI 功能 ─── */
    let aiHistory = [];
 
-   function getApiKey() {
-    return localStorage.getItem('geo_ai_key') || '';
-   }
-   function updateApiStatus() {
-    // AI 已默认启用，不再需要状态更新
-   }
-
-   function openSettings() {
-    document.getElementById('apiKeyInput').value = getApiKey();
-    document.getElementById('settingsModal').classList.add('open');
-   }
-   function closeSettings() {
-    document.getElementById('settingsModal').classList.remove('open');
-   }
-   function saveSettings() {
-    const k = document.getElementById('apiKeyInput').value.trim();
-    if (k) localStorage.setItem('geo_ai_key', k);
-    else localStorage.removeItem('geo_ai_key');
-    updateApiStatus();
-    closeSettings();
+   function setAIMode(mode) {
+    const badge = document.getElementById('aiModeBadge');
+    if (!badge) return;
+    const online = mode === 'online';
+    badge.className = 'header-badge ' + (online ? 'ai-online' : 'ai-basic');
+    badge.innerHTML = online
+     ? '<i class="ti ti-robot" style="font-size:12px;"></i> AI在线讲解'
+     : '<i class="ti ti-bulb" style="font-size:12px;"></i> 基础提示模式';
    }
 
    function toggleAI() {
@@ -6197,7 +6421,7 @@
     if (aiHistory.length === 0 && ct) {
      appendMsg(
       'bot',
-      '👋 我是AI老师！你正在学习「' + ct.title + '」，有什么不明白的尽管问我～',
+      '👋 我是AI老师！你正在学习「' + ct.title + '」。如果在线讲解暂时不可用，我会切换到基础提示模式继续帮你理解。',
      );
     }
     document.getElementById('aiInput').focus();
@@ -6269,17 +6493,20 @@
      });
      if (!res.ok) {
       // 如果代理失败，使用 mock 回复
+      setAIMode('basic');
       await new Promise((r) => setTimeout(r, 900));
       reply = getMockAIReply(q, ct ? ct.title : '');
      } else {
       const data = await res.json();
       reply = data.choices[0].message.content.trim();
+      setAIMode('online');
      }
      document.getElementById('aiThinking').style.display = 'none';
      appendMsg('bot', reply);
     } catch (e) {
      document.getElementById('aiThinking').style.display = 'none';
      // 网络错误时使用 mock 回复
+     setAIMode('basic');
      await new Promise((r) => setTimeout(r, 900));
      appendMsg('bot', getMockAIReply(q, ct ? ct.title : ''));
     }
@@ -6304,12 +6531,14 @@
 
    /* ─── 键盘快捷键 ─── */
    document.addEventListener('keydown', (e) => {
+    if (e.target && ['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName)) return;
     if (document.getElementById('ascreen').classList.contains('active')) {
      if (e.key === 'ArrowRight' || e.key === ' ') {
       e.preventDefault();
       next();
      }
      if (e.key === 'ArrowLeft') prev();
+     if (e.key === 'p' || e.key === 'P') togglePause();
      if (e.key === 'r' || e.key === 'R') replay();
      if (e.key === 'f' || e.key === 'F') togglePresent();
      if (e.key === 'Escape' && !document.fullscreenElement) goHome();
@@ -6336,12 +6565,20 @@
 
    /* ─── 学习进度持久化 ─── */
    const VISITED_KEY = 'geo_visited';
+   const QUIZ_PASSED_KEY = 'geo_quiz_passed';
    function loadVisited() {
     try { return new Set(JSON.parse(localStorage.getItem(VISITED_KEY)) || []); }
     catch (_) { return new Set(); }
    }
    function saveVisited(s) {
     localStorage.setItem(VISITED_KEY, JSON.stringify([...s]));
+   }
+   function loadQuizPassed() {
+    try { return new Set(JSON.parse(localStorage.getItem(QUIZ_PASSED_KEY)) || []); }
+    catch (_) { return new Set(); }
+   }
+   function saveQuizPassed(s) {
+    localStorage.setItem(QUIZ_PASSED_KEY, JSON.stringify([...s]));
    }
    function saveGrade(g) {
     localStorage.setItem('geo_grade', String(g));
@@ -6352,6 +6589,7 @@
    }
 
    const visitedSet = loadVisited();
+   const quizPassedSet = loadQuizPassed();
    // 恢复上次年级
    const savedGrade = loadGrade();
    if (savedGrade) cg = savedGrade;
