@@ -4929,17 +4929,50 @@
         s,
        );
        T(s, 300, 186, '圆柱（等底等高）', '#064A34', 10);
+       // 分3次倒水动画
+       // 时间轴: 0.45-1.0 共0.55，每次倒水0.12，停顿0.06，共3次
+       // 第n次: 倒水 [0.45+n*0.18, 0.45+n*0.18+0.12]，停顿 [+0.12, +0.18]
        if (t > 0.45) {
         const totalFillH = 82;
-        const poured = Math.min(3, (t - 0.45) / 0.18);
-        const fillH = Math.min(totalFillH, (poured / 3) * totalFillH);
+        const p = t - 0.45; // 0~0.55
+        // 计算当前水位高度（分3段，每段0.18，前0.12倒水，后0.06停顿）
+        let fillH = 0;
+        for (let i = 0; i < 3; i++) {
+          const segStart = i * 0.18;
+          const segPour  = segStart + 0.12;
+          if (p >= segStart) {
+            const pourT = Math.min(1, (p - segStart) / 0.12);
+            fillH = ((i + pourT) / 3) * totalFillH;
+          }
+        }
+        fillH = Math.min(totalFillH, fillH);
         const fillY = 70 + totalFillH - fillH;
-        E('ellipse', {cx:300, cy:fillY, rx:50, ry:15, fill:'rgba(147,197,253,0.5)', stroke:'none'}, s);
+
+        // 水体
+        E('ellipse', {cx:300, cy:fillY+1, rx:49, ry:14, fill:'rgba(147,197,253,0.4)', stroke:'none'}, s);
         R(s, 250, fillY, 100, fillH, 'rgba(147,197,253,0.35)', 'none', 0);
-        E('ellipse', {cx:300, cy:fillY, rx:50, ry:15, fill:'rgba(147,197,253,0.6)', stroke:'#1A5FA8', 'stroke-width':1}, s);
-        const n = Math.min(3, Math.ceil((t - 0.45) / 0.18));
-        T(s, 206, 100, `已倒 ${n} 次`, '#C03030', 17, 'middle', '700');
-        if (t > 0.98) T(s, 206, 122, '= V圆柱', '#0A7050', 13, 'middle', '600');
+        E('ellipse', {cx:300, cy:fillY, rx:50, ry:15, fill:'rgba(147,197,253,0.65)', stroke:'#1A5FA8', 'stroke-width':1.2}, s);
+
+        // 当前第几次
+        const n = Math.min(3, Math.floor(p / 0.18) + (p % 0.18 > 0 ? 1 : 0));
+        // 倒水时圆锥倾斜
+        const inPour = (p % 0.18) < 0.12;
+        if (inPour) {
+          T(s, 165, 85, '正在倒入...', '#1A5FA8', 11, 'middle');
+        }
+        // 1/3标注线
+        for (let i = 1; i <= 3; i++) {
+          const lineY = 70 + totalFillH - (i / 3) * totalFillH;
+          if (fillH >= (i / 3) * totalFillH - 2) {
+            L(s, 248, lineY, 244, lineY, '#1A5FA8', 1.2);
+            T(s, 238, lineY+1, `${i}/3`, '#1A5FA8', 9, 'end');
+          }
+        }
+        T(s, 206, 100, `第 ${n} 次`, '#C03030', 17, 'middle', '700');
+        if (t > 0.98) {
+          T(s, 206, 122, '共倒 3 次 = V圆柱', '#0A7050', 12, 'middle', '600');
+          T(s, 206, 138, '∴ V圆锥 = ⅓V圆柱', '#0A7050', 12, 'middle', '700');
+        }
        }
       },
      },
