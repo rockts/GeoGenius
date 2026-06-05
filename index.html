@@ -4861,7 +4861,7 @@
       hint:
        '关键实验：等底等高的圆锥倒入圆柱，需要3次才能装满，因此V圆锥=V圆柱÷3！',
       formula: '实验：圆锥倒满圆柱需3次 → V圆锥=⅓V圆柱',
-      dur: 1400,
+      dur: 4500,
       draw(s, t) {
        PL(
         s,
@@ -4929,41 +4929,55 @@
         s,
        );
        T(s, 300, 186, '圆柱（等底等高）', '#064A34', 10);
-       // 分3次倒水动画 时间轴: t=0.45开始，每段0.18（倒水0.12+停顿0.06）
-       if (t > 0.45) {
+       // 分3次倒水动画
+       // 时间轴(t: 0→1, dur=4500ms):
+       // t=0~0.1: 准备
+       // t=0.1~0.37: 第1次倒(0.2倒水+0.07停顿)
+       // t=0.37~0.64: 第2次倒
+       // t=0.64~0.91: 第3次倒
+       // t=0.91~1.0:  结论
+       if (t > 0.1) {
         const totalH = 82, cxC = 300, topY = 70;
-        const p = Math.min(0.54, t - 0.45); // 0~0.54
-        const seg = Math.floor(p / 0.18);       // 当前第几段 0/1/2
-        const segP = (p % 0.18) / 0.12;         // 段内倒水进度 0~1
-        const inPour = (p % 0.18) < 0.12;       // 是否正在倒水
-        const done = t >= 0.99;                  // 全部完成
+        // 每段0.27: 倒水0.20 + 停顿0.07
+        const SEG = 0.27, POUR = 0.20;
+        const p = t - 0.1; // 0~0.9
 
-        // 水位高度
-        const fillH = Math.min(totalH, ((seg + (inPour ? segP : 1)) / 3) * totalH);
+        let fillH = 0, seg = -1, inPour = false;
+        for (let i = 0; i < 3; i++) {
+          const s0 = i * SEG;
+          if (p >= s0) {
+            seg = i;
+            const sp = p - s0;
+            inPour = sp < POUR;
+            const pourRatio = Math.min(1, sp / POUR);
+            fillH = ((i + pourRatio) / 3) * totalH;
+          }
+        }
+        fillH = Math.min(totalH, fillH);
         const fillY = topY + totalH - fillH;
+        const done = t >= 0.92;
 
-        // 水体（夹在圆柱侧面内）
+        // 水体
         R(s, 250, fillY, 100, fillH, 'rgba(147,197,253,0.4)', 'none', 0);
         E('ellipse', {cx:cxC, cy:fillY, rx:50, ry:15, fill:'rgba(147,197,253,0.7)', stroke:'#1A5FA8', 'stroke-width':1}, s);
 
-        // 1/3 刻度线（只显示已到达的）
+        // 刻度线（右侧，已到达才显示）
         for (let i = 1; i <= 3; i++) {
           const ly = topY + totalH - (i / 3) * totalH;
           if (fillH >= (i / 3) * totalH - 1) {
-            L(s, 356, ly, 362, ly, '#1A5FA8', 1.5);
-            T(s, 366, ly + 4, `${i}/3`, '#1A5FA8', 10, 'start');
+            L(s, 356, ly, 364, ly, '#1A5FA8', 1.5);
+            T(s, 368, ly + 4, `${i}/3`, '#1A5FA8', 10, 'start');
           }
         }
 
-        // 文字：互斥显示
+        // 文字互斥
         if (done) {
-          // 最终结论
-          T(s, 195, 95,  '共倒 3 次 = V圆柱', '#064A34', 12, 'middle', '600');
-          T(s, 195, 113, '∴ V圆锥 = ⅓V圆柱', '#C03030', 13, 'middle', '700');
+          T(s, 195, 92,  '共倒 3 次 = V圆柱', '#064A34', 13, 'middle', '600');
+          T(s, 195, 112, '∴ V圆锥 = ⅓V圆柱', '#C03030', 14, 'middle', '700');
         } else if (inPour) {
-          T(s, 195, 100, `第 ${seg + 1} 次倒入`, '#1A5FA8', 14, 'middle', '600');
+          T(s, 195, 100, `第 ${seg + 1} 次倒入中...`, '#1A5FA8', 13, 'middle', '600');
         } else {
-          T(s, 195, 100, `第 ${seg + 1} 次完成`, '#0A7050', 14, 'middle', '700');
+          T(s, 195, 100, `第 ${seg + 1} 次 ✓`, '#0A7050', 14, 'middle', '700');
         }
        }
       },
