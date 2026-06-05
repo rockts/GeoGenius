@@ -932,7 +932,7 @@
     <!-- 版本号 -->
     <div style="text-align:center;margin:10px 0 16px;font-size:11px;color:#b0b8cc;letter-spacing:0.3px;">
      GeoGenius v1.1.0 · 2026-06-05 &nbsp;·&nbsp;
-     <a href="https://github.com/rockts/GeoGenius/blob/main/CHANGELOG.md" target="_blank" style="color:#b0b8cc;text-decoration:none;border-bottom:1px dotted #c7cfe8;" onmouseover="this.style.color='#6366f1'" onmouseout="this.style.color='#b0b8cc'">更新日志 ↗</a>
+     <a href="javascript:void(0)" onclick="showChangelog()" style="color:#b0b8cc;text-decoration:none;border-bottom:1px dotted #c7cfe8;" onmouseover="this.style.color='#6366f1'" onmouseout="this.style.color='#b0b8cc'">更新日志</a>
     </div>
    </div>
 
@@ -1042,10 +1042,54 @@
     <div id="quizWrap" style="display:none;margin-top:10px;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r2);padding:14px 16px;"></div>
 
     <!-- 每页底部反馈 -->
-    <div style="text-align:center;margin-top:14px;padding-bottom:10px;">
+    <div style="text-align:center;margin-top:14px;padding-bottom:4px;">
      <button onclick="openFeedback()" style="background:none;border:1px solid #dde3f0;border-radius:20px;padding:6px 18px;font-size:11px;color:#999;cursor:pointer;display:inline-flex;align-items:center;gap:5px;transition:border-color 0.2s,color 0.2s;" onmouseover="this.style.borderColor='#a5b4fc';this.style.color='#6366f1';" onmouseout="this.style.borderColor='#dde3f0';this.style.color='#999';">
       <i class="ti ti-message-circle" style="font-size:13px;"></i> 反馈这个知识点
      </button>
+    </div>
+    <!-- 版本号 -->
+    <div style="text-align:center;margin:8px 0 14px;font-size:11px;color:#b0b8cc;letter-spacing:0.3px;">
+     GeoGenius v1.1.0 · 2026-06-05 &nbsp;·&nbsp;
+     <a href="javascript:void(0)" onclick="showChangelog()" style="color:#b0b8cc;text-decoration:none;border-bottom:1px dotted #c7cfe8;" onmouseover="this.style.color='#6366f1'" onmouseout="this.style.color='#b0b8cc'">更新日志</a>
+    </div>
+   </div>
+  </div>
+
+  <!-- 更新日志弹窗 -->
+  <div class="modal-overlay" id="changelogModal" onclick="if(event.target===this)this.style.display='none'">
+   <div class="modal" style="max-width:480px;max-height:70vh;overflow-y:auto;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+     <h3 style="margin:0;">📋 更新日志</h3>
+     <button onclick="document.getElementById('changelogModal').style.display='none'" style="background:none;border:none;font-size:20px;cursor:pointer;color:#999;">×</button>
+    </div>
+    <div style="font-size:13px;line-height:1.7;color:#444;">
+     <p style="font-weight:700;color:#6366f1;margin:0 0 6px;">v1.1.0 · 2026-06-05</p>
+     <p style="font-weight:600;margin:8px 0 4px;">新增</p>
+     <ul style="margin:0;padding-left:18px;">
+      <li>每页底部版本号与更新日志入口</li>
+      <li>每个知识点页面"反馈这个知识点"按钮</li>
+      <li>圆锥体积"倒3次"动态水位动画</li>
+      <li>Actions 自动更新 CONTEXT.md</li>
+     </ul>
+     <p style="font-weight:600;margin:8px 0 4px;">修复</p>
+     <ul style="margin:0;padding-left:18px;">
+      <li>投影模式兼容 iOS Safari / 微信浏览器</li>
+      <li>圆柱顶部椭圆重复绘制（4处）</li>
+      <li>长方体顶面缺失，圆柱与长方体等高对齐</li>
+      <li>三角形/梯形面积拼合动画起点修正</li>
+      <li>量角器标注、三角形字号、正方形等边标记</li>
+     </ul>
+     <p style="font-weight:600;margin:8px 0 4px;">优化</p>
+     <ul style="margin:0;padding-left:18px;">
+      <li>知识点 26→30 个，动画步骤 108→124 个</li>
+     </ul>
+     <hr style="margin:12px 0;border:none;border-top:1px solid #eee;">
+     <p style="font-weight:700;color:#888;margin:0 0 6px;">v1.0.0 · 2026-05-31</p>
+     <ul style="margin:0;padding-left:18px;">
+      <li>初始版本，覆盖2022版课标图形与几何</li>
+      <li>一到六年级，30个知识点，124个动画步骤</li>
+      <li>AI老师问答、随堂练习、投影模式</li>
+     </ul>
     </div>
    </div>
   </div>
@@ -6378,7 +6422,10 @@
    }
 
    /* ─── 学生反馈弹窗 ─── */
-   function openFeedback() {
+   function showChangelog() {
+    document.getElementById('changelogModal').style.display = 'flex';
+  }
+  function openFeedback() {
     document.getElementById('feedbackModal').style.display = 'flex';
    }
    function closeFeedback() {
