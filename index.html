@@ -1025,7 +1025,7 @@
     </div>
     <!-- 版本号 -->
     <div style="text-align:center;margin:10px 0 16px;font-size:11px;color:#b0b8cc;letter-spacing:0.3px;">
-     GeoGenius v1.1.0 · 2026-06-05 &nbsp;·&nbsp;
+     GeoGenius v1.2.0 · 2026-06-06 &nbsp;·&nbsp;
      <a href="javascript:void(0)" onclick="showChangelog()" style="color:#b0b8cc;text-decoration:none;border-bottom:1px dotted #c7cfe8;" onmouseover="this.style.color='#6366f1'" onmouseout="this.style.color='#b0b8cc'">更新日志</a>
     </div>
    </div>
@@ -1157,7 +1157,7 @@
     </div>
     <!-- 版本号 -->
     <div style="text-align:center;margin:8px 0 14px;font-size:11px;color:#b0b8cc;letter-spacing:0.3px;">
-     GeoGenius v1.1.0 · 2026-06-05 &nbsp;·&nbsp;
+     GeoGenius v1.2.0 · 2026-06-06 &nbsp;·&nbsp;
      <a href="javascript:void(0)" onclick="showChangelog()" style="color:#b0b8cc;text-decoration:none;border-bottom:1px dotted #c7cfe8;" onmouseover="this.style.color='#6366f1'" onmouseout="this.style.color='#b0b8cc'">更新日志</a>
     </div>
    </div>
@@ -1171,21 +1171,27 @@
      <button onclick="document.getElementById('changelogModal').style.display='none'" style="background:none;border:none;font-size:20px;cursor:pointer;color:#999;">×</button>
     </div>
     <div style="font-size:13px;line-height:1.7;color:#444;">
-     <p style="font-weight:700;color:#6366f1;margin:0 0 6px;">v1.1.0 · 2026-06-05</p>
+     <p style="font-weight:700;color:#6366f1;margin:0 0 6px;">v1.2.0 · 2026-06-06</p>
+     <p style="font-weight:600;margin:8px 0 4px;">新增 / 优化</p>
+     <ul style="margin:0;padding-left:18px;">
+      <li>圆锥体积"倒水"改为分3次停顿动画，水位逐次升高</li>
+      <li>平行四边形/三角形面积底边标注统一改为 a，公式 S=ah/½ah</li>
+      <li>圆柱表面积展开动画修正</li>
+      <li>首页和知识点页底部显示版本号，更新日志改为页内弹窗</li>
+     </ul>
+     <p style="font-weight:600;margin:8px 0 4px;">修复</p>
+     <ul style="margin:0;padding-left:18px;">
+      <li>Actions workflow 引号错误修复，自动更新稳定运行</li>
+      <li>圆柱重复椭圆、长方体顶面缺失等图形问题</li>
+     </ul>
+     <hr style="margin:12px 0;border:none;border-top:1px solid #eee;">
+     <p style="font-weight:700;color:#888;margin:0 0 6px;">v1.1.0 · 2026-06-05</p>
      <p style="font-weight:600;margin:8px 0 4px;">新增</p>
      <ul style="margin:0;padding-left:18px;">
       <li>每页底部版本号与更新日志入口</li>
       <li>每个知识点页面"反馈这个知识点"按钮</li>
       <li>圆锥体积"倒3次"动态水位动画</li>
       <li>Actions 自动更新 CONTEXT.md</li>
-     </ul>
-     <p style="font-weight:600;margin:8px 0 4px;">修复</p>
-     <ul style="margin:0;padding-left:18px;">
-      <li>投影模式兼容 iOS Safari / 微信浏览器</li>
-      <li>圆柱顶部椭圆重复绘制（4处）</li>
-      <li>长方体顶面缺失，圆柱与长方体等高对齐</li>
-      <li>三角形/梯形面积拼合动画起点修正</li>
-      <li>量角器标注、三角形字号、正方形等边标记</li>
      </ul>
      <p style="font-weight:600;margin:8px 0 4px;">优化</p>
      <ul style="margin:0;padding-left:18px;">
