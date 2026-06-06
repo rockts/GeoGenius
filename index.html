@@ -1023,6 +1023,11 @@
       <i class="ti ti-message-circle" style="font-size:14px;"></i> 使用反馈
      </button>
     </div>
+    <!-- 版本号 -->
+    <div style="text-align:center;margin:10px 0 16px;font-size:11px;color:#b0b8cc;letter-spacing:0.3px;">
+     GeoGenius v1.1.0 · 2026-06-05 &nbsp;·&nbsp;
+     <a href="javascript:void(0)" onclick="showChangelog()" style="color:#b0b8cc;text-decoration:none;border-bottom:1px dotted #c7cfe8;" onmouseover="this.style.color='#6366f1'" onmouseout="this.style.color='#b0b8cc'">更新日志</a>
+    </div>
    </div>
 
    <!-- ANIM -->
@@ -1145,10 +1150,54 @@
     <div id="quizWrap" style="display:none;margin-top:10px;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r2);padding:14px 16px;"></div>
 
     <!-- 每页底部反馈 -->
-    <div style="text-align:center;margin-top:14px;padding-bottom:10px;">
+    <div style="text-align:center;margin-top:14px;padding-bottom:4px;">
      <button onclick="openFeedback()" style="background:none;border:1px solid #dde3f0;border-radius:20px;padding:6px 18px;font-size:11px;color:#999;cursor:pointer;display:inline-flex;align-items:center;gap:5px;transition:border-color 0.2s,color 0.2s;" onmouseover="this.style.borderColor='#a5b4fc';this.style.color='#6366f1';" onmouseout="this.style.borderColor='#dde3f0';this.style.color='#999';">
       <i class="ti ti-message-circle" style="font-size:13px;"></i> 反馈这个知识点
      </button>
+    </div>
+    <!-- 版本号 -->
+    <div style="text-align:center;margin:8px 0 14px;font-size:11px;color:#b0b8cc;letter-spacing:0.3px;">
+     GeoGenius v1.1.0 · 2026-06-05 &nbsp;·&nbsp;
+     <a href="javascript:void(0)" onclick="showChangelog()" style="color:#b0b8cc;text-decoration:none;border-bottom:1px dotted #c7cfe8;" onmouseover="this.style.color='#6366f1'" onmouseout="this.style.color='#b0b8cc'">更新日志</a>
+    </div>
+   </div>
+  </div>
+
+  <!-- 更新日志弹窗 -->
+  <div class="modal-overlay" id="changelogModal" onclick="if(event.target===this)this.style.display='none'">
+   <div class="modal" style="max-width:480px;max-height:70vh;overflow-y:auto;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+     <h3 style="margin:0;">📋 更新日志</h3>
+     <button onclick="document.getElementById('changelogModal').style.display='none'" style="background:none;border:none;font-size:20px;cursor:pointer;color:#999;">×</button>
+    </div>
+    <div style="font-size:13px;line-height:1.7;color:#444;">
+     <p style="font-weight:700;color:#6366f1;margin:0 0 6px;">v1.1.0 · 2026-06-05</p>
+     <p style="font-weight:600;margin:8px 0 4px;">新增</p>
+     <ul style="margin:0;padding-left:18px;">
+      <li>每页底部版本号与更新日志入口</li>
+      <li>每个知识点页面"反馈这个知识点"按钮</li>
+      <li>圆锥体积"倒3次"动态水位动画</li>
+      <li>Actions 自动更新 CONTEXT.md</li>
+     </ul>
+     <p style="font-weight:600;margin:8px 0 4px;">修复</p>
+     <ul style="margin:0;padding-left:18px;">
+      <li>投影模式兼容 iOS Safari / 微信浏览器</li>
+      <li>圆柱顶部椭圆重复绘制（4处）</li>
+      <li>长方体顶面缺失，圆柱与长方体等高对齐</li>
+      <li>三角形/梯形面积拼合动画起点修正</li>
+      <li>量角器标注、三角形字号、正方形等边标记</li>
+     </ul>
+     <p style="font-weight:600;margin:8px 0 4px;">优化</p>
+     <ul style="margin:0;padding-left:18px;">
+      <li>知识点 26→30 个，动画步骤 108→124 个</li>
+     </ul>
+     <hr style="margin:12px 0;border:none;border-top:1px solid #eee;">
+     <p style="font-weight:700;color:#888;margin:0 0 6px;">v1.0.0 · 2026-05-31</p>
+     <ul style="margin:0;padding-left:18px;">
+      <li>初始版本，覆盖2022版课标图形与几何</li>
+      <li>一到六年级，30个知识点，124个动画步骤</li>
+      <li>AI老师问答、随堂练习、投影模式</li>
+     </ul>
     </div>
    </div>
   </div>
@@ -3995,7 +4044,7 @@
       },
      },
      {
-      hint: '把左侧三角形平移到右边补上，拼成与原图等面积的长方形，底b和高h都没变。',
+      hint: '把左侧三角形平移到右边补上，拼成与原图等面积的长方形，底a和高h都没变。',
       formula: '三角形平移到右侧 → 拼成长方形',
       dur: 1500,
       draw(s, t) {
@@ -4036,25 +4085,25 @@
       },
      },
      {
-      hint: '长方形面积 = 底b × 高h，与原平行四边形的底和高相同，公式一样！',
-      formula: '平行四边形面积 S = 底 × 高 = bh',
+      hint: '长方形面积 = 底a × 高h，与原平行四边形的底和高相同，公式一样！',
+      formula: '平行四边形面积 S = 底 × 高 = ah',
       dur: 1300,
       draw(s, t) {
        R(s, 80, 68, 200, 94, '#E8F1FB', '#1A5FA8', 2);
        L(s, 80, 174, 280, 174, '#1A5FA8', 2.5);
-       T(s, 180, 187, '底 b', '#0D3F6E', 13, 'middle', '600');
+       T(s, 180, 187, '底 a', '#0D3F6E', 13, 'middle', '600');
        L(s, 68, 68, 68, 162, '#C03030', 1.8, '5,3');
        RA(s, 68, 162, 12, '#C03030');
        T(s, 48, 118, '高 h', '#C03030', 13, 'middle', '600');
        if (t > 0.62) {
         R(s, 302, 97, 104, 28, '#E8F1FB', '#1A5FA8', 1.5, 6);
-        T(s, 354, 114, 'S = bh', '#0D3F6E', 16, 'middle', '700');
+        T(s, 354, 114, 'S = ah', '#0D3F6E', 16, 'middle', '700');
        }
       },
      },
      {
       hint: '注意：高h必须是底边上的垂直距离。验证：底12、高7 → S = 84 cm²。',
-      formula: '✅  S = bh，高必须⊥底边',
+      formula: '✅  S = ah，高必须⊥底边',
       dur: 1200,
       draw(s, t) {
        PL(
@@ -4144,8 +4193,8 @@
      },
      {
       hint:
-       '平行四边形 = 2个三角形，面积=bh。所以每个三角形面积 = 平行四边形的一半。',
-      formula: '三角形面积 = bh ÷ 2',
+       '平行四边形 = 2个三角形，面积=ah。所以每个三角形面积 = 平行四边形的一半。',
+      formula: '三角形面积 = ah ÷ 2',
       dur: 1200,
       draw(s, t) {
        const A = [78, 128],
@@ -4155,7 +4204,7 @@
        PL(s, [A, B, Cp], '#FEF0DC', '#9A5800', 1.8);
        PL(s, [B, A, D], '#E4F6EE', '#0A7050', 1.8);
        L(s, A[0], A[1], B[0], B[1], '#1A5FA8', 2.8);
-       T(s, 168, 144, '底 b', '#0D3F6E', 13, 'middle', '600');
+       T(s, 168, 144, '底 a', '#0D3F6E', 13, 'middle', '600');
        // 补高线和h标注
        if (t > 0.4) {
         L(s, 214, 58, 214, 128, '#C03030', 1.8, '5,3');
@@ -4169,8 +4218,8 @@
       },
      },
      {
-      hint: 'S = bh÷2 = ½bh。高h必须是底边b上的垂直高度，不能用斜边代替！',
-      formula: '三角形面积 S = bh ÷ 2 = ½bh',
+      hint: 'S = ah÷2 = ½ah。高h必须是底边a上的垂直高度，不能用斜边代替！',
+      formula: '三角形面积 S = ah ÷ 2 = ½ah',
       dur: 1300,
       draw(s, t) {
        const A = [68, 130],
@@ -4182,17 +4231,17 @@
        L(s, A[0], A[1], B[0], B[1], '#1A5FA8', 2.5);
        L(s, 208, 62, 208, 130, '#C03030', 1.8, '5,3');
        RA(s, 208, 130, 12, '#C03030');
-       T(s, 156, 148, '底 b', '#0D3F6E', 12);
+       T(s, 156, 148, '底 a', '#0D3F6E', 12);
        T(s, 226, 98, '高 h', '#C03030', 12, 'start');
        if (t > 0.6) {
         R(s, 295, 110, 116, 28, '#E8F1FB', '#1A5FA8', 1.5, 6);
-        T(s, 353, 126, 'S=bh÷2', '#0D3F6E', 16, 'middle', '700');
+        T(s, 353, 126, 'S=ah÷2', '#0D3F6E', 16, 'middle', '700');
        }
       },
      },
      {
       hint: '验证：底10cm、高6cm → S = 10×6÷2 = 30 cm²。高必须垂直于底！',
-      formula: '✅  S = ½bh，高⊥底边',
+      formula: '✅  S = ½ah，高⊥底边',
       dur: 1200,
       draw(s, t) {
        PL(
@@ -4238,8 +4287,8 @@
     e3: [
      {
       hint:
-       '梯形：上底a（短）、下底b（长）、高h（两底间垂直距离）。两个相同梯形可拼成平行四边形。',
-      formula: '梯形：上底a，下底b，高h',
+       '梯形：上底a（短）、下底a（长）、高h（两底间垂直距离）。两个相同梯形可拼成平行四边形。',
+      formula: '梯形：上底a，下底a，高h',
       dur: 1300,
       draw(s, t) {
        PL(
@@ -4801,14 +4850,24 @@
         },
         s,
        );
-       if (t > 0.52) {
-        const te = ease(Math.min(1, (t - 0.52) / 0.48)),
-         rw = lerp(0, 180, te),
-         rx = lerp(200, 158, te);
-        R(s, rx, 66, rw, 72, '#FEF0DC', '#9A5800', 1.5);
-        if (t > 0.9) {
-         T(s, 248, 47, '2πr', '#6A3A00', 13, 'middle', '600');
-         T(s, 365, 102, 'h', '#9A5800', 18, 'start', '700');
+       // 展开动画：侧面从圆柱右边(x=268)向右展开
+       // 展开图宽136px(≈2πr), 高92px(=h)
+       if (t > 0.3) {
+        const te = ease(Math.min(1, (t - 0.3) / 0.6));
+        const rw = lerp(0, 136, te);  // 宽度从0展开到136
+        const rh = 92;                 // 高度=圆柱高
+        // 展开的矩形（从圆柱右侧展开）
+        R(s, 268, 68, rw, rh, '#FEF0DC', '#9A5800', 1.5);
+        // 标注（展开到一半以上才显示）
+        if (te > 0.7) {
+         const labelAlpha = ease((te - 0.7) / 0.3);
+         T(s, 268 + rw/2, 56, '2πr', '#6A3A00', 13, 'middle', '600');
+         T(s, 268 + rw + 14, 68 + rh/2, 'h', '#9A5800', 16, 'middle', '700');
+        }
+        // 连接线：显示矩形和圆柱的关系
+        if (te > 0.5) {
+         L(s, 268, 68,  268, 68,  '#9A5800', 1, '3,3');
+         L(s, 268, 160, 268, 160, '#9A5800', 1, '3,3');
         }
        }
       },
@@ -5042,7 +5101,7 @@
       hint:
        '关键实验：等底等高的圆锥倒入圆柱，需要3次才能装满，因此V圆锥=V圆柱÷3！',
       formula: '实验：圆锥倒满圆柱需3次 → V圆锥=⅓V圆柱',
-      dur: 1400,
+      dur: 4500,
       draw(s, t) {
        PL(
         s,
@@ -5069,58 +5128,64 @@
         s,
        );
        T(s, 112, 184, '圆锥', '#0D3F6E', 11);
-       E(
-        'ellipse',
-        {
-         cx: 300,
-         cy: 70,
-         rx: 52,
-         ry: 16,
-         fill: '#E4F6EE',
-         stroke: '#0A7050',
-         'stroke-width': 1.8,
-        },
-        s,
-       );
+       T(s, 300, 58, '圆柱（等底等高）', '#064A34', 11, 'middle');
+       // 圆柱绘制顺序：底面→侧面→(水体)→顶面半透明
+       // 底面椭圆
+       E('ellipse', {cx:300, cy:152, rx:52, ry:16, fill:'#E4F6EE', stroke:'#0A7050', 'stroke-width':1.8}, s);
+       // 侧面矩形
        R(s, 248, 70, 104, 82, '#E4F6EE', '#0A7050', 1.8);
-       E(
-        'ellipse',
-        {
-         cx: 300,
-         cy: 152,
-         rx: 52,
-         ry: 16,
-         fill: '#E4F6EE',
-         stroke: '#0A7050',
-         'stroke-width': 1.8,
-        },
-        s,
-       );
-       E(
-        'ellipse',
-        {
-         cx: 300,
-         cy: 70,
-         rx: 52,
-         ry: 16,
-         fill: '#E4F6EE',
-         stroke: '#0A7050',
-         'stroke-width': 1.8,
-        },
-        s,
-       );
-       T(s, 300, 186, '圆柱（等底等高）', '#064A34', 10);
-       if (t > 0.45) {
-        const totalFillH = 82;
-        const poured = Math.min(3, (t - 0.45) / 0.18);
-        const fillH = Math.min(totalFillH, (poured / 3) * totalFillH);
-        const fillY = 70 + totalFillH - fillH;
-        E('ellipse', {cx:300, cy:fillY, rx:50, ry:15, fill:'rgba(147,197,253,0.5)', stroke:'none'}, s);
-        R(s, 250, fillY, 100, fillH, 'rgba(147,197,253,0.35)', 'none', 0);
-        E('ellipse', {cx:300, cy:fillY, rx:50, ry:15, fill:'rgba(147,197,253,0.6)', stroke:'#1A5FA8', 'stroke-width':1}, s);
-        const n = Math.min(3, Math.ceil((t - 0.45) / 0.18));
-        T(s, 206, 100, `已倒 ${n} 次`, '#C03030', 17, 'middle', '700');
-        if (t > 0.98) T(s, 206, 122, '= V圆柱', '#0A7050', 13, 'middle', '600');
+       // 分3次倒水动画
+       // 时间轴(t: 0→1, dur=4500ms):
+       // t=0~0.1: 准备
+       // t=0.1~0.37: 第1次倒(0.2倒水+0.07停顿)
+       // t=0.37~0.64: 第2次倒
+       // t=0.64~0.91: 第3次倒
+       // t=0.91~1.0:  结论
+       if (t > 0.1) {
+        const totalH = 82, cxC = 300, topY = 70;
+        // 每段0.27: 倒水0.20 + 停顿0.07
+        const SEG = 0.27, POUR = 0.20;
+        const p = t - 0.1; // 0~0.9
+
+        let fillH = 0, seg = -1, inPour = false;
+        for (let i = 0; i < 3; i++) {
+          const s0 = i * SEG;
+          if (p >= s0) {
+            seg = i;
+            const sp = p - s0;
+            inPour = sp < POUR;
+            const pourRatio = Math.min(1, sp / POUR);
+            fillH = ((i + pourRatio) / 3) * totalH;
+          }
+        }
+        fillH = Math.min(totalH, fillH);
+        const fillY = topY + totalH - fillH;
+        const done = t >= 0.92;
+
+        // 水体
+        R(s, 250, fillY, 100, fillH, 'rgba(147,197,253,0.4)', 'none', 0);
+        E('ellipse', {cx:cxC, cy:fillY, rx:50, ry:15, fill:'rgba(147,197,253,0.7)', stroke:'#1A5FA8', 'stroke-width':1}, s);
+
+        // 刻度线（右侧，已到达才显示）
+        for (let i = 1; i <= 3; i++) {
+          const ly = topY + totalH - (i / 3) * totalH;
+          if (fillH >= (i / 3) * totalH - 1) {
+            L(s, 356, ly, 364, ly, '#1A5FA8', 1.5);
+            T(s, 368, ly + 4, `${i}/3`, '#1A5FA8', 10, 'start');
+          }
+        }
+
+        // 顶面半透明椭圆（画在水体上方，遮住溢出但透出水面颜色）
+        E('ellipse', {cx:300, cy:70, rx:52, ry:16, fill:'rgba(228,246,238,0.6)', stroke:'#0A7050', 'stroke-width':1.8}, s);
+        // 文字互斥——统一放图形下方y=200区域
+        if (done) {
+          T(s, 230, 200, '共倒 3 次 = V圆柱', '#064A34', 13, 'middle', '600');
+          T(s, 230, 218, '∴ V圆锥 = ⅓V圆柱', '#C03030', 14, 'middle', '700');
+        } else if (inPour) {
+          T(s, 230, 208, `第 ${seg + 1} 次倒入中...`, '#1A5FA8', 13, 'middle', '600');
+        } else {
+          T(s, 230, 208, `第 ${seg + 1} 次 ✓`, '#0A7050', 14, 'middle', '700');
+        }
        }
       },
      },
@@ -6267,7 +6332,7 @@
      { q: '一块平行四边形土地，底12m，高7m，种草坪每平方米25元，共需多少元？', opts: ['475元', '2100元', '1050元', '350元'], a:1, hint:'面积=12×7=84m²，费用=84×25=2100元' },
     ],
     e2: [
-     { q: '三角形面积公式是？', opts: ['S=bh', 'S=bh÷2', 'S=ab', 'S=(a+b)h÷2'], a:1, hint:'底×高÷2，两个三角形拼成平行四边形' },
+     { q: '三角形面积公式是？', opts: ['S=bh', 'S=ah÷2', 'S=ab', 'S=(a+b)h÷2'], a:1, hint:'底×高÷2，两个三角形拼成平行四边形' },
      { q: '三角形面积为什么要÷2？', opts: ['没有原因', '两个三角形拼成平行四边形', '老师规定', '公式简化'], a:1, hint:'两个相同三角形可拼成平行四边形，所以三角形面积是一半' },
      { q: '三角形底6cm高4cm，面积是？', opts: ['24cm²', '12cm²', '10cm²', '20cm²'], a:1, hint:'S=6×4÷2=12cm²' },
      // 变式题：钝角三角形的高在哪里？这是最常考、最容易错的
@@ -6276,7 +6341,7 @@
      { q: '等底等高的三角形和平行四边形，面积关系是？', opts: ['相等', '三角形是平行四边形的一半', '平行四边形是三角形的一半', '无关'], a:1, hint:'两个相同三角形拼成平行四边形，所以三角形面积=平行四边形÷2' },
     ],
     e3: [
-     { q: '梯形面积公式是？', opts: ['S=bh÷2', 'S=ab', 'S=(a+b)×h÷2', 'S=πr²'], a:2, hint:'(上底+下底)×高÷2' },
+     { q: '梯形面积公式是？', opts: ['S=ah÷2', 'S=ab', 'S=(a+b)×h÷2', 'S=πr²'], a:2, hint:'(上底+下底)×高÷2' },
      { q: '梯形上底3cm下底5cm高4cm，面积是？', opts: ['12cm²', '16cm²', '20cm²', '32cm²'], a:1, hint:'S=(3+5)×4÷2=8×4÷2=16cm²' },
      { q: '梯形面积为什么要÷2？', opts: ['没有原因', '两个梯形拼成平行四边形', '老师规定', '公式简化'], a:1, hint:'两个相同梯形可拼成平行四边形，所以梯形面积是一半' },
      // 变式题
@@ -6611,7 +6676,10 @@
    }
 
    /* ─── 学生反馈弹窗 ─── */
-   function openFeedback() {
+   function showChangelog() {
+    document.getElementById('changelogModal').style.display = 'flex';
+  }
+  function openFeedback() {
     document.getElementById('feedbackModal').style.display = 'flex';
    }
    function closeFeedback() {
