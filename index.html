@@ -409,6 +409,10 @@
     align-items: center;
     padding: 18px 12px;
     min-height: var(--stage-h);
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+    caret-color: transparent;
    }
    .canvas-wrap svg {
     width: min(100%, 900px);
@@ -417,6 +421,13 @@
     max-height: calc(var(--stage-h) - 36px);
     display: block;
     overflow: visible;
+    user-select: none;
+    -webkit-user-select: none;
+   }
+   .canvas-wrap text {
+    user-select: none;
+    -webkit-user-select: none;
+    pointer-events: none;
    }
 
    .dot-row {
@@ -1025,7 +1036,7 @@
     </div>
     <!-- 版本号 -->
     <div style="text-align:center;margin:10px 0 16px;font-size:11px;color:#b0b8cc;letter-spacing:0.3px;">
-     GeoGenius v1.1.0 · 2026-06-05 &nbsp;·&nbsp;
+     GeoGenius v1.1.1 · 2026-06-07 &nbsp;·&nbsp;
      <a href="javascript:void(0)" onclick="showChangelog()" style="color:#b0b8cc;text-decoration:none;border-bottom:1px dotted #c7cfe8;" onmouseover="this.style.color='#6366f1'" onmouseout="this.style.color='#b0b8cc'">更新日志</a>
     </div>
    </div>
@@ -1157,7 +1168,7 @@
     </div>
     <!-- 版本号 -->
     <div style="text-align:center;margin:8px 0 14px;font-size:11px;color:#b0b8cc;letter-spacing:0.3px;">
-     GeoGenius v1.1.0 · 2026-06-05 &nbsp;·&nbsp;
+     GeoGenius v1.1.1 · 2026-06-07 &nbsp;·&nbsp;
      <a href="javascript:void(0)" onclick="showChangelog()" style="color:#b0b8cc;text-decoration:none;border-bottom:1px dotted #c7cfe8;" onmouseover="this.style.color='#6366f1'" onmouseout="this.style.color='#b0b8cc'">更新日志</a>
     </div>
    </div>
@@ -1171,6 +1182,17 @@
      <button onclick="document.getElementById('changelogModal').style.display='none'" style="background:none;border:none;font-size:20px;cursor:pointer;color:#999;">×</button>
     </div>
     <div style="font-size:13px;line-height:1.7;color:#444;">
+     <p style="font-weight:700;color:#6366f1;margin:0 0 6px;">v1.1.1 · 2026-06-07</p>
+     <p style="font-weight:600;margin:8px 0 4px;">修复</p>
+     <ul style="margin:0;padding-left:18px;">
+      <li>修正观察物体前视图、量角器角度、钝角三角形和轴对称示例</li>
+      <li>动画 SVG 文本禁用选中，避免出现文本插入光标</li>
+     </ul>
+     <p style="font-weight:600;margin:8px 0 4px;">验证</p>
+     <ul style="margin:0;padding-left:18px;">
+      <li>全量巡检 30 个知识点、124 个动画步骤、372 个关键帧</li>
+     </ul>
+     <hr style="border:none;border-top:1px solid #eee;margin:12px 0;">
      <p style="font-weight:700;color:#6366f1;margin:0 0 6px;">v1.1.0 · 2026-06-05</p>
      <p style="font-weight:600;margin:8px 0 4px;">新增</p>
      <ul style="margin:0;padding-left:18px;">
@@ -1545,6 +1567,9 @@
       fontSize: sz || 13,
       fontWeight: fw || '400',
       fontFamily: "'Noto Sans SC',sans-serif",
+      'user-select': 'none',
+      'aria-hidden': 'true',
+      focusable: 'false',
      },
      s,
     );
@@ -3452,7 +3477,7 @@
         const rad = (deg * Math.PI) / 180;
         if (deg < 180) {
          L(s, x, y, x + 65, y, col, 2);
-         L(s, x, y, x + 65 * Math.cos(Math.PI - rad), y - 65 * Math.sin(rad), col, 2);
+         L(s, x, y, x + 65 * Math.cos(rad), y - 65 * Math.sin(rad), col, 2);
         } else {
          // 平角：顶点出发两条反向射线
          L(s, x, y, x + 65, y, col, 2);
@@ -3479,21 +3504,21 @@
 
        // ── 第一阶段(t<0.35)：先画被测量的角 ──
        // 角的顶点 = 量角器中心
-       // 一条边向右（0°方向），另一条边向左上55°
+       // 一条边向右（0°方向），另一条边向右上55°
        const edgeLen = 95;
        // 底边（对准0°）
        L(s, cx, cy, cx + edgeLen, cy, '#1A5FA8', 2.5);
        // 另一条边（55°方向）
-       const ex = cx + edgeLen * Math.cos(Math.PI - targetRad);
+       const ex = cx + edgeLen * Math.cos(targetRad);
        const ey = cy - edgeLen * Math.sin(targetRad);
        L(s, cx, cy, ex, ey, '#1A5FA8', 2.5);
        // 角的弧线标注（小弧）
        if (t < 0.35) {
         E('path', {
-         d: `M${cx+30},${cy} A30,30,0,0,1,${cx+30*Math.cos(Math.PI-targetRad)},${cy-30*Math.sin(targetRad)}`,
+         d: `M${cx+30},${cy} A30,30,0,0,0,${cx+30*Math.cos(targetRad)},${cy-30*Math.sin(targetRad)}`,
          fill: 'none', stroke: '#1A5FA8', 'stroke-width': 1.5,
         }, s);
-        T(s, cx + 8, cy - 38, '?°', '#1A5FA8', 14, 'middle', '700');
+        T(s, cx + 42 * Math.cos(targetRad / 2), cy - 42 * Math.sin(targetRad / 2), '?°', '#1A5FA8', 14, 'middle', '700');
        }
 
        // ── 第二阶段(t≥0.35)：量角器出现并对准 ──
@@ -3502,7 +3527,7 @@
 
         // 量角器半圆
         E('path', {
-         d: `M${cx-85},${cy} A85,85,0,0,1,${cx+85},${cy}`,
+         d: `M${cx+85},${cy} A85,85,0,0,0,${cx-85},${cy}`,
          fill: 'rgba(240,237,230,0.85)', stroke: '#9E9B96', 'stroke-width': 1.5,
         }, s);
         L(s, cx - 85, cy, cx + 85, cy, '#9E9B96', 1);
@@ -3510,14 +3535,14 @@
         // 刻度
         for (let a = 0; a <= 180; a += 10) {
          const r = (a * Math.PI) / 180;
-         const px = cx + 85 * Math.cos(Math.PI - r);
+         const px = cx + 85 * Math.cos(r);
          const py = cy - 85 * Math.sin(r);
          L(s,
-          cx + (85-(a%30===0?10:5)) * Math.cos(Math.PI-r),
+          cx + (85-(a%30===0?10:5)) * Math.cos(r),
           cy - (85-(a%30===0?10:5)) * Math.sin(r),
           px, py, '#9E9B96', a%90===0 ? 2 : 0.8);
          if (a % 30 === 0)
-          T(s, cx+67*Math.cos(Math.PI-r), cy-67*Math.sin(r), String(a), '#6B6760', 9);
+          T(s, cx+67*Math.cos(r), cy-67*Math.sin(r), String(a), '#6B6760', 9);
         }
 
         // 中心点标注
@@ -3532,20 +3557,20 @@
         const sweepDeg = phase * targetDeg;
         const sweepRad = (sweepDeg * Math.PI) / 180;
         L(s, cx, cy,
-         cx + 82 * Math.cos(Math.PI - sweepRad),
+         cx + 82 * Math.cos(sweepRad),
          cy - 82 * Math.sin(sweepRad),
          '#C03030', 2.5);
 
         // 度数标注跟随指针
         if (phase > 0.3) {
          const labelDeg = Math.round(sweepDeg);
-         T(s, cx + 56, cy - 68, labelDeg + '°', '#C03030', 16, 'middle', '700');
+         T(s, cx + 105 * Math.cos(sweepRad), cy - 105 * Math.sin(sweepRad), labelDeg + '°', '#C03030', 16, 'middle', '700');
         }
 
         // 完成时加说明
         if (phase > 0.9) {
-         T(s, cx, cy - 96, '另一条边指向55°', '#0A7050', 12, 'middle', '600');
-         T(s, cx, cy - 78, '∴ 这个角 = 55°', '#C03030', 14, 'middle', '700');
+         T(s, cx + 150, cy - 56, '另一条边指向55°', '#0A7050', 12, 'middle', '600');
+         T(s, cx + 150, cy - 36, '∴ 这个角 = 55°', '#C03030', 14, 'middle', '700');
         }
        }
       },
@@ -3623,8 +3648,8 @@
          s,
          [
           [282, 156],
-          [374, 156],
-          [296, 80],
+          [400, 156],
+          [330, 116],
          ],
          '#E4F6EE',
          '#0A7050',
@@ -3938,12 +3963,14 @@
       formula: '前面看到：宽 × 高',
       dur: 1100,
       draw(s, t) {
-       R(s, 60, 76, 128, 94, '#E8F1FB', '#1A5FA8', 2, 4);
-       T(s, 124, 192, '实际物体', '#0D3F6E', 11);
+       R(s, 52, 84, 128, 86, '#E8F1FB', '#1A5FA8', 2, 4);
+       E('path', { d: 'M52,84 L84,60 L212,60 L180,84 Z', fill: '#EEECFE', stroke: '#5A4AC0', 'stroke-width': 2 }, s);
+       E('path', { d: 'M180,84 L212,60 L212,146 L180,170 Z', fill: '#FEF0DC', stroke: '#9A5800', 'stroke-width': 2 }, s);
+       T(s, 124, 194, '实际物体', '#0D3F6E', 11);
        if (t > 0.45) {
         T(s, 235, 122, '→', '#9E9B96', 24);
-        R(s, 290, 76, 96, 94, '#E8F1FB', '#1A5FA8', 2, 4);
-        T(s, 338, 192, '前面形状', '#0D3F6E', 11);
+        R(s, 290, 84, 128, 86, '#E8F1FB', '#1A5FA8', 2, 4);
+        T(s, 354, 194, '前面形状', '#0D3F6E', 11);
        }
       },
      },
@@ -5348,7 +5375,7 @@
        }
        if (t > 0.28) {
         R(s, 108, 90, 84, 58, '#E8F1FB', '#1A5FA8', 1.8);
-        L(s, 108, 82, 192, 82, '#C03030', 1.5, '4,2');
+        L(s, 100, 119, 200, 119, '#C03030', 1.5, '4,2');
         L(s, 150, 90, 150, 148, '#C03030', 1.5, '4,2');
         T(s, 150, 162, '长方形2条', '#0D3F6E', 10);
        }
@@ -5720,12 +5747,13 @@
       formula: '✅  掌握：找对称轴 → 在方格纸上画对称图形',
       dur: 1000,
       draw(s, t) {
+       // 蝴蝶：左右两侧关于中线成镜像，是生活中常见的轴对称图形。
        PL(
         s,
         [
          [68, 104],
-         [44, 158],
-         [92, 158],
+         [42, 72],
+         [50, 122],
         ],
         '#FCEAF2',
         '#A03060',
@@ -5736,13 +5764,39 @@
         [
          [68, 70],
          [68, 104],
-         [88, 104],
-         [80, 70],
+         [50, 122],
+         [46, 156],
+         [68, 136],
         ],
         '#FCEAF2',
         '#A03060',
         1.8,
        );
+       PL(
+        s,
+        [
+         [68, 104],
+         [94, 72],
+         [86, 122],
+        ],
+        '#FCEAF2',
+        '#A03060',
+        1.8,
+       );
+       PL(
+        s,
+        [
+         [68, 70],
+         [68, 104],
+         [86, 122],
+         [90, 156],
+         [68, 136],
+        ],
+        '#FCEAF2',
+        '#A03060',
+        1.8,
+       );
+       R(s, 64, 88, 8, 54, '#F8D7E8', '#A03060', 1.3, 4);
        L(s, 68, 58, 68, 166, '#C03030', 1.5, '4,2');
        if (t > 0.45) {
         R(s, 180, 82, 94, 70, '#E8F1FB', '#1A5FA8', 1.8);
