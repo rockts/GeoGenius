@@ -15,7 +15,7 @@ export async function onRequestPost(context) {
     const { event, topicId, grade, correct } = body;
 
     // 只接受合法事件类型
-    const allowedEvents = ['topic_complete', 'quiz_answer', 'topic_view'];
+    const allowedEvents = ['topic_complete', 'quiz_answer', 'quiz_passed', 'topic_view'];
     if (!allowedEvents.includes(event)) {
       return new Response(JSON.stringify({ ok: false }), { status: 400, headers: corsHeaders });
     }
@@ -26,7 +26,7 @@ export async function onRequestPost(context) {
       return new Response(JSON.stringify({ ok: true }), { headers: corsHeaders });
     }
 
-    const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+    const today = getChinaDateKey(); // YYYY-MM-DD，按北京时间统计“今日”
 
     // ── 1. 累计计数：event:topicId ──
     const countKey = `count:${event}:${topicId}`;
@@ -76,4 +76,13 @@ async function hashIP(ip, salt) {
   const buf = await crypto.subtle.digest('SHA-256', data);
   return Array.from(new Uint8Array(buf)).slice(0, 8)
     .map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+function getChinaDateKey(date = new Date()) {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Shanghai',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(date);
 }
