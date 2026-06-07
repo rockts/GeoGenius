@@ -1038,6 +1038,8 @@
     <div style="text-align:center;margin:10px 0 16px;font-size:11px;color:#b0b8cc;letter-spacing:0.3px;">
      GeoGenius v1.2.2 · 2026-06-08 &nbsp;·&nbsp;
      <a href="javascript:void(0)" onclick="showChangelog()" style="color:#b0b8cc;text-decoration:none;border-bottom:1px dotted #c7cfe8;" onmouseover="this.style.color='#6366f1'" onmouseout="this.style.color='#b0b8cc'">更新日志</a>
+     &nbsp;·&nbsp;
+     <a href="javascript:void(0)" onclick="openStatsDashboard()" style="color:#b0b8cc;text-decoration:none;border-bottom:1px dotted #c7cfe8;" onmouseover="this.style.color='#6366f1'" onmouseout="this.style.color='#b0b8cc'">统计后台</a>
     </div>
    </div>
 
@@ -1170,6 +1172,8 @@
     <div style="text-align:center;margin:8px 0 14px;font-size:11px;color:#b0b8cc;letter-spacing:0.3px;">
      GeoGenius v1.2.2 · 2026-06-08 &nbsp;·&nbsp;
      <a href="javascript:void(0)" onclick="showChangelog()" style="color:#b0b8cc;text-decoration:none;border-bottom:1px dotted #c7cfe8;" onmouseover="this.style.color='#6366f1'" onmouseout="this.style.color='#b0b8cc'">更新日志</a>
+     &nbsp;·&nbsp;
+     <a href="javascript:void(0)" onclick="openStatsDashboard()" style="color:#b0b8cc;text-decoration:none;border-bottom:1px dotted #c7cfe8;" onmouseover="this.style.color='#6366f1'" onmouseout="this.style.color='#b0b8cc'">统计后台</a>
     </div>
    </div>
   </div>
@@ -6746,6 +6750,12 @@
    function showChangelog() {
     document.getElementById('changelogModal').style.display = 'flex';
   }
+  function openStatsDashboard() {
+    const token = prompt('请输入统计后台访问密码（token）');
+    if (!token) return;
+    const url = `https://geogenius.xiaole.app/api/stats?token=${encodeURIComponent(token.trim())}&format=html`;
+    window.open(url, '_blank', 'noopener,noreferrer');
+   }
   function openFeedback() {
     document.getElementById('feedbackModal').style.display = 'flex';
    }
