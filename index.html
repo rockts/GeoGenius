@@ -1036,7 +1036,7 @@
     </div>
     <!-- 版本号 -->
     <div style="text-align:center;margin:10px 0 16px;font-size:11px;color:#b0b8cc;letter-spacing:0.3px;">
-     GeoGenius v1.2.3 · 2026-06-08 &nbsp;·&nbsp;
+     GeoGenius v1.2.4 · 2026-06-10 &nbsp;·&nbsp;
      <a href="javascript:void(0)" onclick="showChangelog()" style="color:#b0b8cc;text-decoration:none;border-bottom:1px dotted #c7cfe8;" onmouseover="this.style.color='#6366f1'" onmouseout="this.style.color='#b0b8cc'">更新日志</a>
      &nbsp;·&nbsp;
      <a href="javascript:void(0)" onclick="openStatsDashboard()" style="color:#b0b8cc;text-decoration:none;border-bottom:1px dotted #c7cfe8;" onmouseover="this.style.color='#6366f1'" onmouseout="this.style.color='#b0b8cc'">统计后台</a>
@@ -1170,7 +1170,7 @@
     </div>
     <!-- 版本号 -->
     <div style="text-align:center;margin:8px 0 14px;font-size:11px;color:#b0b8cc;letter-spacing:0.3px;">
-     GeoGenius v1.2.3 · 2026-06-08 &nbsp;·&nbsp;
+     GeoGenius v1.2.4 · 2026-06-10 &nbsp;·&nbsp;
      <a href="javascript:void(0)" onclick="showChangelog()" style="color:#b0b8cc;text-decoration:none;border-bottom:1px dotted #c7cfe8;" onmouseover="this.style.color='#6366f1'" onmouseout="this.style.color='#b0b8cc'">更新日志</a>
      &nbsp;·&nbsp;
      <a href="javascript:void(0)" onclick="openStatsDashboard()" style="color:#b0b8cc;text-decoration:none;border-bottom:1px dotted #c7cfe8;" onmouseover="this.style.color='#6366f1'" onmouseout="this.style.color='#b0b8cc'">统计后台</a>
@@ -1186,6 +1186,13 @@
      <button onclick="document.getElementById('changelogModal').style.display='none'" style="background:none;border:none;font-size:20px;cursor:pointer;color:#999;">×</button>
     </div>
     <div style="font-size:13px;line-height:1.7;color:#444;">
+     <p style="font-weight:700;color:#6366f1;margin:0 0 6px;">v1.2.4 · 2026-06-10</p>
+     <p style="font-weight:600;margin:8px 0 4px;">修复</p>
+     <ul style="margin:0;padding-left:18px;">
+      <li>梯形面积：上底a/下底b变量名修正，第2步改为绕腰中点真正旋转180°拼合</li>
+      <li>圆柱体积：重做为5步切割扇形柱→交错排开→近似长方体推导</li>
+     </ul>
+     <hr style="margin:12px 0;border:none;border-top:1px solid #eee;">
      <p style="font-weight:700;color:#6366f1;margin:0 0 6px;">v1.2.3 · 2026-06-08</p>
      <p style="font-weight:600;margin:8px 0 4px;">新增</p>
      <ul style="margin:0;padding-left:18px;">
@@ -1459,7 +1466,7 @@
       tag: '推导',
       steps: 4,
      },
-     { id: 'f4', title: '圆柱的体积', sub: 'V = πr²h', tag: '推导', steps: 4 },
+     { id: 'f4', title: '圆柱的体积', sub: '切拼近似长方体 V = πr²h', tag: '推导', steps: 5 },
      { id: 'f5', title: '圆锥的体积', sub: 'V = ⅓πr²h', tag: '推导', steps: 4 },
     ],
    };
@@ -4337,8 +4344,8 @@
     e3: [
      {
       hint:
-       '梯形：上底a（短）、下底a（长）、高h（两底间垂直距离）。两个相同梯形可拼成平行四边形。',
-      formula: '梯形：上底a，下底a，高h',
+       '梯形：上底a（短）、下底b（长）、高h（两底间垂直距离）。两个相同梯形可拼成平行四边形。',
+      formula: '梯形：上底a，下底b，高h',
       dur: 1300,
       draw(s, t) {
        PL(
@@ -4363,25 +4370,33 @@
       },
      },
      {
-      hint: '把一个梯形旋转180°，沿腰拼合，两个梯形变成了一个平行四边形！',
-      formula: '梯形 × 2（旋转180°）= 平行四边形',
-      dur: 1500,
+      hint: '把复制的梯形绕腰的中点旋转180°，两个全等梯形的腰恰好重合，拼成一个平行四边形！',
+      formula: '梯形 × 2（绕腰中点旋转180°）= 平行四边形',
+      dur: 1600,
       draw(s, t) {
-       // 粉色梯形固定: [56,150],[238,150],[204,74],[92,74]
-       PL(s, [[56,150],[238,150],[204,74],[92,74]], '#FCEAF2', '#A03060', 1.8);
-       // 蓝色梯形从粉色位置出发，动画到拼合位置（紧贴粉色右侧）
-       // 起始(与粉色重叠): [56,150],[238,150],[204,74],[92,74]
-       // 终止(拼合，旋转180°后接到粉色右腰): [238,150],[420,150],[386,74],[204,74]
-       const te = ease(t);
-       const A2 = lp([56,150],  [238,150], te);
-       const B2 = lp([238,150], [420,150], te);
-       const C2 = lp([204,74],  [386,74],  te);
-       const D2 = lp([92,74],   [204,74],  te);
-       PL(s, [A2,B2,C2,D2], '#E8F1FB', '#1A5FA8', 1.8);
-       if (t > 0.3)
-        T(s, 238, 35, '旋转180°后拼合 →', '#9E9B96', 12, 'middle');
-       if (t > 0.82)
-        T(s, 238, 185, '拼成平行四边形！', '#0D3F6E', 14, 'middle', '700');
+       // 橙色梯形固定: A[72,155] B[254,155] C[218,79] D[108,79]
+       // 腰CD的中点M: ((218+108)/2, (79+155)/2) = [163, 117]
+       // 蓝色梯形绕M旋转180°后: A'=2M-A=[254,79], B'=2M-B=[72,79], C'=2M-C=[108,155], D'=2M-D=[218,155]
+       // 即旋转后: [254,79],[72,79],[108,155],[218,155]
+       // 拼合后平行四边形: A[72,155] B[254,155] A'[254,79] B'[72,79]
+       const Ax=72,Ay=155, Bx=254,By=155, Cx=218,Cy=79, Dx=108,Dy=79;
+       const Mx=(Cx+Ax)/2, My=(Cy+Ay)/2; // 腰AD中点
+       PL(s, [[Ax,Ay],[Bx,By],[Cx,Cy],[Dx,Dy]], '#FCEAF2', '#A03060', 1.8);
+       // 蓝色梯形绕M从重叠位置旋转到最终位置
+       const te = ease(Math.min(1, t));
+       const angle = Math.PI * te;
+       const cos = Math.cos(angle), sin = Math.sin(angle);
+       function rot(px, py) {
+        const dx=px-Mx, dy=py-My;
+        return [Mx+dx*cos-dy*sin, My+dx*sin+dy*cos];
+       }
+       const [gAx,gAy]=rot(Ax,Ay), [gBx,gBy]=rot(Bx,By);
+       const [gCx,gCy]=rot(Cx,Cy), [gDx,gDy]=rot(Dx,Dy);
+       PL(s, [[gAx,gAy],[gBx,gBy],[gCx,gCy],[gDx,gDy]], '#E8F1FB', '#1A5FA8', 1.8);
+       // 旋转中心标记
+       C(s, Mx, My, 4, '#B8860B', 'none');
+       if (t > 0.85)
+        T(s, 163, 200, '两腰重合 → 拼成平行四边形！', '#0D3F6E', 13, 'middle', '700');
       },
      },
      {
@@ -5007,71 +5022,113 @@
     ],
     f4: [
      {
-      hint:
-       '圆柱体积：底面铺一层（面积=πr²），叠高h层，V=πr²h。与长方体V=lwh结构相同！',
-      formula: 'V = πr²h（底面积 × 高）',
+      hint: '这是一个底面半径r、高h的圆柱。它的体积怎么算？我们用"切割重组"的方法来推导。',
+      formula: 'V = ? （底面积 × 高）',
       dur: 1300,
       draw(s, t) {
-       E('ellipse', {cx:200, cy:158, rx:68, ry:20, fill:'#E4F6EE', stroke:'#0A7050', 'stroke-width':2}, s);
-       R(s, 132, 68, 136, 90, '#E4F6EE', '#0A7050', 1.5);
-       E('ellipse', {cx:200, cy:68, rx:68, ry:20, fill:'#E4F6EE', stroke:'#0A7050', 'stroke-width':2}, s);
-       L(s, 130, 68, 130, 158, '#C03030', 1.8, '5,3');
-       T(s, 109, 115, 'h', '#C03030', 19, 'middle', '700');
-       L(s, 200, 68, 268, 68, '#064A34', 1.5);
-       T(s, 236, 58, 'r', '#064A34', 14, 'middle', '700');
-       if (t > 0.58) {
-        R(s, 296, 100, 120, 30, '#E4F6EE', '#0A7050', 1.5, 6);
-        T(s, 356, 118, 'V = πr²h', '#064A34', 17, 'middle', '700');
+       E('ellipse', {cx:185, cy:158, rx:62, ry:19, fill:'#E4F6EE', stroke:'#0A7050', 'stroke-width':2}, s);
+       R(s, 123, 72, 124, 86, '#E4F6EE', '#0A7050', 1.5);
+       E('ellipse', {cx:185, cy:72, rx:62, ry:19, fill:'#E4F6EE', stroke:'#0A7050', 'stroke-width':2}, s);
+       L(s, 121, 72, 121, 158, '#C03030', 1.8, '5,3');
+       RA(s, 121, 158, 10, '#C03030');
+       T(s, 100, 117, 'h', '#C03030', 19, 'middle', '700');
+       L(s, 185, 72, 247, 72, '#064A34', 1.5);
+       T(s, 218, 62, 'r', '#064A34', 14, 'middle', '700');
+       if (t > 0.6) {
+        T(s, 330, 105, '底面积 = πr²', '#064A34', 13, 'middle');
+        T(s, 330, 128, '× 高 h = ?', '#9E9B96', 13, 'middle');
        }
       },
      },
      {
-      hint:
-       '对比：长方体V=lwh（底面积l×w×高h），圆柱V=πr²h（底面积πr²×高h）。本质相同！',
-      formula: '长方体V=lwh | 圆柱V=πr²h（都是底面积×高）',
-      dur: 1300,
+      hint: '把圆柱沿高竖切，切成许多小扇形柱。每一块都来自原来的圆柱，体积不变。',
+      formula: '圆柱 → 竖切成许多扇形柱',
+      dur: 1400,
       draw(s, t) {
-       const x=28, y=55, w=90, h=70, d=24;
+       // 左：显示带切割线的圆柱顶视图
+       const cx=130, cy=115, r=55, rY=17;
+       E('ellipse', {cx, cy:cy+50, rx:r, ry:rY, fill:'#E4F6EE', stroke:'#0A7050', 'stroke-width':1.8}, s);
+       R(s, cx-r, cy-30, r*2, 80, '#E4F6EE', '#0A7050', 1.5);
+       E('ellipse', {cx, cy:cy-30, rx:r, ry:rY, fill:'#E4F6EE', stroke:'#0A7050', 'stroke-width':1.8}, s);
+       // 切割线（从圆心到边缘的放射线）
+       const n = 8;
+       for (let i=0; i<n; i++) {
+        const ang = (i/n)*Math.PI*2;
+        const ex = cx + Math.cos(ang)*r, ey = cy-30 + Math.sin(ang)*rY;
+        if (t > 0.3)
+         L(s, cx, cy-30, ex, ey, '#C03030', 1.2, '4,3');
+       }
+       T(s, cx, cy+80, '竖切成8块扇形柱', '#064A34', 11, 'middle');
+       // 右：单个扇形柱示意
+       if (t > 0.6) {
+        const sx=310, sy=85;
+        // 扇形柱：弧边的小柱体
+        E('path', {
+         d:`M${sx},${sy+70} L${sx-22},${sy+70} A28,9 0 0,0 ${sx+22},${sy+70} Z`,
+         fill:'#C8DCF4', stroke:'#1A5FA8', 'stroke-width':1.5
+        }, s);
+        R(s, sx-22, sy, 44, 70, '#E8F1FB', '#1A5FA8', 1.5);
+        E('path', {
+         d:`M${sx},${sy} L${sx-22},${sy} A28,9 0 0,0 ${sx+22},${sy} Z`,
+         fill:'#EAF2FC', stroke:'#1A5FA8', 'stroke-width':1.5
+        }, s);
+        T(s, sx, sy+90, '扇形柱（带弧边）', '#0D3F6E', 11, 'middle');
+       }
+      },
+     },
+     {
+      hint: '把扇形柱一正一反交错排开——就像两排锯齿咬合，越切越细，形状越来越规则。',
+      formula: '扇形柱交错排开 → 越来越像长方体',
+      dur: 1400,
+      draw(s, t) {
+       const n=8, bw=22, bh=80, gap=2;
+       const totalW = n*(bw+gap);
+       const startX = (380-totalW)/2;
+       const baseY = 170;
+       for (let i=0; i<n; i++) {
+        const x = startX + i*(bw+gap);
+        const flipped = i%2===1;
+        const fill = flipped ? '#E8F1FB' : '#E4F6EE';
+        const stroke = flipped ? '#1A5FA8' : '#0A7050';
+        const y = flipped ? baseY-bh+8 : baseY-bh;
+        // 扇形柱简化为梯形表示
+        PL(s, [[x,baseY],[x+bw,baseY],[x+bw-(flipped?4:-4),y],[x+(flipped?4:-4),y]], fill, stroke, 1.5);
+       }
+       if (t > 0.5)
+        T(s, 190, 195, '交错排开后越来越像长方体', '#064A34', 12, 'middle');
+       if (t > 0.8) {
+        L(s, 30, 60, 350, 60, '#9E9B96', 1, '4,3');
+        T(s, 190, 52, '← 底边总长 ≈ πr（圆周长的一半）→', '#9E9B96', 11, 'middle');
+       }
+      },
+     },
+     {
+      hint: '切得足够细时，拼成的形状就是长方体！底面积 = πr²，高 = h，所以体积 = πr²h。',
+      formula: '近似长方体：底面积πr² × 高h = πr²h',
+      dur: 1400,
+      draw(s, t) {
+       // 左：长方体
+       const x=30, y=60, w=110, h=90, d=28;
        PL(s,[[x,y+h],[x+w,y+h],[x+w+d,y+h-d],[x+d,y+h-d]],'#D0E4F8','#1A5FA8',1.5);
        PL(s,[[x,y],[x+w,y],[x+w,y+h],[x,y+h]],'#E8F1FB','#1A5FA8',1.5);
        PL(s,[[x+w,y],[x+w+d,y-d],[x+w+d,y+h-d],[x+w,y+h]],'#C8DCF4','#1A5FA8',1.5);
        PL(s,[[x,y],[x+d,y-d],[x+w+d,y-d],[x+w,y]],'#EAF2FC','#1A5FA8',1.5);
-       T(s, x+w/2, y+h+16, 'V = lwh', '#0D3F6E', 13, 'middle', '600');
-       if (t > 0.4) {
-        const cx=305, topY=55, cr=52, cRy=16;
-        E('ellipse',{cx, cy:topY+h, rx:cr, ry:cRy, fill:'#E4F6EE', stroke:'#0A7050','stroke-width':1.5},s);
-        R(s, cx-cr, topY, cr*2, h, '#E4F6EE','#0A7050',1.5);
-        E('ellipse',{cx, cy:topY, rx:cr, ry:cRy, fill:'#E4F6EE', stroke:'#0A7050','stroke-width':1.5},s);
-        L(s, cx-cr-10, topY, cx-cr-10, topY+h, '#C03030', 1.5, '4,3');
-        T(s, cx-cr-22, topY+h/2, 'h', '#C03030', 14, 'middle', '700');
-        T(s, cx, topY+h+16, 'V = πr²h', '#064A34', 13, 'middle', '600');
+       T(s, x+w/2, y+h+18, '近似长方体', '#0D3F6E', 12, 'middle');
+       if (t > 0.35) {
+        T(s, x+w/2+d/2, y-d/2-14, '底面积 = πr²', '#064A34', 12, 'middle');
+        L(s, x-12, y, x-12, y+h, '#C03030', 1.5, '4,3');
+        T(s, x-28, y+h/2, 'h', '#C03030', 16, 'middle', '700');
        }
-       if (t > 0.65)
-        T(s, 185, 200, '本质：底面积 × 高', '#9E9B96', 12, 'middle');
-      },
-     },
-     {
-      hint:
-       '区分侧面积和体积：侧面积=2πrh（cm²），体积=πr²h（cm³）。单位不同！',
-      formula: '侧面积2πrh（cm²）≠ 体积πr²h（cm³）',
-      dur: 1200,
-      draw(s, t) {
-       E('ellipse', {cx:160, cy:160, rx:58, ry:18, fill:'#E4F6EE', stroke:'#0A7050', 'stroke-width':2}, s);
-       R(s, 102, 82, 116, 78, '#E4F6EE', '#0A7050', 1.5);
-       E('ellipse', {cx:160, cy:82, rx:58, ry:18, fill:'#E4F6EE', stroke:'#0A7050', 'stroke-width':2}, s);
-       if (t > 0.4) {
-        T(s, 344, 92, '侧面积', '#064A34', 13, 'middle');
-        T(s, 344, 112, '= 2πrh（cm²）', '#0A7050', 14, 'middle', '600');
-       }
-       if (t > 0.72) {
-        T(s, 344, 142, '体积', '#064A34', 13, 'middle');
-        T(s, 344, 162, '= πr²h（cm³）', '#3A7010', 14, 'middle', '600');
+       if (t > 0.65) {
+        R(s, 230, 90, 130, 72, '#E4F6EE', '#0A7050', 1.5, 8);
+        T(s, 295, 116, 'V = πr²h', '#064A34', 18, 'middle', '700');
+        T(s, 295, 140, '底面积 × 高', '#9E9B96', 12, 'middle');
        }
       },
      },
      {
-      hint: '验证：r=3cm、h=10cm → V = 3.14×9×10 = 282.6 cm³。r先平方！',
-      formula: '✅  V = πr²h，单位cm³（立方厘米）',
+      hint: '验证：r=3cm、h=10cm → V = 3.14×3²×10 = 3.14×9×10 = 282.6 cm³。',
+      formula: '✅  V = πr²h，单位 cm³',
       dur: 1200,
       draw(s, t) {
        E('ellipse', {cx:155, cy:154, rx:58, ry:18, fill:'#E4F6EE', stroke:'#0A7050', 'stroke-width':2}, s);
@@ -5082,25 +5139,14 @@
        T(s, 155, 55, 'r=3', '#064A34', 13);
        if (t > 0.42) {
         const ss = [
-         ['π×3²×10', '#9E9B96'],
-         ['=3.14×9×10', '#9E9B96'],
-         ['=282.6 cm³', '#0A7050'],
+         ['π × r² × h', '#9E9B96'],
+         ['= 3.14 × 9 × 10', '#9E9B96'],
+         ['= 282.6 cm³', '#0A7050'],
         ];
         const n = Math.floor(t * 4);
-        ss
-         .slice(0, n)
-         .forEach(([l, c], i) =>
-          T(
-           s,
-           358,
-           79 + i * 28,
-           l,
-           c,
-           i === 2 ? 17 : 13,
-           'middle',
-           i === 2 ? '700' : '400',
-          ),
-         );
+        ss.slice(0, n).forEach(([l, c], i) =>
+         T(s, 348, 82+i*30, l, c, i===2?17:13, 'middle', i===2?'700':'400')
+        );
        }
       },
      },
