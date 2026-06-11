@@ -2077,6 +2077,7 @@
 
    /* ─── ANIMATIONS ─── */
 
+   // @@BUILD_START:e2-helpers@@
    /* ── e2 Canvas 交互推导器状态 ── */
    const e2State = {
     a: 8, h: 5,        // 滑块当前值
@@ -2401,6 +2402,7 @@
     }
    }
 
+   // @@BUILD_END:e2-helpers@@
    const ANIMS = {
     /* ── 一年级 ── */
     a1: [
@@ -4532,6 +4534,7 @@
      },
     ],
     e2: [
+     // @@BUILD_START:e2-anims@@
      {
       hint: '一个三角形，底边 a = BC，高 h 是顶点 A 到底边的垂直距离。拖动滑块改变 a 和 h，图形实时联动。',
       formula: '三角形：底边 a，高 h',
@@ -4606,6 +4609,7 @@
        e2DrawStep(canvas);
       },
      },
+     // @@BUILD_END:e2-anims@@
     ],
     e3: [
      {
