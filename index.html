@@ -2206,13 +2206,12 @@
     const Cx = cx + a*scale/2, Cy = baseY;
     const Ax = Bx + 20,        Ay = baseY - h*scale; // 顶点偏左一点
 
-    // 旋转中心 M = BC 中点
-    const Mx = (Bx + Cx) / 2, My = (By + Cy) / 2;
+    // 旋转中心 M = AC 中点（绕腰旋转，使 BC 成为平行四边形底边）
+    const Mx = (Ax + Cx) / 2, My = (Ay + Cy) / 2;
 
-    // 绿色三角形最终位置（绕 M 旋转 180°）
-    const gAx_f = 2*Mx - Ax, gAy_f = 2*My - Ay;
-    const gBx_f = 2*Mx - Bx, gBy_f = 2*My - By; // = Cx, Cy
-    const gCx_f = 2*Mx - Cx, gCy_f = 2*My - Cy; // = Bx, By
+    // 绿色三角形最终位置（绕 M 旋转 180°）：A↔C 互换，B→gB
+    // A→C, C→A（它们是旋转中心两端，互换）
+    const gBx_f = 2*Mx - Bx, gBy_f = 2*My - By; // B 旋转到 gB（上方）
 
     function rot(px, py, angle) {
      const cos = Math.cos(angle), sin = Math.sin(angle);
@@ -2303,17 +2302,19 @@
 
     } else if (step === 1) {
      // Step 2: 复制绿色三角形叠在橙色上，标旋转中心 M，说明"绕 M 旋转 180°"
-     // 绿色（重叠在橙色上）
-     fillTri([[Ax,Ay],[Bx,By],[Cx,Cy]], '#E4F6EE', '#0A7050', 1.8);
-     // 橙色（在绿色之上）
+     // 橙色先画（底层）
      fillTri([[Ax,Ay],[Bx,By],[Cx,Cy]], '#FEF0DC', '#9A5800', 2.5);
-     // M 点
+     // 绿色后画（半透明，可见叠加效果）
+     ctx.save(); ctx.globalAlpha = 0.55;
+     fillTri([[Ax,Ay],[Bx,By],[Cx,Cy]], '#A8EFD0', '#0A7050', 2);
+     ctx.restore();
+     // 高亮旋转轴 AC（腰）
+     solidLine(Ax, Ay, Cx, Cy, '#1A5FA8', 2.5);
+     // M 点（AC 中点）
      dot(Mx, My, 5, '#E02020');
-     label('M', Mx+10, My-10, '#E02020', 12, 'left');
-     // BC 中点标注
-     solidLine(Bx, By, Cx, Cy, '#1A5FA8', 2.5);
-     label('（BC中点）', Mx, By+22, '#E02020', 11);
-     label('将绕 M 旋转 180°', Mx, Ay-22, '#0A7050', 12);
+     label('M', Mx+14, My, '#E02020', 12, 'left');
+     label('（AC中点）', Mx, My+18, '#E02020', 11);
+     label('将绕 M 旋转 180°', (Bx+Cx)/2, Ay-20, '#0A7050', 12);
      // 旋转方向弧线
      ctx.save();
      ctx.strokeStyle = '#0A7050'; ctx.lineWidth = 1.5;
@@ -2348,21 +2349,21 @@
      label('M', Mx+10, My-10, '#E02020', 12, 'left');
      // 旋转完成提示
      if (e2State.rotDone) {
-      label('BC 边完全重合！', Mx, (Ay+gAy_f)/2, '#0A7050', 13);
-      // 显示拼合后的平行四边形轮廓（正确顶点顺序：A→C→gA_f→B）
+      // 平行四边形轮廓：B→C→gB→A（BC 为底边，gB→A 为上边，均水平）
       ctx.save();
-      ctx.strokeStyle = '#0A7050'; ctx.lineWidth = 1.5; ctx.setLineDash([4,3]);
+      ctx.strokeStyle = '#0A7050'; ctx.lineWidth = 2; ctx.setLineDash([4,3]);
       ctx.beginPath();
-      ctx.moveTo(Ax, Ay); ctx.lineTo(Cx, Cy); ctx.lineTo(gAx_f, gAy_f); ctx.lineTo(Bx, By);
+      ctx.moveTo(Bx,By); ctx.lineTo(Cx,Cy); ctx.lineTo(gBx_f,gBy_f); ctx.lineTo(Ax,Ay);
       ctx.closePath(); ctx.stroke();
       ctx.restore();
+      label('拼成平行四边形！', (Bx+gBx_f)/2, (By+gBy_f)/2, '#0A7050', 13);
      }
 
     } else if (step === 3) {
      // Step 4: 完整平行四边形（橙+绿），标 a×h，右侧公式框
      const area = a * h;
-     // 正确顶点顺序：A→C→gA_f→B（非自交平行四边形）
-     fillTri([[Ax,Ay],[Cx,Cy],[gAx_f,gAy_f],[Bx,By]], '#E4F6EE', '#0A7050', 2);
+     // 平行四边形顶点：B→C→gB→A（BC 为水平底边，gB→A 为水平上边）
+     fillTri([[Bx,By],[Cx,Cy],[gBx_f,gBy_f],[Ax,Ay]], '#E4F6EE', '#0A7050', 2);
      fillTri([[Ax,Ay],[Bx,By],[Cx,Cy]], '#FEF0DC', '#9A5800', 2);
      // 底边
      solidLine(Bx, By, Cx, Cy, '#1A5FA8', 3);
@@ -2381,8 +2382,8 @@
      // Step 5: 高亮橙色（一半），公式 S = ah÷2，代入验证
      const area = a * h;
      const S = area / 2;
-     // 完整平行四边形背景（淡绿，正确顶点顺序）
-     fillTri([[Ax,Ay],[Cx,Cy],[gAx_f,gAy_f],[Bx,By]], '#E4F6EE', '#0A7050', 1.5);
+     // 平行四边形背景（B→C→gB→A，淡绿）
+     fillTri([[Bx,By],[Cx,Cy],[gBx_f,gBy_f],[Ax,Ay]], '#E4F6EE', '#0A7050', 1.5);
      // 高亮橙色三角形
      fillTri([[Ax,Ay],[Bx,By],[Cx,Cy]], '#FEF0DC', '#9A5800', 2.5);
      // 底边和高
@@ -2391,8 +2392,6 @@
      rightAngle(Ax, By, 10, '#C03030');
      label(`a = ${a}`, (Bx+Cx)/2, By+20, '#1A5FA8', 13);
      label(`h = ${h}`, Ax+22, (Ay+By)/2, '#C03030', 13, 'left');
-     // 推导说明
-     label('平行四边形 = 2 × 三角形', cx, gAy_f+18, '#555', 11);
      // 公式框
      const fx = 285, fy = 48, fw = 120, fh = 58;
      roundRect(fx, fy, fw, fh, 7, '#FEF0DC', '#9A5800', 1.5);
@@ -4547,7 +4546,7 @@
       },
      },
      {
-      hint: '复制一个完全相同的三角形（绿色），叠在橙色上。旋转中心 M 是 BC 边的中点。',
+      hint: '复制一个完全相同的三角形（绿色），叠在橙色上。旋转中心 M 是 AC 边的中点。',
       formula: '绕 M（BC中点）旋转 180° → 拼成平行四边形',
       dur: 100,
       noAutoFit: true,
@@ -4560,7 +4559,7 @@
       },
      },
      {
-      hint: '点击"播放旋转"，看绿色三角形绕 M 旋转 180°，BC 边完全重合，两个三角形拼成平行四边形！',
+      hint: '点击"播放旋转"，看绿色三角形绕 M 旋转 180°，AC 边重合，两个三角形拼成平行四边形！',
       formula: '旋转 180° → BC 边重合 → 平行四边形',
       dur: 100,
       noAutoFit: true,
