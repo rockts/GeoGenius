@@ -1831,9 +1831,10 @@
    }
 
    function openT(t) {
-    // 切换话题时清理 canvas（如果之前在 e1/e2）
+    // 切换话题时清理 canvas（如果之前在 e1/e2/e3）
     removeE1Canvas();
     removeE2Canvas();
+    removeE3Canvas();
     // 清空AI对话 + 练习
     aiHistory = [];
     document.getElementById('aiMsgs').innerHTML = '';
@@ -2038,6 +2039,7 @@
     }
     removeE1Canvas();
     removeE2Canvas();
+    removeE3Canvas();
     if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
     document.body.classList.remove('presenting');
     showSc('home');
@@ -2379,11 +2381,7 @@
        高 <i>h</i>&thinsp;=&thinsp;<span id="e2-h-val">${e2State.h}</span>
        <input id="e2-h" type="range" min="3" max="10" step="1" value="${e2State.h}"
         style="width:80px;accent-color:#C03030">
-      </label>
-      <button id="e2-play-btn" style="display:none;padding:4px 14px;border:1.5px solid #0A7050;border-radius:16px;
-       background:#E4F6EE;color:#0A7050;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">
-       ▶ 播放旋转
-      </button>`;
+      </label>`;
      // 插入在 canvas-wrap 后面（同一个父节点）
      wrap.parentNode.insertBefore(overlay, wrap.nextSibling);
      // 绑定滑块事件
@@ -2396,34 +2394,6 @@
       e2State.h = +this.value;
       overlay.querySelector('#e2-h-val').textContent = e2State.h;
       e2DrawStep(canvas);
-     });
-     // 绑定播放按钮
-     overlay.querySelector('#e2-play-btn').addEventListener('click', function() {
-      if (e2State.rotDone) {
-       e2State.rotAngle = 0;
-       e2State.rotDone = false;
-      }
-      if (e2State.rotRaf) return;
-      const start = performance.now();
-      const dur = 1200;
-      const btn = this;
-      btn.disabled = true;
-      function tick(now) {
-       const p = Math.min(1, (now - start) / dur);
-       const te = p < 0.5 ? 2*p*p : 1 - Math.pow(-2*p+2,2)/2;
-       e2State.rotAngle = Math.PI * te;
-       e2DrawStep(canvas);
-       if (p < 1) {
-        e2State.rotRaf = requestAnimationFrame(tick);
-       } else {
-        e2State.rotRaf = null;
-        e2State.rotDone = true;
-        btn.disabled = false;
-        btn.textContent = '↺ 重播旋转';
-        e2DrawStep(canvas);
-       }
-      }
-      e2State.rotRaf = requestAnimationFrame(tick);
      });
     }
     return { canvas, overlay };
@@ -2447,23 +2417,23 @@
     const ctx = canvas.getContext('2d');
     const W = 420, H = 220;
     ctx.clearRect(0, 0, W, H);
-    ctx.font = "600 13px 'Noto Sans SC',sans-serif";
 
     const a = e2State.a, h = e2State.h;
-    const scale = 14; // 1单位 = 14px
-    const baseY = 170;
-    const cx = 210;
-    // 三角形顶点（动态，由 a/h 决定）
-    const Bx = cx - a*scale/2, By = baseY;
-    const Cx = cx + a*scale/2, Cy = baseY;
-    const Ax = Bx + 20,        Ay = baseY - h*scale; // 顶点偏左一点
+    const sc = 14;
+    const baseY = 178;
+    const offset = 24; // 顶点 C 相对 A 的水平偏移（形成非直角三角形）
+    const cx = 205;
 
-    // 旋转中心 M = AC 中点（绕腰旋转，使 BC 成为平行四边形底边）
-    const Mx = (Ax + Cx) / 2, My = (Ay + Cy) / 2;
+    // A（左下）、B（右下）、C（顶部偏右）
+    const Ax = Math.round(cx - (a*sc + offset) / 2), Ay = baseY;
+    const Bx = Ax + a*sc, By = baseY;
+    const Cx = Ax + offset, Cy = baseY - h*sc;
 
-    // 绿色三角形最终位置（绕 M 旋转 180°）：A↔C 互换，B→gB
-    // A→C, C→A（它们是旋转中心两端，互换）
-    const gBx_f = 2*Mx - Bx, gBy_f = 2*My - By; // B 旋转到 gB（上方）
+    // 旋转中心 M = BC 右腰中点
+    const Mx = (Bx + Cx) / 2, My = (By + Cy) / 2;
+
+    // A 绕 M 旋转 180° → gA（平行四边形右上角）
+    const gAx = 2*Mx - Ax, gAy = 2*My - Ay; // y = baseY - h*sc = Cy
 
     function rot(px, py, angle) {
      const cos = Math.cos(angle), sin = Math.sin(angle);
@@ -2471,10 +2441,10 @@
      return [Mx + dx*cos - dy*sin, My + dx*sin + dy*cos];
     }
 
-    function fillTri(pts, fill, strokeColor, lw) {
+    function fillPoly(pts, fill, strokeColor, lw) {
      ctx.beginPath();
      ctx.moveTo(pts[0][0], pts[0][1]);
-     for (let i=1;i<pts.length;i++) ctx.lineTo(pts[i][0], pts[i][1]);
+     for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i][0], pts[i][1]);
      ctx.closePath();
      ctx.fillStyle = fill; ctx.fill();
      if (strokeColor) { ctx.strokeStyle = strokeColor; ctx.lineWidth = lw||2; ctx.stroke(); }
@@ -2508,8 +2478,7 @@
 
     function rightAngle(x, y, sz, col) {
      ctx.save();
-     ctx.strokeStyle = col||'#C03030'; ctx.lineWidth = 1.5;
-     ctx.setLineDash([]);
+     ctx.strokeStyle = col||'#C03030'; ctx.lineWidth = 1.5; ctx.setLineDash([]);
      ctx.beginPath();
      ctx.moveTo(x, y-sz); ctx.lineTo(x+sz, y-sz); ctx.lineTo(x+sz, y);
      ctx.stroke();
@@ -2540,91 +2509,95 @@
     const step = e2State.curStep;
 
     if (step === 0) {
-     // Step 1: 橙色三角形，标顶点 A/B/C，底 a，高 h（红色虚线）
-     fillTri([[Ax,Ay],[Bx,By],[Cx,Cy]], '#FEF0DC', '#9A5800', 2.5);
-     label('A', Ax, Ay-14, '#9A5800', 13);
-     label('B', Bx-12, By, '#9A5800', 13, 'right');
-     label('C', Cx+12, Cy, '#9A5800', 13, 'left');
-     label(`底边 a = ${a}`, (Bx+Cx)/2, By+20, '#0D3F6E', 12);
-     dashedLine(Ax, Ay, Ax, By, '#C03030', 1.8, [5,3]);
-     rightAngle(Ax, By, 10, '#C03030');
-     label(`h = ${h}`, Ax+22, (Ay+By)/2, '#C03030', 12, 'left');
+     // 橙色三角形，A/B/C 顶点，底 a，高 h
+     fillPoly([[Ax,Ay],[Bx,By],[Cx,Cy]], '#FEF0DC', '#9A5800', 2.5);
+     label('A', Ax-12, Ay, '#9A5800', 13, 'right');
+     label('B', Bx+12, By, '#9A5800', 13, 'left');
+     label('C', Cx, Cy-16, '#9A5800', 13);
+     label(`底边 a = ${a}`, (Ax+Bx)/2, Ay+20, '#0D3F6E', 12);
+     dashedLine(Cx, Cy, Cx, Ay, '#C03030', 1.8, [5,3]);
+     rightAngle(Cx, Ay, 10, '#C03030');
+     label(`h = ${h}`, Cx+16, (Cy+Ay)/2, '#C03030', 12, 'left');
 
     } else if (step === 1) {
-     // Step 2: 复制绿色三角形叠在橙色上，标旋转中心 M，说明"绕 M 旋转 180°"
-     fillTri([[Ax,Ay],[Bx,By],[Cx,Cy]], '#FEF0DC', '#9A5800', 2.5);
+     // 橙+绿叠放，标 M（BC中点），旋转箭头
+     fillPoly([[Ax,Ay],[Bx,By],[Cx,Cy]], '#FEF0DC', '#9A5800', 2.5);
      ctx.save(); ctx.globalAlpha = 0.55;
-     fillTri([[Ax,Ay],[Bx,By],[Cx,Cy]], '#A8EFD0', '#0A7050', 2);
+     fillPoly([[Ax,Ay],[Bx,By],[Cx,Cy]], '#A8EFD0', '#0A7050', 2);
      ctx.restore();
-     solidLine(Ax, Ay, Cx, Cy, '#1A5FA8', 2.5);
+     solidLine(Bx, By, Cx, Cy, '#1A5FA8', 2.5); // 右腰 BC
      dot(Mx, My, 5, '#E02020');
      label('M', Mx+14, My, '#E02020', 12, 'left');
-     label('（AC中点）', Mx, My+18, '#E02020', 11);
-     label('将绕 M 旋转 180°', (Bx+Cx)/2, Ay-20, '#0A7050', 12);
+     label('（BC中点）', Mx+14, My+16, '#E02020', 11, 'left');
+     label('绿色将绕 M 旋转 180°', (Ax+Bx)/2, Cy-18, '#0A7050', 12);
      ctx.save();
-     ctx.strokeStyle = '#0A7050'; ctx.lineWidth = 1.5;
-     ctx.setLineDash([4,3]);
-     ctx.beginPath();
-     ctx.arc(Mx, My, 28, -Math.PI*0.6, Math.PI*0.6);
-     ctx.stroke();
-     const arx = Mx + 28*Math.cos(Math.PI*0.6);
-     const ary = My + 28*Math.sin(Math.PI*0.6);
+     ctx.strokeStyle = '#0A7050'; ctx.lineWidth = 1.5; ctx.setLineDash([4,3]);
+     ctx.beginPath(); ctx.arc(Mx, My, 28, -Math.PI*0.6, Math.PI*0.6); ctx.stroke();
+     const arx = Mx + 28*Math.cos(Math.PI*0.6), ary = My + 28*Math.sin(Math.PI*0.6);
      ctx.setLineDash([]);
      ctx.fillStyle = '#0A7050';
      ctx.beginPath();
-     ctx.moveTo(arx, ary);
-     ctx.lineTo(arx-8, ary-3);
-     ctx.lineTo(arx-5, ary+6);
+     ctx.moveTo(arx, ary); ctx.lineTo(arx-8, ary-3); ctx.lineTo(arx-5, ary+6);
      ctx.closePath(); ctx.fill();
      ctx.restore();
 
     } else if (step === 2) {
-     // Step 3: 旋转动画
+     // 旋转动画：绿色绕 M 转，橙色固定
      const angle = e2State.rotAngle;
-     const [gAxt, gAyt] = rot(Ax, Ay, angle);
-     const [gBxt, gByt] = rot(Bx, By, angle);
-     const [gCxt, gCyt] = rot(Cx, Cy, angle);
-     fillTri([[gAxt,gAyt],[gBxt,gByt],[gCxt,gCyt]], '#E4F6EE', '#0A7050', 1.8);
-     fillTri([[Ax,Ay],[Bx,By],[Cx,Cy]], '#FEF0DC', '#9A5800', 2.5);
+     const [gAt_x, gAt_y] = rot(Ax, Ay, angle);
+     const [gBt_x, gBt_y] = rot(Bx, By, angle);
+     const [gCt_x, gCt_y] = rot(Cx, Cy, angle);
+     fillPoly([[gAt_x,gAt_y],[gBt_x,gBt_y],[gCt_x,gCt_y]], '#E4F6EE', '#0A7050', 1.8);
+     fillPoly([[Ax,Ay],[Bx,By],[Cx,Cy]], '#FEF0DC', '#9A5800', 2.5);
      dot(Mx, My, 5, '#E02020');
      label('M', Mx+10, My-10, '#E02020', 12, 'left');
      if (e2State.rotDone) {
       ctx.save();
-      ctx.strokeStyle = '#0A7050'; ctx.lineWidth = 2; ctx.setLineDash([4,3]);
+      ctx.strokeStyle = '#1A5FA8'; ctx.lineWidth = 2; ctx.setLineDash([4,3]);
       ctx.beginPath();
-      ctx.moveTo(Bx,By); ctx.lineTo(Cx,Cy); ctx.lineTo(gBx_f,gBy_f); ctx.lineTo(Ax,Ay);
+      ctx.moveTo(Ax,Ay); ctx.lineTo(Bx,By); ctx.lineTo(gAx,gAy); ctx.lineTo(Cx,Cy);
       ctx.closePath(); ctx.stroke();
       ctx.restore();
-      label('拼成平行四边形！', (Bx+gBx_f)/2, (By+gBy_f)/2, '#0A7050', 13);
+      label('拼成平行四边形！', (Bx+gAx)/2, gAy-18, '#0A7050', 13);
      }
 
     } else if (step === 3) {
-     // Step 4: 完整平行四边形（橙+绿），标 a×h，右侧公式框
+     // 平行四边形：橙（原三角形）+ 绿（旋转后的副本）
      const area = a * h;
-     fillTri([[Bx,By],[Cx,Cy],[gBx_f,gBy_f],[Ax,Ay]], '#E4F6EE', '#0A7050', 2);
-     fillTri([[Ax,Ay],[Bx,By],[Cx,Cy]], '#FEF0DC', '#9A5800', 2);
-     solidLine(Bx, By, Cx, Cy, '#1A5FA8', 3);
-     label(`a = ${a}`, (Bx+Cx)/2, By+20, '#1A5FA8', 13);
-     dashedLine(Ax, Ay, Ax, By, '#C03030', 1.8, [5,3]);
-     rightAngle(Ax, By, 10, '#C03030');
-     label(`h = ${h}`, Ax+22, (Ay+By)/2, '#C03030', 13, 'left');
-     const fx = 290, fy = 60, fw = 110, fh = 46;
+     fillPoly([[gAx,gAy],[Cx,Cy],[Bx,By]], '#E4F6EE', '#0A7050', 2);  // 绿色右半
+     fillPoly([[Ax,Ay],[Bx,By],[Cx,Cy]], '#FEF0DC', '#9A5800', 2);    // 橙色左半
+     ctx.save();
+     ctx.strokeStyle = '#1A5FA8'; ctx.lineWidth = 2.5; ctx.setLineDash([]);
+     ctx.beginPath();
+     ctx.moveTo(Ax,Ay); ctx.lineTo(Bx,By); ctx.lineTo(gAx,gAy); ctx.lineTo(Cx,Cy);
+     ctx.closePath(); ctx.stroke();
+     ctx.restore();
+     label(`a = ${a}`, (Ax+Bx)/2, Ay+20, '#1A5FA8', 13);
+     dashedLine(Cx, Cy, Cx, Ay, '#C03030', 1.8, [5,3]);
+     rightAngle(Cx, Ay, 10, '#C03030');
+     label(`h = ${h}`, Cx+16, (Cy+Ay)/2, '#C03030', 13, 'left');
+     const fx = Math.min(gAx+6, 305), fy = Cy-6, fw = 108, fh = 46;
      roundRect(fx, fy, fw, fh, 7, '#FFF8E7', '#9A5800', 1.5);
      label('面积 = a × h', fx+fw/2, fy+15, '#9A5800', 12);
      label(`= ${a} × ${h} = ${area}`, fx+fw/2, fy+33, '#9A5800', 13);
 
     } else if (step === 4) {
-     // Step 5: 高亮橙色（一半），公式 S = ah÷2，代入验证
+     // 公式 S = ah÷2
      const area = a * h;
      const S = area / 2;
-     fillTri([[Bx,By],[Cx,Cy],[gBx_f,gBy_f],[Ax,Ay]], '#E4F6EE', '#0A7050', 1.5);
-     fillTri([[Ax,Ay],[Bx,By],[Cx,Cy]], '#FEF0DC', '#9A5800', 2.5);
-     solidLine(Bx, By, Cx, Cy, '#1A5FA8', 2.5);
-     dashedLine(Ax, Ay, Ax, By, '#C03030', 1.8, [5,3]);
-     rightAngle(Ax, By, 10, '#C03030');
-     label(`a = ${a}`, (Bx+Cx)/2, By+20, '#1A5FA8', 13);
-     label(`h = ${h}`, Ax+22, (Ay+By)/2, '#C03030', 13, 'left');
-     const fx = 285, fy = 48, fw = 120, fh = 58;
+     fillPoly([[gAx,gAy],[Cx,Cy],[Bx,By]], '#E4F6EE', '#0A7050', 1.5);
+     fillPoly([[Ax,Ay],[Bx,By],[Cx,Cy]], '#FEF0DC', '#9A5800', 2.5);
+     ctx.save();
+     ctx.strokeStyle = '#1A5FA8'; ctx.lineWidth = 2; ctx.setLineDash([]);
+     ctx.beginPath();
+     ctx.moveTo(Ax,Ay); ctx.lineTo(Bx,By); ctx.lineTo(gAx,gAy); ctx.lineTo(Cx,Cy);
+     ctx.closePath(); ctx.stroke();
+     ctx.restore();
+     dashedLine(Cx, Cy, Cx, Ay, '#C03030', 1.8, [5,3]);
+     rightAngle(Cx, Ay, 10, '#C03030');
+     label(`a = ${a}`, (Ax+Bx)/2, Ay+20, '#1A5FA8', 13);
+     label(`h = ${h}`, Cx+16, (Cy+Ay)/2, '#C03030', 13, 'left');
+     const fx = Math.min(gAx+6, 295), fy = Cy-6, fw = 120, fh = 60;
      roundRect(fx, fy, fw, fh, 7, '#FEF0DC', '#9A5800', 1.5);
      label('S = ah ÷ 2', fx+fw/2, fy+17, '#9A5800', 14);
      label(`= ${a}×${h}÷2`, fx+fw/2, fy+36, '#9A5800', 12);
@@ -2632,6 +2605,326 @@
     }
    }
    // @@BUILD_END:e2-helpers@@
+
+   // @@BUILD_START:e3-helpers@@
+
+   /* ── e3 Canvas 交互推导器状态 ── */
+   const e3State = {
+    a: 4, b: 6, h: 5,
+    curStep: -1,
+    rotAngle: 0,
+    rotDone: false,
+    rotRaf: null,
+   };
+
+   function getE3Canvas(s) {
+    const svg = s.ownerSVGElement || s;
+    const wrap = svg.closest('.canvas-wrap') || svg.parentElement;
+    let canvas = document.getElementById('e3-canvas');
+    let overlay = document.getElementById('e3-overlay');
+    if (!canvas) {
+     svg.style.display = 'none';
+     canvas = document.createElement('canvas');
+     canvas.id = 'e3-canvas';
+     canvas.width = 420;
+     canvas.height = 230;
+     Object.assign(canvas.style, {
+      display: 'block', maxWidth: '100%', height: 'auto', borderRadius: '6px',
+     });
+     wrap.appendChild(canvas);
+     overlay = document.createElement('div');
+     overlay.id = 'e3-overlay';
+     Object.assign(overlay.style, {
+      display: 'flex', gap: '10px', alignItems: 'center',
+      justifyContent: 'center', flexWrap: 'wrap',
+      padding: '6px 0 2px',
+      fontSize: '13px', fontFamily: "'Noto Sans SC',sans-serif", whiteSpace: 'nowrap',
+     });
+     overlay.innerHTML = `
+      <label style="display:flex;align-items:center;gap:5px;color:#7A4A00;font-weight:600">
+       上底 <i>a</i>&thinsp;=&thinsp;<span id="e3-a-val">${e3State.a}</span>
+       <input id="e3-a" type="range" min="2" max="8" step="1" value="${e3State.a}"
+        style="width:65px;accent-color:#9A5800">
+      </label>
+      <label style="display:flex;align-items:center;gap:5px;color:#0D3F6E;font-weight:600">
+       下底 <i>b</i>&thinsp;=&thinsp;<span id="e3-b-val">${e3State.b}</span>
+       <input id="e3-b" type="range" min="4" max="12" step="1" value="${e3State.b}"
+        style="width:65px;accent-color:#1A5FA8">
+      </label>
+      <label style="display:flex;align-items:center;gap:5px;color:#C03030;font-weight:600">
+       高 <i>h</i>&thinsp;=&thinsp;<span id="e3-h-val">${e3State.h}</span>
+       <input id="e3-h" type="range" min="2" max="8" step="1" value="${e3State.h}"
+        style="width:65px;accent-color:#C03030">
+      </label>
+      <button id="e3-play-btn" style="display:none;padding:4px 12px;border:1.5px solid #0A7050;
+       border-radius:16px;background:#D4F5E9;color:#0A7050;font-size:12px;font-weight:700;
+       cursor:pointer;font-family:inherit">▶ 播放旋转</button>`;
+     wrap.parentNode.insertBefore(overlay, wrap.nextSibling);
+     overlay.querySelector('#e3-a').addEventListener('input', function() {
+      e3State.a = +this.value;
+      overlay.querySelector('#e3-a-val').textContent = e3State.a;
+      if (e3State.a >= e3State.b) {
+       e3State.b = Math.min(12, e3State.a + 1);
+       overlay.querySelector('#e3-b').value = e3State.b;
+       overlay.querySelector('#e3-b-val').textContent = e3State.b;
+      }
+      if (e3State.curStep === 2) { e3State.rotAngle = 0; e3State.rotDone = false; }
+      e3DrawStep(canvas);
+     });
+     overlay.querySelector('#e3-b').addEventListener('input', function() {
+      e3State.b = +this.value;
+      overlay.querySelector('#e3-b-val').textContent = e3State.b;
+      if (e3State.b <= e3State.a) {
+       e3State.a = Math.max(2, e3State.b - 1);
+       overlay.querySelector('#e3-a').value = e3State.a;
+       overlay.querySelector('#e3-a-val').textContent = e3State.a;
+      }
+      if (e3State.curStep === 2) { e3State.rotAngle = 0; e3State.rotDone = false; }
+      e3DrawStep(canvas);
+     });
+     overlay.querySelector('#e3-h').addEventListener('input', function() {
+      e3State.h = +this.value;
+      overlay.querySelector('#e3-h-val').textContent = e3State.h;
+      if (e3State.curStep === 2) { e3State.rotAngle = 0; e3State.rotDone = false; }
+      e3DrawStep(canvas);
+     });
+     overlay.querySelector('#e3-play-btn').addEventListener('click', function() {
+      if (e3State.rotDone) { e3State.rotAngle = 0; e3State.rotDone = false; }
+      if (e3State.rotRaf) return;
+      const start = performance.now(), dur = 1400, btn = this;
+      btn.disabled = true;
+      function tick(now) {
+       const p = Math.min(1, (now - start) / dur);
+       const te = p < 0.5 ? 2*p*p : 1 - Math.pow(-2*p+2,2)/2;
+       e3State.rotAngle = Math.PI * te;
+       e3DrawStep(canvas);
+       if (p < 1) {
+        e3State.rotRaf = requestAnimationFrame(tick);
+       } else {
+        e3State.rotRaf = null; e3State.rotDone = true;
+        btn.disabled = false; btn.textContent = '↺ 重播旋转';
+        e3DrawStep(canvas);
+       }
+      }
+      e3State.rotRaf = requestAnimationFrame(tick);
+     });
+    }
+    return { canvas, overlay };
+   }
+
+   function removeE3Canvas() {
+    if (e3State.rotRaf) { cancelAnimationFrame(e3State.rotRaf); e3State.rotRaf = null; }
+    document.getElementById('e3-canvas')?.remove();
+    document.getElementById('e3-overlay')?.remove();
+    const svg = document.getElementById('asvg');
+    if (svg) svg.style.display = '';
+    e3State.curStep = -1;
+    e3State.rotAngle = 0;
+    e3State.rotDone = false;
+   }
+
+   function e3DrawStep(canvas) {
+    const ctx = canvas.getContext('2d');
+    const W = 420, H = 230;
+    ctx.clearRect(0, 0, W, H);
+
+    const a = e3State.a, b = e3State.b, h = e3State.h;
+    // Dynamic scale: keeps figure within canvas for all valid a+b values
+    const sc = Math.min(13, Math.floor(190 / (a + b + 1)));
+    const offset = 24;   // fixed left-leg slant (px)
+    const baseY = 178;
+    // Center the TRAPEZOID's bottom edge horizontally
+    const ax = Math.round(210 - b * sc / 2);
+
+    // ── Trapezoid vertices (orange, original) ──────────────────
+    // A=bottom-left, B=bottom-right, C=top-right, D=top-left
+    const Ax = ax,          Ay = baseY;
+    const Bx = ax + b*sc,   By = baseY;
+    const Dx = ax + offset, Dy = baseY - h*sc;
+    const Cx = Dx + a*sc,   Cy = Dy;
+
+    // M = midpoint of right leg BC (rotation center)
+    const Mx = (Bx + Cx) / 2, My = (By + Cy) / 2;
+
+    // Final positions of A and D after 180° rotation around M
+    // (B↔C swap since M is their midpoint)
+    const Ar_x = 2*Mx - Ax, Ar_y = 2*My - Ay;   // top-right of final parallelogram
+    const Dr_x = 2*Mx - Dx, Dr_y = 2*My - Dy;   // bottom-right of final parallelogram
+
+    // Rotate (px,py) around (Mx,My) by angle
+    function rotPt(px, py, angle) {
+     const cos = Math.cos(angle), sin = Math.sin(angle);
+     const dx = px - Mx, dy = py - My;
+     return [Mx + dx*cos - dy*sin, My + dx*sin + dy*cos];
+    }
+
+    // ── Drawing helpers ────────────────────────────────────────
+    function fillPoly(pts, fill, stroke, lw) {
+     ctx.beginPath();
+     ctx.moveTo(pts[0][0], pts[0][1]);
+     for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i][0], pts[i][1]);
+     ctx.closePath();
+     ctx.fillStyle = fill; ctx.fill();
+     if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = lw || 2; ctx.stroke(); }
+    }
+    function label(text, x, y, color, size, align) {
+     ctx.save();
+     ctx.fillStyle = color || '#333';
+     ctx.font = `600 ${size || 13}px 'Noto Sans SC',sans-serif`;
+     ctx.textAlign = align || 'center';
+     ctx.textBaseline = 'middle';
+     ctx.fillText(text, x, y); ctx.restore();
+    }
+    function dashedLine(x1, y1, x2, y2, color, lw) {
+     ctx.save();
+     ctx.strokeStyle = color; ctx.lineWidth = lw || 1.8;
+     ctx.setLineDash([5, 3]);
+     ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+     ctx.setLineDash([]); ctx.restore();
+    }
+    function solidLine(x1, y1, x2, y2, color, lw) {
+     ctx.save();
+     ctx.strokeStyle = color; ctx.lineWidth = lw || 2;
+     ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+     ctx.restore();
+    }
+    function rightAngleMark(x, y, sz, col) {
+     ctx.save();
+     ctx.strokeStyle = col || '#C03030'; ctx.lineWidth = 1.5; ctx.setLineDash([]);
+     ctx.beginPath();
+     ctx.moveTo(x, y - sz); ctx.lineTo(x + sz, y - sz); ctx.lineTo(x + sz, y);
+     ctx.stroke(); ctx.restore();
+    }
+    function dot(x, y, r, color) {
+     ctx.save(); ctx.fillStyle = color;
+     ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI*2); ctx.fill(); ctx.restore();
+    }
+
+    // Helper: draw the two-sided height indicator to the LEFT of the figure
+    function drawHeightAnnotation() {
+     const hx = Ax - 14;
+     dashedLine(hx, Dy, hx, Ay, '#C03030', 1.5);
+     solidLine(hx - 4, Dy, hx + 4, Dy, '#C03030', 1.5);
+     solidLine(hx - 4, Ay, hx + 4, Ay, '#C03030', 1.5);
+     label('高 h = ' + h, hx - 2, (Dy + Ay) / 2, '#C03030', 12, 'right');
+    }
+
+    // Helper: draw the green rotated copy at given angle
+    function drawGreenCopy(angle, alpha) {
+     const [Ar, Br, Cr, Dr] = [
+      rotPt(Ax, Ay, angle),
+      rotPt(Bx, By, angle),
+      rotPt(Cx, Cy, angle),
+      rotPt(Dx, Dy, angle),
+     ];
+     ctx.save(); ctx.globalAlpha = alpha;
+     fillPoly([Ar, Br, Cr, Dr], '#A8EFD0', '#0A7050', 2);
+     ctx.restore();
+    }
+
+    // Helper: draw the final parallelogram (step 3 & 4)
+    function drawParallelogram() {
+     // Orange half (original trapezoid)
+     fillPoly([[Ax,Ay],[Bx,By],[Cx,Cy],[Dx,Dy]], '#FEF0DC', '#9A5800', 2);
+     // Green half (rotated copy at π): Ar→C→B→Dr
+     fillPoly([[Ar_x,Ar_y],[Cx,Cy],[Bx,By],[Dr_x,Dr_y]], '#A8EFD0', '#0A7050', 2);
+     // Blue outline of full parallelogram
+     ctx.save();
+     ctx.strokeStyle = '#1A5FA8'; ctx.lineWidth = 2.5; ctx.setLineDash([]);
+     ctx.beginPath();
+     ctx.moveTo(Ax, Ay); ctx.lineTo(Dr_x, Dr_y);
+     ctx.lineTo(Ar_x, Ar_y); ctx.lineTo(Dx, Dy); ctx.closePath();
+     ctx.stroke(); ctx.restore();
+    }
+
+    const step = e3State.curStep;
+
+    /* ── Step 0: 展示梯形，标出 a / b / h ── */
+    if (step === 0) {
+     fillPoly([[Ax,Ay],[Bx,By],[Cx,Cy],[Dx,Dy]], '#FEF0DC', '#9A5800', 2);
+     // Height line
+     dashedLine(Dx, Dy, Dx, Ay, '#C03030', 1.8);
+     rightAngleMark(Dx, Ay, 9, '#C03030');
+     label('高 h = ' + h, Dx - 6, (Dy + Ay) / 2, '#C03030', 12, 'right');
+     // Top base (上底 a)
+     solidLine(Dx, Dy - 10, Cx, Dy - 10, '#9A5800', 1.5);
+     label('上底 a = ' + a, (Dx + Cx) / 2, Dy - 20, '#7A4A00', 12);
+     // Bottom base (下底 b)
+     solidLine(Ax, Ay + 12, Bx, Ay + 12, '#1A5FA8', 1.5);
+     label('下底 b = ' + b, (Ax + Bx) / 2, Ay + 23, '#0D3F6E', 12);
+
+    /* ── Step 1: 复制绿色梯形，标出旋转中心 M ── */
+    } else if (step === 1) {
+     // Orange original
+     fillPoly([[Ax,Ay],[Bx,By],[Cx,Cy],[Dx,Dy]], '#FEF0DC', '#9A5800', 2);
+     // Green copy on top (semi-transparent)
+     ctx.save(); ctx.globalAlpha = 0.55;
+     fillPoly([[Ax,Ay],[Bx,By],[Cx,Cy],[Dx,Dy]], '#A8EFD0', '#0A7050', 2);
+     ctx.restore();
+     // M point on BC midpoint
+     dot(Mx, My, 5, '#E02020');
+     const mLabelX = Mx + (Cx > Bx ? 10 : -10);
+     label('M', mLabelX, My - 8, '#E02020', 12, Cx > Bx ? 'left' : 'right');
+     label('（腰BC中点）', mLabelX, My + 8, '#E02020', 10, Cx > Bx ? 'left' : 'right');
+     // base labels
+     label('下底 b = ' + b, (Ax + Bx) / 2, Ay + 23, '#0D3F6E', 12);
+     label('上底 a = ' + a, (Dx + Cx) / 2, Dy - 18, '#7A4A00', 12);
+
+    /* ── Step 2: 绕 M 旋转 180° 动画 ── */
+    } else if (step === 2) {
+     const angle = e3State.rotAngle;
+     // Orange fixed
+     fillPoly([[Ax,Ay],[Bx,By],[Cx,Cy],[Dx,Dy]], '#FEF0DC', '#9A5800', 2);
+     // Green copy rotating
+     drawGreenCopy(angle, 0.85);
+     // M point (stays fixed)
+     dot(Mx, My, 5, '#E02020');
+     label('M', Mx + 8, My - 8, '#E02020', 11);
+     // "腰重合" hint near end of rotation
+     if (angle > Math.PI * 0.92) {
+      label('腰重合！', Mx, My - 22, '#0A7050', 12);
+     }
+
+    /* ── Step 3: 拼成平行四边形，标出 (a+b)×h ── */
+    } else if (step === 3) {
+     drawParallelogram();
+     // Bottom width annotation
+     solidLine(Ax, Ay + 14, Dr_x, Ay + 14, '#1A5FA8', 1.5);
+     label('底 = a+b = ' + (a+b), (Ax + Dr_x) / 2, Ay + 26, '#0D3F6E', 12);
+     // Height annotation (left of figure)
+     drawHeightAnnotation();
+     // Center label: parallelogram area
+     const figMx = (Ax + Ar_x) / 2;
+     const figMy = (Ay + Dy) / 2;
+     label('平行四边形面积', figMx, figMy - 10, '#0A7050', 11);
+     label('= (a+b)×h = ' + (a+b)*h, figMx, figMy + 8, '#0A7050', 12);
+
+    /* ── Step 4: S = (a+b)×h÷2，代入数字 ── */
+    } else if (step === 4) {
+     drawParallelogram();
+     solidLine(Ax, Ay + 14, Dr_x, Ay + 14, '#1A5FA8', 1.5);
+     label('底 = a+b = ' + (a+b), (Ax + Dr_x) / 2, Ay + 26, '#0D3F6E', 12);
+     drawHeightAnnotation();
+     // Formula box (white semi-transparent, centered inside parallelogram)
+     const figCx = (Ax + Ar_x) / 2;
+     const figCy = (Ay + Dy) / 2;
+     const bw = 144, bh = 78, br = 8;
+     const bx0 = figCx - bw/2, by0 = figCy - bh/2;
+     ctx.save();
+     ctx.fillStyle = 'rgba(255,255,255,0.9)'; ctx.strokeStyle = '#1A5FA8'; ctx.lineWidth = 1.5;
+     ctx.beginPath();
+     ctx.moveTo(bx0+br,by0); ctx.lineTo(bx0+bw-br,by0); ctx.arcTo(bx0+bw,by0,bx0+bw,by0+br,br);
+     ctx.lineTo(bx0+bw,by0+bh-br); ctx.arcTo(bx0+bw,by0+bh,bx0+bw-br,by0+bh,br);
+     ctx.lineTo(bx0+br,by0+bh); ctx.arcTo(bx0,by0+bh,bx0,by0+bh-br,br);
+     ctx.lineTo(bx0,by0+br); ctx.arcTo(bx0,by0,bx0+br,by0,br);
+     ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.restore();
+     label('S = (a+b)×h÷2', figCx, by0 + 18, '#0D3F6E', 13);
+     label('= (' + a + '+' + b + ')×' + h + '÷2', figCx, by0 + 39, '#5A4AC0', 13);
+     label('= ' + (a+b)*h + '÷2 = ' + (a+b)*h/2, figCx, by0 + 60, '#0A7050', 15);
+    }
+   }
+   // @@BUILD_END:e3-helpers@@
+
    const ANIMS = {
     /* ── 一年级 ── */
     a1: [
@@ -4679,7 +4972,7 @@
       },
      },
      {
-      hint: '复制一个完全相同的三角形（绿色），叠在橙色上。旋转中心 M 是 AC 边的中点。',
+      hint: '复制一个完全相同的三角形（绿色），叠在橙色上。旋转中心 M 是 BC 边的中点。',
       formula: '绕 M（BC中点）旋转 180° → 拼成平行四边形',
       dur: 100,
       noAutoFit: true,
@@ -4692,24 +4985,30 @@
       },
      },
      {
-      hint: '点击"播放旋转"，看绿色三角形绕 M 旋转 180°，AC 边重合，两个三角形拼成平行四边形！',
+      hint: '绿色三角形绕 BC 中点 M 自动旋转 180°，BC 边重合，两个三角形拼成平行四边形！',
       formula: '旋转 180° → BC 边重合 → 平行四边形',
       dur: 100,
       noAutoFit: true,
       draw(s, t) {
-       const { canvas, overlay } = getE2Canvas(s);
-       const playBtn = overlay.querySelector('#e2-play-btn');
-       if (e2State.curStep !== 2) {
-        if (e2State.rotRaf) { cancelAnimationFrame(e2State.rotRaf); e2State.rotRaf = null; }
-        e2State.rotAngle = 0;
-        e2State.rotDone = false;
-       }
+       const { canvas } = getE2Canvas(s);
+       if (e2State.rotRaf) { cancelAnimationFrame(e2State.rotRaf); e2State.rotRaf = null; }
+       e2State.rotAngle = 0;
+       e2State.rotDone = false;
        e2State.curStep = 2;
-       if (playBtn) {
-        playBtn.style.display = '';
-        playBtn.textContent = e2State.rotDone ? '↺ 重播旋转' : '▶ 播放旋转';
-       }
-       e2DrawStep(canvas);
+       const start = performance.now();
+       const dur = 1200;
+       (function tick(now) {
+        const p = Math.min(1, (now - start) / dur);
+        const te = p < 0.5 ? 2*p*p : 1 - Math.pow(-2*p+2,2)/2;
+        e2State.rotAngle = Math.PI * te;
+        e2DrawStep(canvas);
+        if (p < 1) {
+         e2State.rotRaf = requestAnimationFrame(tick);
+        } else {
+         e2State.rotRaf = null;
+         e2State.rotDone = true;
+        }
+       })(performance.now());
       },
      },
      {
@@ -4741,177 +5040,83 @@
      // @@BUILD_END:e2-anims@@
     ],
     e3: [
+     // @@BUILD_START:e3-anims@@
+
      {
-      hint:
-       '梯形：上底a（短）、下底b（长）、高h（两底间垂直距离）。两个相同梯形可拼成平行四边形。',
-      formula: '梯形：上底a，下底b，高h',
-      dur: 1300,
+      hint: '梯形：上底 a（短）、下底 b（长）、高 h（两底间垂直距离）。拖动滑块改变数值，图形实时联动。',
+      formula: '梯形：上底 a，下底 b，高 h',
+      dur: 100,
+      noAutoFit: true,
       draw(s, t) {
-       PL(
-        s,
-        [
-         [76, 160],
-         [294, 160],
-         [256, 75],
-         [118, 75],
-        ],
-        '#FCEAF2',
-        '#A03060',
-        2,
-       );
-       T(s, 187, 67, '上底 a', '#701040', 13);
-       T(s, 187, 176, '下底 b', '#701040', 13);
-       if (t > 0.52) {
-        L(s, 118, 75, 118, 160, '#C03030', 1.8, '5,3');
-        RA(s, 118, 160, 12, '#C03030');
-        T(s, 96, 120, '高 h', '#C03030', 13, 'middle');
+       const { canvas, overlay } = getE3Canvas(s);
+       if (e3State.curStep !== 0) {
+        e3State.curStep = 0;
+        overlay.querySelector('#e3-play-btn').style.display = 'none';
+        e3DrawStep(canvas);
        }
       },
      },
      {
-      hint: '把复制的梯形绕腰的中点旋转180°，两个全等梯形的腰恰好重合，拼成一个平行四边形！',
-      formula: '梯形 × 2（绕腰中点旋转180°）= 平行四边形',
-      dur: 1600,
+      hint: '复制一个完全相同的绿色梯形，叠在上面。M 是腰 BC 的中点，将作为旋转中心。',
+      formula: '复制梯形 + 旋转中心 M（腰BC中点）',
+      dur: 100,
+      noAutoFit: true,
       draw(s, t) {
-       // 橙色梯形固定: A[72,155] B[254,155] C[218,79] D[108,79]
-       // 旋转中心 = 腰BC中点: M=((254+218)/2,(155+79)/2)=(236,117)
-       // 蓝色梯形绕M旋转180°后:
-       //   A' = 2M-A = [400,79], B' = 2M-B = [218,79]=C ✓
-       //   C' = 2M-C = [254,155]=B ✓, D' = 2M-D = [364,155]
-       // 拼合后平行四边形: A[72,155] → D[108,79] → A'[400,79] → D'[364,155]
-       const Ax=72,Ay=155, Bx=254,By=155, Cx=218,Cy=79, Dx=108,Dy=79;
-       const Mx=(Bx+Cx)/2, My=(By+Cy)/2; // 腰BC中点 (236,117)
-       PL(s, [[Ax,Ay],[Bx,By],[Cx,Cy],[Dx,Dy]], '#FCEAF2', '#A03060', 1.8);
-       // 蓝色梯形绕M从重叠位置旋转到最终位置
-       const te = ease(Math.min(1, t));
-       const angle = Math.PI * te;
-       const cos = Math.cos(angle), sin = Math.sin(angle);
-       function rot(px, py) {
-        const dx=px-Mx, dy=py-My;
-        return [Mx+dx*cos-dy*sin, My+dx*sin+dy*cos];
-       }
-       const [gAx,gAy]=rot(Ax,Ay), [gBx,gBy]=rot(Bx,By);
-       const [gCx,gCy]=rot(Cx,Cy), [gDx,gDy]=rot(Dx,Dy);
-       PL(s, [[gAx,gAy],[gBx,gBy],[gCx,gCy],[gDx,gDy]], '#E8F1FB', '#1A5FA8', 1.8);
-       // 旋转中心标记
-       C(s, Mx, My, 4, '#B8860B', 'none');
-       if (t > 0.85)
-        T(s, 230, 175, '两腰重合 → 拼成平行四边形！', '#0D3F6E', 13, 'middle', '700');
-      },
-     },
-     {
-      hint:
-       '拼成的平行四边形：底=a+b，高=h，面积=(a+b)×h，梯形面积是它的一半。',
-      formula: '平行四边形面积=(a+b)×h，梯形面积=其一半',
-      dur: 1200,
-      draw(s, t) {
-       PL(
-        s,
-        [
-         [44, 150],
-         [264, 150],
-         [236, 74],
-         [72, 74],
-        ],
-        '#EEECFE',
-        '#5A4AC0',
-        2,
-       );
-       T(s, 154, 64, 'a + b', '#3A2A90', 16, 'middle', '700');
-       L(s, 72, 74, 72, 150, '#C03030', 1.8, '5,3');
-       RA(s, 72, 150, 12, '#C03030');
-       T(s, 52, 114, 'h', '#C03030', 18, 'middle', '700');
-       if (t > 0.6) {
-        T(s, 368, 100, '平行四边形面积', '#9E9B96', 11, 'middle');
-        T(s, 368, 118, 'S=(a+b)×h', '#3A2A90', 16, 'middle', '700');
-        T(s, 368, 138, '÷2 → 梯形面积', '#C03030', 11, 'middle');
+       const { canvas, overlay } = getE3Canvas(s);
+       if (e3State.curStep !== 1) {
+        e3State.curStep = 1;
+        overlay.querySelector('#e3-play-btn').style.display = 'none';
+        e3DrawStep(canvas);
        }
       },
      },
      {
-      hint:
-       '梯形面积=(a+b)×h÷2。两个梯形的平行四边形面积再除以2，得一个梯形面积。',
-      formula: '梯形面积 S = (a+b) × h ÷ 2',
-      dur: 1300,
+      hint: '绿色梯形绕 M 旋转 180°，旋转后两个梯形的腰 BC 完全重合，拼成一个平行四边形！',
+      formula: '绕 M 旋转 180° → 腰重合',
+      dur: 100,
+      noAutoFit: true,
       draw(s, t) {
-       PL(
-        s,
-        [
-         [56, 150],
-         [238, 150],
-         [204, 74],
-         [92, 74],
-        ],
-        '#FCEAF2',
-        '#A03060',
-        2,
-       );
-       T(s, 148, 118, '①', '#701040', 21, 'middle', '600');
-       PL(
-        s,
-        [
-         [238, 150],
-         [420, 150],
-         [386, 74],
-         [272, 74],
-        ],
-        '#E8F1FB',
-        '#1A5FA8',
-        1.8,
-       );
-       T(s, 325, 118, '②', '#0D3F6E', 21, 'middle', '600');
-       if (t > 0.68) {
-        R(s, 102, 164, 210, 29, '#FCEAF2', '#A03060', 1.5, 6);
-        T(s, 207, 182, 'S=(a+b)×h÷2', '#701040', 14, 'middle', '700');
+       const { canvas, overlay } = getE3Canvas(s);
+       if (e3State.curStep !== 2) {
+        e3State.curStep = 2;
+        e3State.rotAngle = 0; e3State.rotDone = false;
+        const btn = overlay.querySelector('#e3-play-btn');
+        btn.style.display = ''; btn.disabled = false; btn.textContent = '▶ 播放旋转';
+        e3DrawStep(canvas);
        }
       },
      },
      {
-      hint: '验证：上底4、下底8、高5 → S = (4+8)×5÷2 = 30 cm²。',
-      formula: '✅  S = (上底+下底) × 高 ÷ 2',
-      dur: 1200,
+      hint: '两个梯形拼成平行四边形，底 = a+b，高 = h，面积 = (a+b)×h（两个梯形面积之和）。',
+      formula: '拼成平行四边形：底=(a+b)，高=h',
+      dur: 100,
+      noAutoFit: true,
       draw(s, t) {
-       PL(
-        s,
-        [
-         [76, 158],
-         [264, 158],
-         [232, 78],
-         [110, 78],
-        ],
-        '#FCEAF2',
-        '#A03060',
-        2,
-       );
-       T(s, 171, 70, '4 cm', '#701040', 12);
-       T(s, 171, 174, '8 cm', '#701040', 12);
-       L(s, 110, 78, 110, 158, '#C03030', 1.8, '5,3');
-       RA(s, 110, 158, 12, '#C03030');
-       T(s, 88, 120, '5', '#C03030', 17, 'middle', '700');
-       if (t > 0.42) {
-        const ss = [
-         ['(4+8)×5÷2', '#9E9B96'],
-         ['=12×5÷2', '#9E9B96'],
-         ['=30 cm²', '#A03060'],
-        ];
-        const n = Math.floor(t * 4);
-        ss
-         .slice(0, n)
-         .forEach(([l, c], i) =>
-          T(
-           s,
-           368,
-           84 + i * 28,
-           l,
-           c,
-           i === 2 ? 19 : 14,
-           'middle',
-           i === 2 ? '700' : '400',
-          ),
-         );
+       const { canvas, overlay } = getE3Canvas(s);
+       if (e3State.curStep !== 3) {
+        e3State.curStep = 3;
+        e3State.rotAngle = Math.PI;
+        overlay.querySelector('#e3-play-btn').style.display = 'none';
+        e3DrawStep(canvas);
        }
       },
      },
+     {
+      hint: '一个梯形面积 = 平行四边形面积 ÷ 2 = (a+b)×h÷2。代入数字验证。',
+      formula: 'S = (a+b)×h÷2',
+      dur: 100,
+      noAutoFit: true,
+      draw(s, t) {
+       const { canvas, overlay } = getE3Canvas(s);
+       if (e3State.curStep !== 4) {
+        e3State.curStep = 4;
+        e3State.rotAngle = Math.PI;
+        overlay.querySelector('#e3-play-btn').style.display = 'none';
+        e3DrawStep(canvas);
+       }
+      },
+     },
+     // @@BUILD_END:e3-anims@@
     ],
     e4: [
      {
