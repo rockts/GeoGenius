@@ -1420,7 +1420,7 @@
       title: '平行四边形面积',
       sub: '剪拼变长方形推导',
       tag: '推导',
-      steps: 5,
+      steps: 4,
      },
      {
       id: 'e2',
@@ -1831,7 +1831,8 @@
    }
 
    function openT(t) {
-    // 切换话题时清理 e2 canvas（如果之前在 e2）
+    // 切换话题时清理 canvas（如果之前在 e1/e2）
+    removeE1Canvas();
     removeE2Canvas();
     // 清空AI对话 + 练习
     aiHistory = [];
@@ -2035,6 +2036,7 @@
      cancelAnimationFrame(af);
      af = null;
     }
+    removeE1Canvas();
     removeE2Canvas();
     if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
     document.body.classList.remove('presenting');
@@ -2077,7 +2079,256 @@
 
    /* ─── ANIMATIONS ─── */
 
+   // @@BUILD_START:e1-helpers@@
+
+   /* ── e1 Canvas 交互推导器状态 ── */
+   const e1State = {
+    a: 8, h: 5,
+    curStep: -1,
+    transProgress: 0,
+    transDone: false,
+    transRaf: null,
+   };
+
+   function getE1Canvas(s) {
+    const svg = s.ownerSVGElement || s;
+    const wrap = svg.closest('.canvas-wrap') || svg.parentElement;
+    let canvas = document.getElementById('e1-canvas');
+    let overlay = document.getElementById('e1-overlay');
+    if (!canvas) {
+     svg.style.display = 'none';
+     canvas = document.createElement('canvas');
+     canvas.id = 'e1-canvas';
+     canvas.width = 420;
+     canvas.height = 220;
+     Object.assign(canvas.style, {
+      display: 'block',
+      maxWidth: '100%',
+      height: 'auto',
+      borderRadius: '6px',
+     });
+     wrap.appendChild(canvas);
+     overlay = document.createElement('div');
+     overlay.id = 'e1-overlay';
+     Object.assign(overlay.style, {
+      display: 'flex', gap: '14px', alignItems: 'center',
+      justifyContent: 'center', flexWrap: 'wrap',
+      padding: '6px 0 2px',
+      fontSize: '13px', fontFamily: "'Noto Sans SC',sans-serif",
+      whiteSpace: 'nowrap',
+     });
+     overlay.innerHTML = `
+      <label style="display:flex;align-items:center;gap:6px;color:#3A2A90;font-weight:600">
+       底边 <i>a</i>&thinsp;=&thinsp;<span id="e1-a-val">${e1State.a}</span>
+       <input id="e1-a" type="range" min="3" max="12" step="1" value="${e1State.a}"
+        style="width:80px;accent-color:#5A4AC0">
+      </label>
+      <label style="display:flex;align-items:center;gap:6px;color:#C03030;font-weight:600">
+       高 <i>h</i>&thinsp;=&thinsp;<span id="e1-h-val">${e1State.h}</span>
+       <input id="e1-h" type="range" min="2" max="8" step="1" value="${e1State.h}"
+        style="width:80px;accent-color:#C03030">
+      </label>
+      <button id="e1-play-btn" style="display:none;padding:4px 14px;border:1.5px solid #1A5FA8;
+       border-radius:16px;background:#E8F1FB;color:#1A5FA8;font-size:12px;font-weight:700;
+       cursor:pointer;font-family:inherit">
+       ▶ 播放平移
+      </button>`;
+     wrap.parentNode.insertBefore(overlay, wrap.nextSibling);
+     overlay.querySelector('#e1-a').addEventListener('input', function() {
+      e1State.a = +this.value;
+      overlay.querySelector('#e1-a-val').textContent = e1State.a;
+      if (e1State.curStep === 2) {
+       e1State.transProgress = 0; e1State.transDone = false;
+       const btn = overlay.querySelector('#e1-play-btn');
+       btn.textContent = '▶ 播放平移'; btn.disabled = false;
+      }
+      e1DrawStep(canvas);
+     });
+     overlay.querySelector('#e1-h').addEventListener('input', function() {
+      e1State.h = +this.value;
+      overlay.querySelector('#e1-h-val').textContent = e1State.h;
+      if (e1State.curStep === 2) {
+       e1State.transProgress = 0; e1State.transDone = false;
+       const btn = overlay.querySelector('#e1-play-btn');
+       btn.textContent = '▶ 播放平移'; btn.disabled = false;
+      }
+      e1DrawStep(canvas);
+     });
+     overlay.querySelector('#e1-play-btn').addEventListener('click', function() {
+      if (e1State.transDone) {
+       e1State.transProgress = 0; e1State.transDone = false;
+      }
+      if (e1State.transRaf) return;
+      const start = performance.now(), dur = 1200, btn = this;
+      btn.disabled = true;
+      function tick(now) {
+       const p = Math.min(1, (now - start) / dur);
+       const te = p < 0.5 ? 2*p*p : 1 - Math.pow(-2*p+2,2)/2;
+       e1State.transProgress = te;
+       e1DrawStep(canvas);
+       if (p < 1) {
+        e1State.transRaf = requestAnimationFrame(tick);
+       } else {
+        e1State.transRaf = null; e1State.transDone = true;
+        btn.disabled = false; btn.textContent = '↺ 重播平移';
+        e1DrawStep(canvas);
+       }
+      }
+      e1State.transRaf = requestAnimationFrame(tick);
+     });
+    }
+    return { canvas, overlay };
+   }
+
+   function removeE1Canvas() {
+    if (e1State.transRaf) { cancelAnimationFrame(e1State.transRaf); e1State.transRaf = null; }
+    document.getElementById('e1-canvas')?.remove();
+    document.getElementById('e1-overlay')?.remove();
+    const svg = document.getElementById('asvg');
+    if (svg) svg.style.display = '';
+    e1State.curStep = -1;
+    e1State.transProgress = 0;
+    e1State.transDone = false;
+   }
+
+   function e1DrawStep(canvas) {
+    const ctx = canvas.getContext('2d');
+    const W = 420, H = 220;
+    ctx.clearRect(0, 0, W, H);
+
+    const a = e1State.a, h = e1State.h;
+    const sc = 13;          // px per unit
+    const offset = 30;      // fixed visual slant (px): top edge shifted right by this
+    const baseY = 172;
+    const aW = a * sc;      // base width in px
+    const hH = h * sc;      // height in px
+
+    // Center the parallelogram horizontally
+    const ax = Math.round(210 - aW / 2 - offset / 2);
+
+    // Vertices: A=bottom-left, B=bottom-right, D=top-left (shifted), C=top-right
+    const Ax = ax,           Ay = baseY;
+    const Bx = ax + aW,      By = baseY;
+    const Dx = ax + offset,  Dy = baseY - hH;   // top-left (x = ax+offset)
+    const Cx = Bx + offset,  Cy = baseY - hH;   // top-right
+    // Height foot F (directly below D on bottom edge AB)
+    const Fx = Dx, Fy = baseY;
+
+    function fillPoly(pts, fill, stroke, lw) {
+     ctx.beginPath();
+     ctx.moveTo(pts[0][0], pts[0][1]);
+     for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i][0], pts[i][1]);
+     ctx.closePath();
+     ctx.fillStyle = fill; ctx.fill();
+     if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = lw || 2; ctx.stroke(); }
+    }
+    function label(text, x, y, color, size, align) {
+     ctx.save();
+     ctx.fillStyle = color || '#333';
+     ctx.font = `600 ${size || 13}px 'Noto Sans SC',sans-serif`;
+     ctx.textAlign = align || 'center';
+     ctx.textBaseline = 'middle';
+     ctx.fillText(text, x, y); ctx.restore();
+    }
+    function dashedLine(x1, y1, x2, y2, color, lw) {
+     ctx.save();
+     ctx.strokeStyle = color; ctx.lineWidth = lw || 1.8;
+     ctx.setLineDash([5, 3]);
+     ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+     ctx.setLineDash([]); ctx.restore();
+    }
+    function solidLine(x1, y1, x2, y2, color, lw) {
+     ctx.save();
+     ctx.strokeStyle = color; ctx.lineWidth = lw || 2;
+     ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+     ctx.restore();
+    }
+    function rightAngleMark(x, y, sz, col) {
+     ctx.save();
+     ctx.strokeStyle = col || '#C03030'; ctx.lineWidth = 1.5; ctx.setLineDash([]);
+     ctx.beginPath();
+     // bracket at (x, y): foot of height going upward, bracket opens right
+     ctx.moveTo(x, y - sz); ctx.lineTo(x + sz, y - sz); ctx.lineTo(x + sz, y);
+     ctx.stroke(); ctx.restore();
+    }
+
+    const step = e1State.curStep;
+
+    /* ── Step 0: 展示平行四边形 ── */
+    if (step === 0) {
+     fillPoly([[Ax,Ay],[Bx,By],[Cx,Cy],[Dx,Dy]], '#EEECFE', '#5A4AC0', 2);
+     dashedLine(Dx, Dy, Fx, Fy, '#C03030', 1.8);
+     rightAngleMark(Fx, Fy, 9, '#C03030');
+     label('高 h = ' + h, Fx - 6, (Dy + Fy) / 2, '#C03030', 12, 'right');
+     solidLine(Ax, Ay + 14, Bx, By + 14, '#3A2A90', 1.5);
+     label('底 a = ' + a, (Ax + Bx) / 2, Ay + 26, '#3A2A90', 12);
+     label('A', Ax - 10, Ay + 10, '#5A4AC0', 11);
+     label('B', Bx + 10, By + 10, '#5A4AC0', 11);
+     label('C', Cx + 10, Cy - 10, '#5A4AC0', 11);
+     label('D', Dx - 10, Dy - 10, '#5A4AC0', 11);
+
+    /* ── Step 1: 沿高剪切，高亮左侧三角形 ── */
+    } else if (step === 1) {
+     fillPoly([[Ax,Ay],[Bx,By],[Cx,Cy],[Dx,Dy]], '#EEECFE', '#5A4AC0', 2);
+     solidLine(Dx, Dy, Fx, Fy, '#C03030', 2.5);
+     rightAngleMark(Fx, Fy, 9, '#C03030');
+     label('高 h', Fx - 6, (Dy + Fy) / 2, '#C03030', 12, 'right');
+     ctx.save(); ctx.globalAlpha = 0.75;
+     fillPoly([[Ax,Ay],[Fx,Fy],[Dx,Dy]], '#FECACA', '#C03030', 2);
+     ctx.restore();
+     label('剪！', (Ax + Fx * 2 + Dx) / 4, (Ay + Fy + Dy) / 3 + 8, '#C03030', 14);
+     label('底 a = ' + a, (Ax + Bx) / 2, Ay + 24, '#3A2A90', 12);
+
+    /* ── Step 2: 平移动画 ── */
+    } else if (step === 2) {
+     const p = e1State.transProgress;
+     const dx = p * aW;   // triangle translates rightward by aW total
+
+     if (p >= 1) {
+      // Completed: rectangle D→C→(Cx,Fy)→F
+      fillPoly([[Dx,Dy],[Cx,Cy],[Cx,Fy],[Fx,Fy]], '#E8F1FB', '#1A5FA8', 2.5);
+      label('拼成长方形！', (Fx + Cx) / 2, (Fy + Dy) / 2, '#0D3F6E', 13);
+     } else {
+      // Remaining trapezoid: F, B, C, D
+      fillPoly([[Fx,Fy],[Bx,By],[Cx,Cy],[Dx,Dy]], '#E2E0F6', '#5A4AC0', 1.5);
+      // Moving left triangle: A→F→D translated by dx
+      ctx.save(); ctx.globalAlpha = 0.85;
+      fillPoly([[Ax+dx,Ay],[Fx+dx,Fy],[Dx+dx,Dy]], '#FECACA', '#C03030', 2);
+      ctx.restore();
+     }
+     label('底 a = ' + a, (Fx + Cx) / 2, Fy + 24, '#3A2A90', 12);
+
+    /* ── Step 3: 公式 S = ah ── */
+    } else if (step === 3) {
+     fillPoly([[Dx,Dy],[Cx,Cy],[Cx,Fy],[Fx,Fy]], '#E8F1FB', '#1A5FA8', 2.5);
+     // base annotation
+     solidLine(Fx, Fy + 14, Cx, Fy + 14, '#1A5FA8', 1.5);
+     label('底 a = ' + a, (Fx + Cx) / 2, Fy + 26, '#0D3F6E', 12);
+     // height annotation (left of rectangle)
+     dashedLine(Dx - 16, Dy, Dx - 16, Fy, '#C03030', 1.5);
+     solidLine(Dx - 20, Dy, Dx - 12, Dy, '#C03030', 1.5);
+     solidLine(Dx - 20, Fy, Dx - 12, Fy, '#C03030', 1.5);
+     label('高 h = ' + h, Dx - 22, (Dy + Fy) / 2, '#C03030', 12, 'right');
+     // formula box (right of rectangle)
+     const bx0 = Cx + 14, by0 = (Dy + Fy) / 2 - 34;
+     const bw = 100, bh = 68, br = 8;
+     ctx.save();
+     ctx.fillStyle = '#E8F1FB'; ctx.strokeStyle = '#1A5FA8'; ctx.lineWidth = 1.5;
+     ctx.beginPath();
+     ctx.moveTo(bx0+br,by0); ctx.lineTo(bx0+bw-br,by0); ctx.arcTo(bx0+bw,by0,bx0+bw,by0+br,br);
+     ctx.lineTo(bx0+bw,by0+bh-br); ctx.arcTo(bx0+bw,by0+bh,bx0+bw-br,by0+bh,br);
+     ctx.lineTo(bx0+br,by0+bh); ctx.arcTo(bx0,by0+bh,bx0,by0+bh-br,br);
+     ctx.lineTo(bx0,by0+br); ctx.arcTo(bx0,by0,bx0+br,by0,br);
+     ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.restore();
+     label('S = a × h', bx0 + bw/2, by0 + 18, '#0D3F6E', 13);
+     label('= ' + a + ' × ' + h, bx0 + bw/2, by0 + 38, '#5A4AC0', 13);
+     label('= ' + (a * h), bx0 + bw/2, by0 + 56, '#0A7050', 15);
+    }
+   }
+   // @@BUILD_END:e1-helpers@@
+
    // @@BUILD_START:e2-helpers@@
+
    /* ── e2 Canvas 交互推导器状态 ── */
    const e2State = {
     a: 8, h: 5,        // 滑块当前值
@@ -2294,36 +2545,28 @@
      label('A', Ax, Ay-14, '#9A5800', 13);
      label('B', Bx-12, By, '#9A5800', 13, 'right');
      label('C', Cx+12, Cy, '#9A5800', 13, 'left');
-     // 底边标注
      label(`底边 a = ${a}`, (Bx+Cx)/2, By+20, '#0D3F6E', 12);
-     // 高线
      dashedLine(Ax, Ay, Ax, By, '#C03030', 1.8, [5,3]);
      rightAngle(Ax, By, 10, '#C03030');
      label(`h = ${h}`, Ax+22, (Ay+By)/2, '#C03030', 12, 'left');
 
     } else if (step === 1) {
      // Step 2: 复制绿色三角形叠在橙色上，标旋转中心 M，说明"绕 M 旋转 180°"
-     // 橙色先画（底层）
      fillTri([[Ax,Ay],[Bx,By],[Cx,Cy]], '#FEF0DC', '#9A5800', 2.5);
-     // 绿色后画（半透明，可见叠加效果）
      ctx.save(); ctx.globalAlpha = 0.55;
      fillTri([[Ax,Ay],[Bx,By],[Cx,Cy]], '#A8EFD0', '#0A7050', 2);
      ctx.restore();
-     // 高亮旋转轴 AC（腰）
      solidLine(Ax, Ay, Cx, Cy, '#1A5FA8', 2.5);
-     // M 点（AC 中点）
      dot(Mx, My, 5, '#E02020');
      label('M', Mx+14, My, '#E02020', 12, 'left');
      label('（AC中点）', Mx, My+18, '#E02020', 11);
      label('将绕 M 旋转 180°', (Bx+Cx)/2, Ay-20, '#0A7050', 12);
-     // 旋转方向弧线
      ctx.save();
      ctx.strokeStyle = '#0A7050'; ctx.lineWidth = 1.5;
      ctx.setLineDash([4,3]);
      ctx.beginPath();
      ctx.arc(Mx, My, 28, -Math.PI*0.6, Math.PI*0.6);
      ctx.stroke();
-     // 箭头
      const arx = Mx + 28*Math.cos(Math.PI*0.6);
      const ary = My + 28*Math.sin(Math.PI*0.6);
      ctx.setLineDash([]);
@@ -2341,16 +2584,11 @@
      const [gAxt, gAyt] = rot(Ax, Ay, angle);
      const [gBxt, gByt] = rot(Bx, By, angle);
      const [gCxt, gCyt] = rot(Cx, Cy, angle);
-     // 先画绿色（可能被橙色遮挡）
      fillTri([[gAxt,gAyt],[gBxt,gByt],[gCxt,gCyt]], '#E4F6EE', '#0A7050', 1.8);
-     // 再画橙色
      fillTri([[Ax,Ay],[Bx,By],[Cx,Cy]], '#FEF0DC', '#9A5800', 2.5);
-     // M 点
      dot(Mx, My, 5, '#E02020');
      label('M', Mx+10, My-10, '#E02020', 12, 'left');
-     // 旋转完成提示
      if (e2State.rotDone) {
-      // 平行四边形轮廓：B→C→gB→A（BC 为底边，gB→A 为上边，均水平）
       ctx.save();
       ctx.strokeStyle = '#0A7050'; ctx.lineWidth = 2; ctx.setLineDash([4,3]);
       ctx.beginPath();
@@ -2363,17 +2601,13 @@
     } else if (step === 3) {
      // Step 4: 完整平行四边形（橙+绿），标 a×h，右侧公式框
      const area = a * h;
-     // 平行四边形顶点：B→C→gB→A（BC 为水平底边，gB→A 为水平上边）
      fillTri([[Bx,By],[Cx,Cy],[gBx_f,gBy_f],[Ax,Ay]], '#E4F6EE', '#0A7050', 2);
      fillTri([[Ax,Ay],[Bx,By],[Cx,Cy]], '#FEF0DC', '#9A5800', 2);
-     // 底边
      solidLine(Bx, By, Cx, Cy, '#1A5FA8', 3);
      label(`a = ${a}`, (Bx+Cx)/2, By+20, '#1A5FA8', 13);
-     // 高线
      dashedLine(Ax, Ay, Ax, By, '#C03030', 1.8, [5,3]);
      rightAngle(Ax, By, 10, '#C03030');
      label(`h = ${h}`, Ax+22, (Ay+By)/2, '#C03030', 13, 'left');
-     // 公式框
      const fx = 290, fy = 60, fw = 110, fh = 46;
      roundRect(fx, fy, fw, fh, 7, '#FFF8E7', '#9A5800', 1.5);
      label('面积 = a × h', fx+fw/2, fy+15, '#9A5800', 12);
@@ -2383,17 +2617,13 @@
      // Step 5: 高亮橙色（一半），公式 S = ah÷2，代入验证
      const area = a * h;
      const S = area / 2;
-     // 平行四边形背景（B→C→gB→A，淡绿）
      fillTri([[Bx,By],[Cx,Cy],[gBx_f,gBy_f],[Ax,Ay]], '#E4F6EE', '#0A7050', 1.5);
-     // 高亮橙色三角形
      fillTri([[Ax,Ay],[Bx,By],[Cx,Cy]], '#FEF0DC', '#9A5800', 2.5);
-     // 底边和高
      solidLine(Bx, By, Cx, Cy, '#1A5FA8', 2.5);
      dashedLine(Ax, Ay, Ax, By, '#C03030', 1.8, [5,3]);
      rightAngle(Ax, By, 10, '#C03030');
      label(`a = ${a}`, (Bx+Cx)/2, By+20, '#1A5FA8', 13);
      label(`h = ${h}`, Ax+22, (Ay+By)/2, '#C03030', 13, 'left');
-     // 公式框
      const fx = 285, fy = 48, fw = 120, fh = 58;
      roundRect(fx, fy, fw, fh, 7, '#FEF0DC', '#9A5800', 1.5);
      label('S = ah ÷ 2', fx+fw/2, fy+17, '#9A5800', 14);
@@ -2401,7 +2631,6 @@
      label(`= ${S} cm²`, fx+fw/2, fy+52, '#9A5800', 14);
     }
    }
-
    // @@BUILD_END:e2-helpers@@
    const ANIMS = {
     /* ── 一年级 ── */
@@ -4370,171 +4599,72 @@
 
     /* ── 五年级 ── */
     e1: [
+     // @@BUILD_START:e1-anims@@
+
      {
-      hint: '推导平行四边形面积：把它剪拼成已知面积的图形——长方形！',
-      formula: '策略：平行四边形 → 剪拼 → 长方形',
-      dur: 1200,
+      hint: '平行四边形 ABCD：底边 AB = a，高 h 是两平行边之间的垂直距离。拖动滑块改变 a 和 h，图形实时联动。',
+      formula: '平行四边形：底边 a，高 h',
+      dur: 100,
+      noAutoFit: true,
       draw(s, t) {
-       PL(
-        s,
-        [
-         [40, 162],
-         [240, 162],
-         [280, 68],
-         [80, 68],
-        ],
-        '#EEECFE',
-        '#5A4AC0',
-        2,
-       );
-       T(s, 160, 180, '平行四边形', '#3A2A90', 12);
-       if (t > 0.55) {
-        T(s, 344, 104, '→', '#9E9B96', 24, 'middle');
-        R(s, 360, 84, 80, 70, '#E8F1FB', '#1A5FA8', 1.5);
-        T(s, 400, 168, '长方形', '#0D3F6E', 11);
+       const { canvas, overlay } = getE1Canvas(s);
+       if (e1State.curStep !== 0) {
+        e1State.curStep = 0;
+        overlay.querySelector('#e1-play-btn').style.display = 'none';
+        e1DrawStep(canvas);
        }
       },
      },
      {
-      hint: '从顶点向底边作垂线（高h），切下左侧直角三角形。',
-      formula: '作高h（⊥底边）→ 切下左侧三角形',
-      dur: 1300,
+      hint: '从顶点 D 向底边 AB 作垂线（高 h），垂足为 F，切下左侧直角三角形 ADF。',
+      formula: '作高 h（⊥底边）→ 切下左侧三角形',
+      dur: 100,
+      noAutoFit: true,
       draw(s, t) {
-       PL(
-        s,
-        [
-         [40, 162],
-         [240, 162],
-         [280, 68],
-         [80, 68],
-        ],
-        '#EEECFE',
-        '#5A4AC0',
-        2,
-       );
-       L(s, 80, 68, 80, 162, '#C03030', 2, '5,3');
-       RA(s, 80, 162, 14, '#C03030');
-       T(s, 58, 118, '高 h', '#C03030', 13, 'middle', '600');
-       if (t > 0.45)
-        PL(
-         s,
-         [
-          [40, 162],
-          [80, 162],
-          [80, 68],
-         ],
-         '#FEF0DC',
-         '#9A5800',
-         2,
-        );
-       if (t > 0.78) T(s, 58, 85, '切！', '#C03030', 15, 'middle', '700');
+       const { canvas, overlay } = getE1Canvas(s);
+       if (e1State.curStep !== 1) {
+        e1State.curStep = 1;
+        overlay.querySelector('#e1-play-btn').style.display = 'none';
+        e1DrawStep(canvas);
+       }
       },
      },
      {
-      hint: '把左侧三角形平移到右边补上，拼成与原图等面积的长方形，底a和高h都没变。',
+      hint: '把左侧三角形向右平移，补到右侧，拼成与原图等面积的长方形。底 a 和高 h 都没变！',
       formula: '三角形平移到右侧 → 拼成长方形',
-      dur: 1500,
+      dur: 100,
+      noAutoFit: true,
       draw(s, t) {
-       const dx = lerp(
-        0,
-        200,
-        ease(Math.min(1, Math.max(0, (t - 0.08) / 0.82))),
-       );
-       if (t > 0.9) {
-        R(s, 80, 68, 200, 94, '#E8F1FB', '#1A5FA8', 2.5);
-        L(s, 240, 68, 240, 162, '#9A5800', 1.5, '4,3');
-        T(s, 180, 180, '拼成长方形！', '#0D3F6E', 13, 'middle', '700');
-        return;
-       }
-       PL(
-        s,
-        [
-         [80, 162],
-         [240, 162],
-         [280, 68],
-         [80, 68],
-        ],
-        '#E2E0F6',
-        '#5A4AC0',
-        1.5,
-       );
-       PL(
-        s,
-        [
-         [40 + dx, 162],
-         [80 + dx, 162],
-         [80 + dx, 68],
-        ],
-        '#FEF0DC',
-        '#9A5800',
-        2,
-       );
-      },
-     },
-     {
-      hint: '长方形面积 = 底a × 高h，与原平行四边形的底和高相同，公式一样！',
-      formula: '平行四边形面积 S = 底 × 高 = ah',
-      dur: 1300,
-      draw(s, t) {
-       R(s, 80, 68, 200, 94, '#E8F1FB', '#1A5FA8', 2);
-       L(s, 80, 174, 280, 174, '#1A5FA8', 2.5);
-       T(s, 180, 187, '底 a', '#0D3F6E', 13, 'middle', '600');
-       L(s, 68, 68, 68, 162, '#C03030', 1.8, '5,3');
-       RA(s, 68, 162, 12, '#C03030');
-       T(s, 48, 118, '高 h', '#C03030', 13, 'middle', '600');
-       if (t > 0.62) {
-        R(s, 302, 97, 104, 28, '#E8F1FB', '#1A5FA8', 1.5, 6);
-        T(s, 354, 114, 'S = ah', '#0D3F6E', 16, 'middle', '700');
+       const { canvas, overlay } = getE1Canvas(s);
+       if (e1State.curStep !== 2) {
+        e1State.curStep = 2;
+        e1State.transProgress = 0; e1State.transDone = false;
+        const btn = overlay.querySelector('#e1-play-btn');
+        btn.style.display = ''; btn.disabled = false; btn.textContent = '▶ 播放平移';
+        e1DrawStep(canvas);
        }
       },
      },
      {
-      hint: '注意：高h必须是底边上的垂直距离。验证：底12、高7 → S = 84 cm²。',
-      formula: '✅  S = ah，高必须⊥底边',
-      dur: 1200,
+      hint: '长方形面积 = 底 × 高 = a × h，与原平行四边形底高完全相同，所以 S = ah。',
+      formula: 'S = ah',
+      dur: 100,
+      noAutoFit: true,
       draw(s, t) {
-       PL(
-        s,
-        [
-         [40, 158],
-         [240, 158],
-         [280, 72],
-         [80, 72],
-        ],
-        '#EEECFE',
-        '#5A4AC0',
-        2,
-       );
-       L(s, 80, 72, 80, 158, '#C03030', 1.8, '5,3');
-       RA(s, 80, 158, 12, '#C03030');
-       T(s, 160, 174, '12 cm', '#3A2A90', 12);
-       T(s, 60, 118, '7 cm', '#C03030', 12, 'middle');
-       if (t > 0.42) {
-        const ss = [
-         ['12 × 7', '#9E9B96'],
-         ['= 84 cm²', '#5A4AC0'],
-        ];
-        const n = Math.floor(t * 3);
-        ss
-         .slice(0, n)
-         .forEach(([l, c], i) =>
-          T(
-           s,
-           370,
-           95 + i * 34,
-           l,
-           c,
-           i === 1 ? 21 : 14,
-           'middle',
-           i === 1 ? '700' : '400',
-          ),
-         );
+       const { canvas, overlay } = getE1Canvas(s);
+       if (e1State.curStep !== 3) {
+        e1State.curStep = 3;
+        e1State.transProgress = 1;
+        overlay.querySelector('#e1-play-btn').style.display = 'none';
+        e1DrawStep(canvas);
        }
       },
      },
+     // @@BUILD_END:e1-anims@@
     ],
     e2: [
      // @@BUILD_START:e2-anims@@
+
      {
       hint: '一个三角形，底边 a = BC，高 h 是顶点 A 到底边的垂直距离。拖动滑块改变 a 和 h，图形实时联动。',
       formula: '三角形：底边 a，高 h',
@@ -4569,7 +4699,6 @@
       draw(s, t) {
        const { canvas, overlay } = getE2Canvas(s);
        const playBtn = overlay.querySelector('#e2-play-btn');
-       // 仅在首次进入本步（curStep != 2）时重置动画状态
        if (e2State.curStep !== 2) {
         if (e2State.rotRaf) { cancelAnimationFrame(e2State.rotRaf); e2State.rotRaf = null; }
         e2State.rotAngle = 0;

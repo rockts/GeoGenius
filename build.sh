@@ -5,7 +5,7 @@
 #   ./build.sh --inplace  → overwrite index.html directly (for release)
 #
 # How it works:
-#   Reads src/topics/e2.js, splits on @@SECTION markers, then injects
+#   Reads src/topics/e1.js and e2.js, splits on @@SECTION markers, then injects
 #   each section into index.html between the matching @@BUILD_START/END markers.
 
 set -euo pipefail
@@ -21,10 +21,12 @@ import sys, re, pathlib
 
 root     = pathlib.Path('.')
 src_html = root / 'index.html'
+e1_src   = root / 'src' / 'topics' / 'e1.js'
 e2_src   = root / 'src' / 'topics' / 'e2.js'
 inplace  = $INPLACE
 
 html = src_html.read_text('utf-8')
+e1   = e1_src.read_text('utf-8')
 e2   = e2_src.read_text('utf-8')
 
 def extract_section(src, name):
@@ -32,7 +34,7 @@ def extract_section(src, name):
         r'// @@SECTION:' + re.escape(name) + r'@@\n(.*?)(?=\n// @@SECTION:|\Z)',
         src, re.DOTALL)
     if not m:
-        sys.exit(f'ERROR: section \"{name}\" not found in e2.js')
+        sys.exit(f'ERROR: section \"{name}\" not found')
     return m.group(1).rstrip('\n')
 
 def replace_region(html, tag, content):
@@ -46,6 +48,8 @@ def replace_region(html, tag, content):
     print(f'  ✓ {tag}  ({content.count(chr(10))+1} lines)')
     return result
 
+html = replace_region(html, 'e1-helpers', extract_section(e1, 'helpers'))
+html = replace_region(html, 'e1-anims',   extract_section(e1, 'anims'))
 html = replace_region(html, 'e2-helpers', extract_section(e2, 'helpers'))
 html = replace_region(html, 'e2-anims',   extract_section(e2, 'anims'))
 
