@@ -1836,6 +1836,7 @@
     removeE2Canvas();
     removeE3Canvas();
     removeF2Canvas();
+    removeF4Canvas();
     // 清空AI对话 + 练习
     aiHistory = [];
     document.getElementById('aiMsgs').innerHTML = '';
@@ -2042,6 +2043,7 @@
     removeE2Canvas();
     removeE3Canvas();
     removeF2Canvas();
+    removeF4Canvas();
     if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
     document.body.classList.remove('presenting');
     showSc('home');
@@ -3266,6 +3268,395 @@
     })(performance.now());
    }
    // @@BUILD_END:f2-helpers@@
+
+   // @@BUILD_START:f4-helpers@@
+
+   const f4State = {
+    r: 3, h: 5, curStep: -1, animRaf: null, animDone: false,
+   };
+
+   /* ── Canvas helpers ── */
+   function f4Label(ctx, text, x, y, color, size, align, weight) {
+    ctx.save();
+    ctx.fillStyle = color || '#333';
+    ctx.font = `${weight||'400'} ${size||13}px 'Noto Sans SC',sans-serif`;
+    ctx.textAlign = align || 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(text, x, y);
+    ctx.restore();
+   }
+
+   function f4RoundRect(ctx, x, y, w, h, radius, fill, stroke, lw) {
+    ctx.save();
+    ctx.beginPath();
+    ctx.roundRect(x, y, w, h, radius);
+    ctx.fillStyle = fill; ctx.fill();
+    ctx.strokeStyle = stroke; ctx.lineWidth = lw || 1; ctx.stroke();
+    ctx.restore();
+   }
+
+   /* Draw 3D cylinder with perspective */
+   function f4Cylinder(ctx, cx, cy, rx, hPx, colTop, colSide, colStroke, lw) {
+    colTop   = colTop    || '#E4F6EE';
+    colSide  = colSide   || '#C8E6D4';
+    colStroke = colStroke || '#0A7050';
+    lw = lw || 2;
+    const ry = Math.max(6, Math.round(rx * 0.28));
+    ctx.save();
+    ctx.strokeStyle = colStroke; ctx.lineWidth = lw;
+    /* bottom front arc (only visible half) */
+    ctx.beginPath();
+    ctx.ellipse(cx, cy+hPx, rx, ry, 0, 0, Math.PI, false);
+    ctx.stroke();
+    /* side fill */
+    ctx.fillStyle = colSide;
+    ctx.beginPath();
+    ctx.moveTo(cx-rx, cy);
+    ctx.lineTo(cx-rx, cy+hPx);
+    ctx.ellipse(cx, cy+hPx, rx, ry, 0, Math.PI, 0, true);  // front bottom arc L→R
+    ctx.lineTo(cx+rx, cy);
+    ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI, true);       // back top arc R→L
+    ctx.closePath();
+    ctx.fill();
+    ctx.beginPath(); ctx.moveTo(cx-rx, cy); ctx.lineTo(cx-rx, cy+hPx); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cx+rx, cy); ctx.lineTo(cx+rx, cy+hPx); ctx.stroke();
+    /* top face */
+    ctx.beginPath();
+    ctx.ellipse(cx, cy, rx, ry, 0, 0, 2*Math.PI);
+    ctx.fillStyle = colTop; ctx.fill(); ctx.strokeStyle = colStroke; ctx.stroke();
+    ctx.restore();
+   }
+
+   /* Draw n-sector pie (top view) at (cx,cy,r) */
+   function f4PieCircle(ctx, cx, cy, r, n) {
+    const pi = Math.PI;
+    const alpha = pi / n;
+    const col = [{fill:'#FCEAF2',stroke:'#A03060'},{fill:'#EEF2FF',stroke:'#4A5AC0'}];
+    for (let i = 0; i < n; i++) {
+     const mid = (i / n + 0.5 / n) * 2 * pi - pi / 2;
+     const c = col[i % 2];
+     ctx.save();
+     ctx.translate(cx, cy); ctx.rotate(mid);
+     ctx.beginPath(); ctx.moveTo(0,0); ctx.arc(0,0,r,-alpha,alpha); ctx.closePath();
+     ctx.fillStyle=c.fill; ctx.fill(); ctx.strokeStyle=c.stroke; ctx.lineWidth=0.8; ctx.stroke();
+     ctx.restore();
+    }
+   }
+
+   /* Draw a single sector */
+   function f4Sector(ctx, cx, cy, r, alpha, midAngle, fill, stroke) {
+    ctx.save();
+    ctx.translate(cx, cy); ctx.rotate(midAngle);
+    ctx.beginPath(); ctx.moveTo(0,0); ctx.arc(0,0,r,-alpha,alpha); ctx.closePath();
+    ctx.fillStyle=fill; ctx.fill(); ctx.strokeStyle=stroke; ctx.lineWidth=0.8; ctx.stroke();
+    ctx.restore();
+   }
+
+   /* Draw n interleaved sectors in horizontal band */
+   function f4Band(ctx, n, bandY, rArr) {
+    const pi = Math.PI;
+    const alpha = pi / n;
+    const arcW = 2 * pi * rArr / n;
+    const totalW = n * arcW;
+    const startX = (420 - totalW) / 2;
+    const col = [{fill:'#FCEAF2',stroke:'#A03060'},{fill:'#EEF2FF',stroke:'#4A5AC0'}];
+    for (let i = 0; i < n; i++) {
+     const openDown = (i % 2 === 0);
+     const cx_ = startX + (i + 0.5) * arcW;
+     const cy_ = openDown ? (bandY - rArr) : (bandY + rArr);
+     const mid = openDown ? pi/2 : -pi/2;
+     const c = col[i % 2];
+     ctx.save();
+     ctx.translate(cx_, cy_); ctx.rotate(mid);
+     ctx.beginPath(); ctx.moveTo(0,0); ctx.arc(0,0,rArr,-alpha,alpha); ctx.closePath();
+     ctx.fillStyle=c.fill; ctx.fill(); ctx.strokeStyle=c.stroke; ctx.lineWidth=0.8; ctx.stroke();
+     ctx.restore();
+    }
+    return { startX, totalW };
+   }
+
+   /* ── Canvas setup / teardown ── */
+   function getF4Canvas(s) {
+    const svg = s.ownerSVGElement || s;
+    const wrap = svg.closest('.canvas-wrap') || svg.parentElement;
+    let canvas = document.getElementById('f4-canvas');
+    let overlay = document.getElementById('f4-overlay');
+    if (!canvas) {
+     svg.style.display = 'none';
+     canvas = document.createElement('canvas');
+     canvas.id = 'f4-canvas';
+     canvas.width = 420; canvas.height = 260;
+     Object.assign(canvas.style, {
+      display:'block', maxWidth:'100%', height:'auto', borderRadius:'6px',
+     });
+     wrap.appendChild(canvas);
+     overlay = document.createElement('div');
+     overlay.id = 'f4-overlay';
+     Object.assign(overlay.style, {
+      display:'flex', gap:'20px', alignItems:'center',
+      justifyContent:'center', flexWrap:'wrap',
+      padding:'6px 0 2px',
+      fontSize:'13px', fontFamily:"'Noto Sans SC',sans-serif", whiteSpace:'nowrap',
+     });
+     overlay.innerHTML = `
+      <label style="display:flex;align-items:center;gap:6px;color:#0A7050;font-weight:600">
+       底面半径 <i>r</i>&thinsp;=&thinsp;<span id="f4-r-val">${f4State.r}</span>
+       <input id="f4-r" type="range" min="2" max="5" step="1" value="${f4State.r}"
+        style="width:80px;accent-color:#0A7050">
+      </label>
+      <label style="display:flex;align-items:center;gap:6px;color:#C03030;font-weight:600">
+       高 <i>h</i>&thinsp;=&thinsp;<span id="f4-h-val">${f4State.h}</span>
+       <input id="f4-h" type="range" min="3" max="8" step="1" value="${f4State.h}"
+        style="width:80px;accent-color:#C03030">
+      </label>`;
+     wrap.after(overlay);
+     function onSlider() {
+      if (f4State.animRaf) {
+       cancelAnimationFrame(f4State.animRaf);
+       f4State.animRaf = null; f4State.animDone = true;
+      }
+      f4DrawStep(canvas);
+      const sf = document.getElementById('sform');
+      if (sf) sf.textContent = ANIMS[ct.id][cs].formula;
+     }
+     document.getElementById('f4-r').addEventListener('input', function() {
+      f4State.r = +this.value;
+      document.getElementById('f4-r-val').textContent = this.value;
+      onSlider();
+     });
+     document.getElementById('f4-h').addEventListener('input', function() {
+      f4State.h = +this.value;
+      document.getElementById('f4-h-val').textContent = this.value;
+      onSlider();
+     });
+    }
+    return { canvas, overlay };
+   }
+
+   function removeF4Canvas() {
+    if (f4State.animRaf) {
+     cancelAnimationFrame(f4State.animRaf);
+     f4State.animRaf = null;
+    }
+    const c = document.getElementById('f4-canvas');
+    const o = document.getElementById('f4-overlay');
+    if (c) {
+     const svg = c.parentElement && c.parentElement.querySelector('svg');
+     if (svg) svg.style.display = '';
+     c.remove();
+    }
+    if (o) o.remove();
+    f4State.curStep = -1;
+   }
+
+   /* ── Static drawing (all steps) ── */
+   function f4DrawStep(canvas) {
+    const W=420, H=260;
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, W, H);
+    const r=f4State.r, h=f4State.h, step=f4State.curStep, pi=Math.PI;
+    const RARR = 55;
+    const CX=52, CY=46, RS=40;  // reference circle position
+
+    if (step === 0) {
+     /* Cylinder scales with r and h sliders */
+     const cx=85, cy=28;
+     const rx = Math.max(25, r * 10);
+     const hPx = Math.max(36, h * 10);
+     f4Cylinder(ctx, cx, cy, rx, hPx);
+     /* r label above top face */
+     ctx.save(); ctx.strokeStyle='#0A7050'; ctx.lineWidth=1.5;
+     ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx+rx, cy); ctx.stroke(); ctx.restore();
+     f4Label(ctx, `r = ${r}`, cx+rx/2, cy-10, '#0A7050', 14, 'center', '600');
+     /* h label on right side */
+     const hx = cx+rx+14;
+     ctx.save(); ctx.strokeStyle='#C03030'; ctx.lineWidth=1.5; ctx.setLineDash([4,3]);
+     ctx.beginPath(); ctx.moveTo(hx, cy); ctx.lineTo(hx, cy+hPx); ctx.stroke();
+     ctx.beginPath(); ctx.moveTo(hx-5, cy); ctx.lineTo(hx+5, cy); ctx.stroke();
+     ctx.beginPath(); ctx.moveTo(hx-5, cy+hPx); ctx.lineTo(hx+5, cy+hPx); ctx.stroke();
+     ctx.restore();
+     f4Label(ctx, `h = ${h}`, hx+6, cy+hPx/2, '#C03030', 14, 'left', '600');
+     /* formula box */
+     f4RoundRect(ctx, 228, 30, 174, 120, 8, '#FFF8E7', '#9A5800', 1.5);
+     f4Label(ctx, '圆柱体积', 315, 54, '#9A5800', 13, 'center', '600');
+     f4Label(ctx, 'V = ?', 315, 82, '#A03060', 22, 'center', '700');
+     f4Label(ctx, '底面积 × 高', 315, 116, '#9A5800', 12);
+     f4Label(ctx, '= πr² × h', 315, 135, '#9A5800', 12);
+    }
+    else if (step === 1) {
+     /* Top-view circle + 8 sector-columns spread out */
+     const bandY = 162;
+     const {startX, totalW} = f4Band(ctx, 8, bandY, RARR);
+     ctx.save(); ctx.setLineDash([4,3]); ctx.strokeStyle='#aaa'; ctx.lineWidth=1;
+     ctx.beginPath(); ctx.moveTo(startX,bandY-RARR); ctx.lineTo(startX+totalW,bandY-RARR); ctx.stroke();
+     ctx.beginPath(); ctx.moveTo(startX,bandY+RARR); ctx.lineTo(startX+totalW,bandY+RARR); ctx.stroke();
+     ctx.restore();
+     f4PieCircle(ctx, CX, CY, RS, 8);
+     ctx.save(); ctx.strokeStyle='#888'; ctx.lineWidth=1.5;
+     ctx.beginPath(); ctx.moveTo(CX+RS+6,CY); ctx.lineTo(CX+RS+28,CY); ctx.stroke();
+     ctx.fillStyle='#888';
+     ctx.beginPath(); ctx.moveTo(CX+RS+28,CY); ctx.lineTo(CX+RS+20,CY-5); ctx.lineTo(CX+RS+20,CY+5); ctx.fill();
+     ctx.restore();
+     ctx.save(); ctx.fillStyle='rgba(255,255,255,0.82)'; ctx.fillRect(CX-34,CY+RS+1,68,13); ctx.restore();
+     f4Label(ctx, '俯视图', CX, CY+RS+8, '#555', 11);
+     f4Label(ctx, '↑ 锯齿明显，近似平行六面体', W/2, 246, '#666', 11);
+    }
+    else if (step === 2) {
+     const bandY = 162;
+     const {startX, totalW} = f4Band(ctx, 16, bandY, RARR);
+     ctx.save(); ctx.setLineDash([4,3]); ctx.strokeStyle='#aaa'; ctx.lineWidth=1;
+     ctx.beginPath(); ctx.moveTo(startX,bandY-RARR); ctx.lineTo(startX+totalW,bandY-RARR); ctx.stroke();
+     ctx.beginPath(); ctx.moveTo(startX,bandY+RARR); ctx.lineTo(startX+totalW,bandY+RARR); ctx.stroke();
+     ctx.restore();
+     f4PieCircle(ctx, CX, CY, RS, 16);
+     ctx.save(); ctx.strokeStyle='#888'; ctx.lineWidth=1.5;
+     ctx.beginPath(); ctx.moveTo(CX+RS+6,CY); ctx.lineTo(CX+RS+28,CY); ctx.stroke();
+     ctx.fillStyle='#888';
+     ctx.beginPath(); ctx.moveTo(CX+RS+28,CY); ctx.lineTo(CX+RS+20,CY-5); ctx.lineTo(CX+RS+20,CY+5); ctx.fill();
+     ctx.restore();
+     ctx.save(); ctx.fillStyle='rgba(255,255,255,0.82)'; ctx.fillRect(CX-40,CY+RS+1,80,13); ctx.restore();
+     f4Label(ctx, '16个扇形柱', CX, CY+RS+8, '#555', 11);
+     f4Label(ctx, '锯齿减少，越来越像长方体！', W/2, 246, '#666', 12);
+    }
+    else if (step === 3) {
+     const bandY = 145;
+     const {startX, totalW} = f4Band(ctx, 32, bandY, RARR);
+     const top = bandY-RARR, bot = bandY+RARR;
+     /* Dashed rectangle outline */
+     ctx.save(); ctx.setLineDash([6,4]); ctx.strokeStyle='#0A7050'; ctx.lineWidth=2;
+     ctx.strokeRect(startX, top, totalW, 2*RARR); ctx.restore();
+     /* Bottom brace + 长≈πr */
+     ctx.save(); ctx.strokeStyle='#0A7050'; ctx.lineWidth=1.5;
+     ctx.beginPath(); ctx.moveTo(startX,bot+20); ctx.lineTo(startX+totalW,bot+20); ctx.stroke();
+     ctx.beginPath(); ctx.moveTo(startX,bot+15); ctx.lineTo(startX,bot+25); ctx.stroke();
+     ctx.beginPath(); ctx.moveTo(startX+totalW,bot+15); ctx.lineTo(startX+totalW,bot+25); ctx.stroke();
+     ctx.restore();
+     f4Label(ctx, `长≈πr=π×${r}≈${(pi*r).toFixed(1)}`, W/2, bot+36, '#0A7050', 13, 'center', '600');
+     f4Label(ctx, `× 高h=${h}  →  V=πr²h`, W/2, bot+52, '#555', 12);
+     /* Width label inside right */
+     ctx.save(); ctx.fillStyle='rgba(255,255,255,0.85)'; ctx.fillRect(startX+totalW-72, bandY-11, 68, 22); ctx.restore();
+     f4Label(ctx, `宽=r=${r}`, startX+totalW-6, bandY, '#C03030', 12, 'right', '600');
+     /* Height label inside left */
+     ctx.save(); ctx.fillStyle='rgba(255,255,255,0.85)'; ctx.fillRect(startX+4, bandY-11, 66, 22); ctx.restore();
+     f4Label(ctx, `高h=${h}`, startX+8, bandY, '#A03060', 12, 'left', '600');
+     f4Label(ctx, '32个扇形柱 ≈ 长方体', W/2, top-14, '#333', 12);
+     /* Reference circle (top view) drawn last */
+     f4PieCircle(ctx, CX, CY, RS, 32);
+     ctx.save(); ctx.strokeStyle='#888'; ctx.lineWidth=1.5;
+     ctx.beginPath(); ctx.moveTo(CX+RS+6,CY); ctx.lineTo(CX+RS+26,CY); ctx.stroke();
+     ctx.fillStyle='#888';
+     ctx.beginPath(); ctx.moveTo(CX+RS+26,CY); ctx.lineTo(CX+RS+18,CY-5); ctx.lineTo(CX+RS+18,CY+5); ctx.fill();
+     ctx.restore();
+     ctx.save(); ctx.fillStyle='rgba(255,255,255,0.82)'; ctx.fillRect(CX-40,CY+RS+1,80,13); ctx.restore();
+     f4Label(ctx, '32个扇形柱', CX, CY+RS+8, '#555', 11);
+    }
+    else if (step === 4) {
+     /* Left: cylinder (fixed display size) with current r and h labels */
+     const cx=66, cy=20, rx=40;
+     const hPx = Math.max(50, Math.min(h*14, 140));
+     f4Cylinder(ctx, cx, cy, rx, hPx);
+     ctx.save(); ctx.strokeStyle='#0A7050'; ctx.lineWidth=1.5;
+     ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx+rx, cy); ctx.stroke(); ctx.restore();
+     f4Label(ctx, `r=${r}`, cx+rx/2, cy-10, '#0A7050', 13, 'center', '600');
+     const hx = cx+rx+14;
+     ctx.save(); ctx.strokeStyle='#C03030'; ctx.lineWidth=1.5; ctx.setLineDash([4,3]);
+     ctx.beginPath(); ctx.moveTo(hx, cy); ctx.lineTo(hx, cy+hPx); ctx.stroke();
+     ctx.beginPath(); ctx.moveTo(hx-5, cy); ctx.lineTo(hx+5, cy); ctx.stroke();
+     ctx.beginPath(); ctx.moveTo(hx-5, cy+hPx); ctx.lineTo(hx+5, cy+hPx); ctx.stroke();
+     ctx.restore();
+     f4Label(ctx, `h=${h}`, hx+6, cy+hPx/2, '#C03030', 13, 'left', '600');
+     /* Formula derivation box */
+     const vol = (3.14*r*r*h).toFixed(2);
+     const fx=163, fy=18, fw=244, fh=152;
+     f4RoundRect(ctx, fx, fy, fw, fh, 8, '#FFF8E7', '#9A5800', 1.5);
+     f4Label(ctx, '推导过程', fx+fw/2, fy+18, '#9A5800', 12, 'center', '600');
+     f4Label(ctx, 'V = 底面积 × 高', fx+fw/2, fy+40, '#555', 13);
+     f4Label(ctx, '= πr² × h', fx+fw/2, fy+62, '#555', 13);
+     f4Label(ctx, '= πr²h', fx+fw/2, fy+88, '#A03060', 20, 'center', '700');
+     f4Label(ctx, `r=${r}, h=${h} → V=3.14×${r}²×${h}`, fx+fw/2, fy+116, '#555', 12);
+     f4Label(ctx, `=3.14×${r*r}×${h} ≈ ${vol}`, fx+fw/2, fy+138, '#A03060', 14, 'center', '700');
+     /* Green formula box */
+     f4RoundRect(ctx, 48, 186, 322, 55, 8, '#E8F5E9', '#2E7D32', 1.5);
+     f4Label(ctx, '圆柱体积公式：V = πr²h', W/2, 207, '#2E7D32', 15, 'center', '700');
+     f4Label(ctx, '切得越细越准确！', W/2, 229, '#2E7D32', 12, 'center', '600');
+    }
+   }
+
+   /* ── Animation: sectors fly from circle to band ── */
+   function f4AnimFrame(canvas, n, bandY, RARR, p) {
+    const W=420, H=260, pi=Math.PI;
+    const CX=52, CY=46, RS=40;
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, W, H);
+    const alpha = pi/n;
+    const arcW = 2*pi*RARR/n;
+    const totalW = n*arcW;
+    const startX = (W-totalW)/2;
+    const STAGGER = 0.65;
+    const FLIGHT_DUR = 1 - STAGGER*(n-1)/n;
+    const col = [{fill:'#FCEAF2',stroke:'#A03060'},{fill:'#EEF2FF',stroke:'#4A5AC0'}];
+    function tOf(i) {
+     return Math.max(0, Math.min(1, (p - STAGGER*i/n) / FLIGHT_DUR));
+    }
+    /* Band dashed lines fade in */
+    if (p > 0.2) {
+     const la = Math.min(1, (p-0.2)/0.4);
+     ctx.save(); ctx.globalAlpha=la; ctx.setLineDash([5,4]); ctx.strokeStyle='#aaa'; ctx.lineWidth=1;
+     ctx.beginPath(); ctx.moveTo(startX,bandY-RARR); ctx.lineTo(startX+totalW,bandY-RARR); ctx.stroke();
+     ctx.beginPath(); ctx.moveTo(startX,bandY+RARR); ctx.lineTo(startX+totalW,bandY+RARR); ctx.stroke();
+     ctx.restore();
+    }
+    /* Flying sectors */
+    for (let i=0; i<n; i++) {
+     const t = tOf(i);
+     if (t <= 0) continue;
+     const ease = t*t*(3-2*t);
+     const c = col[i%2];
+     const openDown = (i%2===0);
+     const srcMid = (i/n + 0.5/n)*2*pi - pi/2;
+     const tX = startX + (i+0.5)*arcW;
+     const tY = openDown ? (bandY-RARR) : (bandY+RARR);
+     const tMid = openDown ? pi/2 : -pi/2;
+     const curX = CX + (tX-CX)*ease;
+     const curY = CY + (tY-CY)*ease;
+     let dA = tMid - srcMid;
+     while (dA > pi)  dA -= 2*pi;
+     while (dA < -pi) dA += 2*pi;
+     const curAngle = srcMid + dA*ease;
+     const curR = RS + (RARR-RS)*ease;
+     f4Sector(ctx, curX, curY, curR, alpha, curAngle, c.fill, c.stroke);
+    }
+    /* Circle outline fading */
+    const cAlpha = Math.max(0, 1-p*2);
+    if (cAlpha > 0) {
+     ctx.save(); ctx.globalAlpha=cAlpha;
+     ctx.beginPath(); ctx.arc(CX, CY, RS, 0, 2*pi);
+     ctx.strokeStyle='#ccc'; ctx.lineWidth=1; ctx.stroke();
+     ctx.restore();
+    }
+    ctx.save(); ctx.fillStyle='rgba(255,255,255,0.82)'; ctx.fillRect(CX-40,CY+RS+1,80,13); ctx.restore();
+    f4Label(ctx, `${n}个扇形柱`, CX, CY+RS+8, '#555', 11);
+   }
+
+   function f4StartAnim(canvas, n) {
+    const RARR = 55;
+    const bandY = (n===32) ? 145 : 162;
+    const dur   = (n===32) ? 2500 : 2200;
+    if (f4State.animRaf) { cancelAnimationFrame(f4State.animRaf); f4State.animRaf = null; }
+    f4State.animDone = false;
+    const t0 = performance.now();
+    (function tick(now) {
+     const p = Math.min(1, (now-t0)/dur);
+     f4AnimFrame(canvas, n, bandY, RARR, p);
+     if (p < 1) {
+      f4State.animRaf = requestAnimationFrame(tick);
+     } else {
+      f4State.animRaf = null; f4State.animDone = true;
+      f4DrawStep(canvas);
+     }
+    })(performance.now());
+   }
+   // @@BUILD_END:f4-helpers@@
 
    const ANIMS = {
     /* ── 一年级 ── */
@@ -5871,135 +6262,64 @@
      },
     ],
     f4: [
+     // @@BUILD_START:f4-anims@@
+
      {
-      hint: '这是一个底面半径r、高h的圆柱。它的体积怎么算？我们用"切割重组"的方法来推导。',
-      formula: 'V = ? （底面积 × 高）',
-      dur: 1300,
-      draw(s, t) {
-       E('ellipse', {cx:185, cy:158, rx:62, ry:19, fill:'#E4F6EE', stroke:'#0A7050', 'stroke-width':2}, s);
-       R(s, 123, 72, 124, 86, '#E4F6EE', '#0A7050', 1.5);
-       E('ellipse', {cx:185, cy:72, rx:62, ry:19, fill:'#E4F6EE', stroke:'#0A7050', 'stroke-width':2}, s);
-       L(s, 121, 72, 121, 158, '#C03030', 1.8, '5,3');
-       RA(s, 121, 158, 10, '#C03030');
-       T(s, 100, 117, 'h', '#C03030', 19, 'middle', '700');
-       L(s, 185, 72, 247, 72, '#064A34', 1.5);
-       T(s, 218, 62, 'r', '#064A34', 14, 'middle', '700');
-       if (t > 0.6) {
-        T(s, 330, 105, '底面积 = πr²', '#064A34', 13, 'middle');
-        T(s, 330, 128, '× 高 h = ?', '#9E9B96', 13, 'middle');
-       }
+      hint: '这是一个底面半径r、高h的圆柱。体积怎么算？拖动滑块改变r和h，观察圆柱大小变化。',
+      formula: 'V = ?（目标：推导圆柱体积公式 V = πr²h）',
+      dur: 100,
+      noAutoFit: true,
+      draw(s) {
+       const { canvas } = getF4Canvas(s);
+       f4State.curStep = 0;
+       f4DrawStep(canvas);
       },
      },
      {
-      hint: '把圆柱沿高竖切，切成许多小扇形柱。每一块都来自原来的圆柱，体积不变。',
-      formula: '圆柱 → 竖切成许多扇形柱',
-      dur: 1400,
-      draw(s, t) {
-       // 左：显示带切割线的圆柱顶视图
-       const cx=130, cy=115, r=55, rY=17;
-       E('ellipse', {cx, cy:cy+50, rx:r, ry:rY, fill:'#E4F6EE', stroke:'#0A7050', 'stroke-width':1.8}, s);
-       R(s, cx-r, cy-30, r*2, 80, '#E4F6EE', '#0A7050', 1.5);
-       E('ellipse', {cx, cy:cy-30, rx:r, ry:rY, fill:'#E4F6EE', stroke:'#0A7050', 'stroke-width':1.8}, s);
-       // 切割线（从圆心到边缘的放射线）
-       const n = 8;
-       for (let i=0; i<n; i++) {
-        const ang = (i/n)*Math.PI*2;
-        const ex = cx + Math.cos(ang)*r, ey = cy-30 + Math.sin(ang)*rY;
-        if (t > 0.3)
-         L(s, cx, cy-30, ex, ey, '#C03030', 1.2, '4,3');
-       }
-       T(s, cx, cy+80, '竖切成8块扇形柱', '#064A34', 11, 'middle');
-       // 右：单个扇形柱示意
-       if (t > 0.6) {
-        const sx=310, sy=85;
-        // 扇形柱：弧边的小柱体
-        E('path', {
-         d:`M${sx},${sy+70} L${sx-22},${sy+70} A28,9 0 0,0 ${sx+22},${sy+70} Z`,
-         fill:'#C8DCF4', stroke:'#1A5FA8', 'stroke-width':1.5
-        }, s);
-        R(s, sx-22, sy, 44, 70, '#E8F1FB', '#1A5FA8', 1.5);
-        E('path', {
-         d:`M${sx},${sy} L${sx-22},${sy} A28,9 0 0,0 ${sx+22},${sy} Z`,
-         fill:'#EAF2FC', stroke:'#1A5FA8', 'stroke-width':1.5
-        }, s);
-        T(s, sx, sy+90, '扇形柱（带弧边）', '#0D3F6E', 11, 'middle');
-       }
+      hint: '把圆柱沿高方向竖切，切成许多扇形柱。每块体积不变，拼回去就是原来的体积。',
+      formula: '圆柱 → 竖切成8个扇形柱（俯视为圆形切片）',
+      dur: 100,
+      noAutoFit: true,
+      draw(s) {
+       const { canvas } = getF4Canvas(s);
+       f4State.curStep = 1;
+       f4DrawStep(canvas);
       },
      },
      {
-      hint: '把扇形柱一正一反交错排开——就像两排锯齿咬合，越切越细，形状越来越规则。',
-      formula: '扇形柱交错排开 → 越来越像长方体',
-      dur: 1400,
-      draw(s, t) {
-       const n=8, bw=22, bh=80, gap=2;
-       const totalW = n*(bw+gap);
-       const startX = (380-totalW)/2;
-       const baseY = 170;
-       for (let i=0; i<n; i++) {
-        const x = startX + i*(bw+gap);
-        const flipped = i%2===1;
-        const fill = flipped ? '#E8F1FB' : '#E4F6EE';
-        const stroke = flipped ? '#1A5FA8' : '#0A7050';
-        const y = flipped ? baseY-bh+8 : baseY-bh;
-        // 扇形柱简化为梯形表示
-        PL(s, [[x,baseY],[x+bw,baseY],[x+bw-(flipped?4:-4),y],[x+(flipped?4:-4),y]], fill, stroke, 1.5);
-       }
-       if (t > 0.5)
-        T(s, 190, 195, '交错排开后越来越像长方体', '#064A34', 12, 'middle');
-       if (t > 0.8) {
-        L(s, 30, 60, 350, 60, '#9E9B96', 1, '4,3');
-        T(s, 190, 52, '← 底边总长 ≈ πr（圆周长的一半）→', '#9E9B96', 11, 'middle');
-       }
+      hint: '把扇形柱一正一反交错排开。观察动画——切得越细，形状越接近长方体！',
+      formula: '16个扇形柱交错排开 → 越来越像长方体',
+      dur: 100,
+      noAutoFit: true,
+      draw(s) {
+       const { canvas } = getF4Canvas(s);
+       f4State.curStep = 2;
+       f4StartAnim(canvas, 16);
       },
      },
      {
-      hint: '切得足够细时，拼成的形状就是长方体！底面积 = πr²，高 = h，所以体积 = πr²h。',
-      formula: '近似长方体：底面积πr² × 高h = πr²h',
-      dur: 1400,
-      draw(s, t) {
-       // 左：长方体
-       const x=30, y=60, w=110, h=90, d=28;
-       PL(s,[[x,y+h],[x+w,y+h],[x+w+d,y+h-d],[x+d,y+h-d]],'#D0E4F8','#1A5FA8',1.5);
-       PL(s,[[x,y],[x+w,y],[x+w,y+h],[x,y+h]],'#E8F1FB','#1A5FA8',1.5);
-       PL(s,[[x+w,y],[x+w+d,y-d],[x+w+d,y+h-d],[x+w,y+h]],'#C8DCF4','#1A5FA8',1.5);
-       PL(s,[[x,y],[x+d,y-d],[x+w+d,y-d],[x+w,y]],'#EAF2FC','#1A5FA8',1.5);
-       T(s, x+w/2, y+h+18, '近似长方体', '#0D3F6E', 12, 'middle');
-       if (t > 0.35) {
-        T(s, x+w/2+d/2, y-d/2-14, '底面积 = πr²', '#064A34', 12, 'middle');
-        L(s, x-12, y, x-12, y+h, '#C03030', 1.5, '4,3');
-        T(s, x-28, y+h/2, 'h', '#C03030', 16, 'middle', '700');
-       }
-       if (t > 0.65) {
-        R(s, 230, 90, 130, 72, '#E4F6EE', '#0A7050', 1.5, 8);
-        T(s, 295, 116, 'V = πr²h', '#064A34', 18, 'middle', '700');
-        T(s, 295, 140, '底面积 × 高', '#9E9B96', 12, 'middle');
-       }
+      hint: '切成32个扇形柱，几乎就是长方体！长≈πr，宽=r，高=h → V≈πr×r×h=πr²h。',
+      formula: '32个扇形柱 ≈ 长方体：长≈πr，宽=r，高=h → V≈πr²h',
+      dur: 100,
+      noAutoFit: true,
+      draw(s) {
+       const { canvas } = getF4Canvas(s);
+       f4State.curStep = 3;
+       f4StartAnim(canvas, 32);
       },
      },
      {
-      hint: '验证：r=3cm、h=10cm → V = 3.14×3²×10 = 3.14×9×10 = 282.6 cm³。',
-      formula: '✅  V = πr²h，单位 cm³',
-      dur: 1200,
-      draw(s, t) {
-       E('ellipse', {cx:155, cy:154, rx:58, ry:18, fill:'#E4F6EE', stroke:'#0A7050', 'stroke-width':2}, s);
-       R(s, 97, 68, 116, 86, '#E4F6EE', '#0A7050', 1.5);
-       E('ellipse', {cx:155, cy:68, rx:58, ry:18, fill:'#E4F6EE', stroke:'#0A7050', 'stroke-width':2}, s);
-       L(s, 95, 68, 95, 154, '#C03030', 1.8, '5,3');
-       T(s, 74, 113, 'h=10', '#C03030', 12, 'middle');
-       T(s, 155, 55, 'r=3', '#064A34', 13);
-       if (t > 0.42) {
-        const ss = [
-         ['π × r² × h', '#9E9B96'],
-         ['= 3.14 × 9 × 10', '#9E9B96'],
-         ['= 282.6 cm³', '#0A7050'],
-        ];
-        const n = Math.floor(t * 4);
-        ss.slice(0, n).forEach(([l, c], i) =>
-         T(s, 348, 82+i*30, l, c, i===2?17:13, 'middle', i===2?'700':'400')
-        );
-       }
+      hint: '切得越细越准确！长方体体积 = 底面积×高 = πr²×h = πr²h，这就是圆柱体积公式！',
+      get formula() { const r=f4State.r, h=f4State.h; return `V = πr²h，r=${r}，h=${h} → V = 3.14×${r}²×${h} ≈ ${(3.14*r*r*h).toFixed(2)}`; },
+      dur: 100,
+      noAutoFit: true,
+      draw(s) {
+       const { canvas } = getF4Canvas(s);
+       f4State.curStep = 4;
+       f4DrawStep(canvas);
       },
      },
+     // @@BUILD_END:f4-anims@@
     ],
     f5: [
      {
