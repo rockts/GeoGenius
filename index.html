@@ -3034,6 +3034,8 @@
        f2State.animRaf = null; f2State.animDone = true;
       }
       f2DrawStep(canvas);
+      const sf = document.getElementById('sform');
+      if (sf) sf.textContent = ANIMS[ct.id][cs].formula;
      });
     }
     return { canvas, overlay };
@@ -3061,7 +3063,7 @@
     ctx.clearRect(0, 0, W, H);
     const r = f2State.r, step = f2State.curStep, pi = Math.PI;
     const RARR = 60;   // fixed arrangement radius (independent of r)
-    const CX = 52, CY = 62, RS = 46;  // small circle position
+    const CX = 52, CY = 48, RS = 42;  // small circle position
 
     if (step === 0) {
      /* Circle + radius line; size scales with r */
@@ -3077,37 +3079,39 @@
      f2Label(ctx, '推导：扇形切拼', 336, 157, '#9A5800', 12);
     }
     else if (step === 1) {
-     const bandY = 148;
+     const bandY = 162;
+     const {startX,totalW} = f2Band(ctx, 8, bandY, RARR);
+     f2Line(ctx, startX, bandY-RARR, startX+totalW, bandY-RARR, '#aaa', 1, true);
+     f2Line(ctx, startX, bandY+RARR, startX+totalW, bandY+RARR, '#aaa', 1, true);
      f2PieCircle(ctx, CX, CY, RS, 8);
-     f2Label(ctx, '8个扇形', CX, CY + RS + 14, '#555', 11);
      // arrow →
      ctx.save(); ctx.strokeStyle='#888'; ctx.lineWidth=1.5;
      ctx.beginPath(); ctx.moveTo(CX+RS+6,CY); ctx.lineTo(CX+RS+28,CY); ctx.stroke();
      ctx.fillStyle='#888';
      ctx.beginPath(); ctx.moveTo(CX+RS+28,CY); ctx.lineTo(CX+RS+20,CY-5); ctx.lineTo(CX+RS+20,CY+5); ctx.fill();
      ctx.restore();
-     const {startX,totalW} = f2Band(ctx, 8, bandY, RARR);
-     f2Line(ctx, startX, bandY-RARR, startX+totalW, bandY-RARR, '#aaa', 1, true);
-     f2Line(ctx, startX, bandY+RARR, startX+totalW, bandY+RARR, '#aaa', 1, true);
-     f2Label(ctx, '↑ 锯齿明显，近似平行四边形', W/2, 232, '#666', 11);
+     ctx.save(); ctx.fillStyle='rgba(255,255,255,0.82)'; ctx.fillRect(CX-34,CY+RS+1,68,13); ctx.restore();
+     f2Label(ctx, '8个扇形', CX, CY+RS+8, '#555', 11);
+     f2Label(ctx, '↑ 锯齿明显，近似平行四边形', W/2, 246, '#666', 11);
     }
     else if (step === 2) {
      /* Final state after animation */
-     const bandY = 148;
+     const bandY = 162;
+     const {startX,totalW} = f2Band(ctx, 16, bandY, RARR);
+     f2Line(ctx, startX, bandY-RARR, startX+totalW, bandY-RARR, '#aaa', 1, true);
+     f2Line(ctx, startX, bandY+RARR, startX+totalW, bandY+RARR, '#aaa', 1, true);
      f2PieCircle(ctx, CX, CY, RS, 16);
-     f2Label(ctx, '16个扇形', CX, CY + RS + 14, '#555', 11);
      ctx.save(); ctx.strokeStyle='#888'; ctx.lineWidth=1.5;
      ctx.beginPath(); ctx.moveTo(CX+RS+6,CY); ctx.lineTo(CX+RS+28,CY); ctx.stroke();
      ctx.fillStyle='#888';
      ctx.beginPath(); ctx.moveTo(CX+RS+28,CY); ctx.lineTo(CX+RS+20,CY-5); ctx.lineTo(CX+RS+20,CY+5); ctx.fill();
      ctx.restore();
-     const {startX,totalW} = f2Band(ctx, 16, bandY, RARR);
-     f2Line(ctx, startX, bandY-RARR, startX+totalW, bandY-RARR, '#aaa', 1, true);
-     f2Line(ctx, startX, bandY+RARR, startX+totalW, bandY+RARR, '#aaa', 1, true);
-     f2Label(ctx, '锯齿变少，越来越像长方形！', W/2, 232, '#666', 12);
+     ctx.save(); ctx.fillStyle='rgba(255,255,255,0.82)'; ctx.fillRect(CX-40,CY+RS+1,80,13); ctx.restore();
+     f2Label(ctx, '16个扇形', CX, CY+RS+8, '#555', 11);
+     f2Label(ctx, '锯齿变少，越来越像长方形！', W/2, 246, '#666', 12);
     }
     else if (step === 3) {
-     const bandY = 130;
+     const bandY = 152;
      const {startX,totalW} = f2Band(ctx, 32, bandY, RARR);
      const top = bandY-RARR, bot = bandY+RARR;
      ctx.save(); ctx.setLineDash([6,4]); ctx.strokeStyle='#1A5FA8'; ctx.lineWidth=2;
@@ -3119,15 +3123,19 @@
      ctx.beginPath(); ctx.moveTo(startX+totalW,bot+17); ctx.lineTo(startX+totalW,bot+27); ctx.stroke();
      ctx.restore();
      f2Label(ctx, `长 ≈ πr = π×${r} ≈ ${(pi*r).toFixed(1)}`, W/2, bot+38, '#1A5FA8', 13, 'center', '600');
-     // right brace
-     const rx = startX+totalW+14;
-     ctx.save(); ctx.strokeStyle='#C03030'; ctx.lineWidth=1.5;
-     ctx.beginPath(); ctx.moveTo(rx,top); ctx.lineTo(rx,bot); ctx.stroke();
-     ctx.beginPath(); ctx.moveTo(rx-5,top); ctx.lineTo(rx+5,top); ctx.stroke();
-     ctx.beginPath(); ctx.moveTo(rx-5,bot); ctx.lineTo(rx+5,bot); ctx.stroke();
-     ctx.restore();
-     f2Label(ctx, `宽=r=${r}`, rx+4, bandY, '#C03030', 13, 'left', '600');
+     // width label — inside the dashed rect, right side (avoids canvas clipping)
+     ctx.save(); ctx.fillStyle='rgba(255,255,255,0.85)'; ctx.fillRect(startX+totalW-72, bandY-11, 68, 22); ctx.restore();
+     f2Label(ctx, `宽=r=${r}`, startX+totalW-6, bandY, '#C03030', 12, 'right', '600');
      f2Label(ctx, '32个扇形 ≈ 长方形', W/2, top-14, '#333', 12);
+     /* reference circle drawn last so it appears above band */
+     f2PieCircle(ctx, CX, CY, RS, 32);
+     ctx.save(); ctx.strokeStyle='#888'; ctx.lineWidth=1.5;
+     ctx.beginPath(); ctx.moveTo(CX+RS+6,CY); ctx.lineTo(CX+RS+26,CY); ctx.stroke();
+     ctx.fillStyle='#888';
+     ctx.beginPath(); ctx.moveTo(CX+RS+26,CY); ctx.lineTo(CX+RS+18,CY-5); ctx.lineTo(CX+RS+18,CY+5); ctx.fill();
+     ctx.restore();
+     ctx.save(); ctx.fillStyle='rgba(255,255,255,0.82)'; ctx.fillRect(CX-40,CY+RS+1,80,13); ctx.restore();
+     f2Label(ctx, '32个扇形', CX, CY+RS+8, '#555', 11);
     }
     else if (step === 4) {
      const cx=68, cy=78, rS=56;
@@ -3135,7 +3143,7 @@
      f2Line(ctx, cx, cy, cx+rS, cy, '#1A5FA8', 2);
      f2Circle(ctx, cx, cy, 4, '#A03060');
      f2Label(ctx, `r = ${r}`, cx+rS/2, cy-14, '#1A5FA8', 14, 'center', '600');
-     const area = (pi*r*r).toFixed(2);
+     const area = (3.14*r*r).toFixed(2);
      const fw=224,fh=145,fx=168,fy=22;
      f2RoundRect(ctx, fx, fy, fw, fh, 8, '#FFF8E7', '#9A5800', 1.5);
      f2Label(ctx, '推导过程', fx+fw/2, fy+18, '#9A5800', 12, 'center', '600');
@@ -3146,14 +3154,14 @@
      f2Label(ctx, `= 3.14×${r*r} ≈ ${area}`, fx+fw/2, fy+136, '#A03060', 14, 'center', '700');
      f2RoundRect(ctx, 50, 185, 316, 55, 8, '#E8F5E9', '#2E7D32', 1.5);
      f2Label(ctx, '圆的面积公式：S = πr²', 208, 206, '#2E7D32', 15, 'center', '700');
-     f2Label(ctx, '（无限细分扇形后精确成立）', 208, 228, '#555', 11);
+     f2Label(ctx, '切得越细越准确！', 208, 228, '#2E7D32', 12, 'center', '600');
     }
    }
 
    /* ── Animation: sectors fly from circle to band ── */
    function f2AnimFrame(canvas, n, bandY, RARR, p) {
     const W = 420, H = 260, pi = Math.PI;
-    const CX = 52, CY = 62, RS = 46;
+    const CX = 52, CY = 48, RS = 42;
     const ctx = canvas.getContext('2d');
     ctx.clearRect(0, 0, W, H);
     const alpha = pi / n;
@@ -3192,7 +3200,8 @@
      ctx.strokeStyle='#ccc'; ctx.lineWidth=1; ctx.stroke();
      ctx.restore();
     }
-    f2Label(ctx, `${n}个扇形`, CX, CY + RS + 14, '#555', 11);
+    ctx.save(); ctx.fillStyle='rgba(255,255,255,0.82)'; ctx.fillRect(CX-40,CY+RS+1,80,13); ctx.restore();
+    f2Label(ctx, `${n}个扇形`, CX, CY+RS+8, '#555', 11);
 
     /* Band dashed lines fade in */
     if (p > 0.2) {
@@ -3240,7 +3249,7 @@
    /** Start rAF animation for step 2 (n=16) or step 3 (n=32) */
    function f2StartAnim(canvas, n) {
     const RARR = 60;
-    const bandY = (n === 32) ? 130 : 148;
+    const bandY = (n === 32) ? 152 : 162;
     const dur   = (n === 32) ? 2500 : 2200;
     if (f2State.animRaf) { cancelAnimationFrame(f2State.animRaf); f2State.animRaf = null; }
     f2State.animDone = false;
@@ -5697,8 +5706,8 @@
       },
      },
      {
-      hint: '切得无限细时，长方形面积 = πr×r = πr²，这就是圆面积公式！',
-      formula: 'S = πr²（精确公式，用 r=3 验证：S≈28.26）',
+      hint: '切得越细越准确！长方形面积 = πr × r = πr²，这就是圆面积公式！',
+      get formula() { const r=f2State.r; return `S = πr²，r=${r} → S = 3.14×${r}² ≈ ${(3.14*r*r).toFixed(2)}`; },
       dur: 100,
       noAutoFit: true,
       draw(s) {
