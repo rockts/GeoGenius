@@ -2,15 +2,17 @@
 // GeoGenius Topic: f4 — 圆柱的体积 (Cylinder Volume)
 // @@SECTION:helpers@@  → before ANIMS
 // @@SECTION:anims@@    → body of ANIMS.f4
-// 推导：竖切n等份 → 扇形柱直立展开 → 近似长方体 → V=πr²h
-// Cabinet投影：前面=矩形(arcW×h)，顶面=三角(深度r)，右侧面=平行四边形
+// 推导：竖切n等份 → 奇偶两组 → 翻转咬合 → 近似长方体 → V=πr²h
+// 扇形柱正视图：矩形前面 + 等腰三角（齿），橙齿朝上，蓝齿朝下，交替咬合
 // ================================================================
 
 // @@SECTION:helpers@@
 
    const f4State = {
-    r: 3, h: 5, curStep: -1, animRaf: null, animDone: false,
+    r: 3, h: 5, curStep: -1, animRaf: null,
    };
+
+   const F4BW = 252;  // 块总宽（固定像素）
 
    function f4Label(ctx, text, x, y, color, size, align, weight) {
     ctx.save();
@@ -30,126 +32,97 @@
     ctx.restore();
    }
 
-   /* 从滑块值计算像素尺寸 */
-   function f4D() {
+   /* 从 r/h/n 计算绘制参数 */
+   function f4D(n) {
     const r = f4State.r, h = f4State.h;
-    const pixR  = Math.min(r * 12, 40);          // Cabinet投影深度（半径像素）
-    const colH  = Math.min(h * 16, 155);          // 柱高像素
-    const botY  = 228;                            // 柱底 y
-    const topY  = botY - colH;                   // 柱顶 y
-    const oblX  = r * 6;                          // 顶面后顶点水平偏移
-    const oblY  = r * 4;                          // 顶面后顶点垂直偏移（向上）
-    const blockW = 252;                           // 整个柱块的固定宽度
-    const cylCX = 60;                             // 圆柱中心 x（Steps 0-2）
-    const cylRx = Math.min(r * 10, 34);          // 圆柱水平半径
+    n = n || 8;
+    const ch    = Math.min(h * 16, 130);              // 柱矩形高（像素）
+    const arcW  = F4BW / n;                           // 单柱宽（像素）
+    // 扇形矢高（齿高）= r*(1-cos(π/n))，缩放后至少 4px
+    const depth = Math.max(4, r * (1 - Math.cos(Math.PI / n)) * 65);
+    const cylCX = 58;
+    const cylRx = Math.min(r * 10, 34);
     const cylRy = Math.max(5, Math.round(cylRx * 0.28));
-    return { r, h, pixR, colH, botY, topY, oblX, oblY, blockW, cylCX, cylRx, cylRy };
+    const botY  = 212;                                // 矩形底边 y（蓝色齿在 botY+depth 处）
+    const startXcyl    = cylCX + cylRx + 26;          // 带圆柱时块起始 x
+    const startXcenter = Math.round((420 - F4BW) / 2);// 居中时块起始 x
+    return { r, h, n, ch, arcW, depth, cylCX, cylRx, cylRy, botY, startXcyl, startXcenter };
    }
 
    /* 画直立圆柱，可选顶面切割线 */
-   function f4Cyl(ctx, cx, cy, D, showCuts, nCuts) {
-    const { cylRx: rx, cylRy: ry, colH } = D;
-    const botY = cy + colH;
+   function f4Cyl(ctx, cx, topY, D, showCuts, nCuts) {
+    const { cylRx: rx, cylRy: ry, ch } = D;
+    const botY = topY + ch;
     ctx.save();
-    /* 底面半椭圆 */
     ctx.strokeStyle = '#0A7050'; ctx.lineWidth = 1.5;
     ctx.beginPath(); ctx.ellipse(cx, botY, rx, ry, 0, 0, Math.PI, false); ctx.stroke();
-    /* 侧面 */
     ctx.beginPath();
-    ctx.moveTo(cx - rx, cy); ctx.lineTo(cx - rx, botY);
+    ctx.moveTo(cx - rx, topY); ctx.lineTo(cx - rx, botY);
     ctx.ellipse(cx, botY, rx, ry, 0, Math.PI, 0, true);
-    ctx.lineTo(cx + rx, cy);
-    ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI, true);
+    ctx.lineTo(cx + rx, topY);
+    ctx.ellipse(cx, topY, rx, ry, 0, 0, Math.PI, true);
     ctx.closePath(); ctx.fillStyle = '#C8E6D4'; ctx.fill();
-    ctx.beginPath(); ctx.moveTo(cx - rx, cy); ctx.lineTo(cx - rx, botY); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(cx + rx, cy); ctx.lineTo(cx + rx, botY); ctx.stroke();
-    /* 顶面椭圆 */
-    ctx.beginPath(); ctx.ellipse(cx, cy, rx, ry, 0, 0, 2 * Math.PI);
+    ctx.beginPath(); ctx.moveTo(cx - rx, topY); ctx.lineTo(cx - rx, botY); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cx + rx, topY); ctx.lineTo(cx + rx, botY); ctx.stroke();
+    ctx.beginPath(); ctx.ellipse(cx, topY, rx, ry, 0, 0, 2 * Math.PI);
     ctx.fillStyle = '#E4F6EE'; ctx.fill(); ctx.strokeStyle = '#0A7050'; ctx.stroke();
-    /* 切割线 */
     if (showCuts && nCuts > 0) {
      ctx.strokeStyle = '#8B0020'; ctx.lineWidth = 1.2;
      for (let i = 0; i < nCuts; i++) {
       const a = i * 2 * Math.PI / nCuts;
       ctx.beginPath();
-      ctx.moveTo(cx, cy);
-      ctx.lineTo(cx + rx * Math.cos(a), cy + ry * Math.sin(a));
+      ctx.moveTo(cx, topY);
+      ctx.lineTo(cx + rx * Math.cos(a), topY + ry * Math.sin(a));
       ctx.stroke();
      }
     }
     ctx.restore();
    }
 
-   /* 颜色表（奇偶交替） */
-   const F4COL = [
-    { front: '#F97028', top: '#FBBA70', stroke: '#A03810' },   // 橙
-    { front: '#4A90E8', top: '#88BBF4', stroke: '#1840A0' },   // 蓝
-   ];
-
-   /*
-    * 画 n 个直立扇形柱组成的块（Cabinet 投影）
-    * 画家算法：右侧面 → 顶面(右到左) → 前面(左到右)
-    * 支持每柱的 x 位置数组（用于动画），默认为等间距
-    */
-   function f4DrawBlock(ctx, n, startX, D, xArr) {
-    const { topY, colH, oblX, oblY, blockW } = D;
-    const botY  = topY + colH;
-    const arcW  = blockW / n;
-
-    /* 当前每柱的 x 位置 */
-    const xs = xArr || Array.from({ length: n }, (_, i) => startX + i * arcW);
-    const lastX = (xArr ? xArr[n - 1] + arcW : startX + n * arcW);
-
-    /* 右侧面（最右柱的切面，绿色平行四边形） */
+   /* 单根橙色扇形柱：矩形 + 顶面等腰三角（齿朝上） */
+   function f4ColOrange(ctx, x, botY, arcW, ch, depth) {
     ctx.save();
+    ctx.fillStyle = '#F97028';
+    ctx.fillRect(x, botY - ch, arcW, ch);
+    ctx.strokeStyle = '#A03810'; ctx.lineWidth = 0.7;
+    ctx.strokeRect(x, botY - ch, arcW, ch);
+    ctx.fillStyle = '#FBBA70';
     ctx.beginPath();
-    ctx.moveTo(lastX, topY);
-    ctx.lineTo(lastX + oblX, topY - oblY);
-    ctx.lineTo(lastX + oblX, botY - oblY);
-    ctx.lineTo(lastX, botY);
-    ctx.closePath();
-    ctx.fillStyle = '#A8D4B4'; ctx.fill();
-    ctx.strokeStyle = '#2A6040'; ctx.lineWidth = 0.8; ctx.stroke();
+    ctx.moveTo(x, botY - ch);
+    ctx.lineTo(x + arcW, botY - ch);
+    ctx.lineTo(x + arcW / 2, botY - ch - depth);
+    ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = '#A03810'; ctx.lineWidth = 0.5; ctx.stroke();
     ctx.restore();
+   }
 
-    /* 顶面扇形（右到左，保证近处覆盖远处）
-       前弧用二次贝塞尔模拟扇形弧面；n≥20 时统一顶色减少锯齿
-       奇数柱（橙,i偶）apex向右后，偶数柱（蓝,i奇）apex向左后，交替咬合 */
-    const cylRx = D.cylRx || 30;
-    const sagY   = Math.max(1.5, arcW * arcW / (8 * cylRx));
-    const effOblY = n >= 20 ? Math.min(oblY, arcW * 0.85) : oblY;
-    const effOblX = oblX * (effOblY / oblY);
-    const blendTop = n >= 20;
-    for (let i = n - 1; i >= 0; i--) {
-     const x = xs[i], c = F4COL[i % 2];
-     const flipped = (i % 2 === 1);
-     // 橙色 apex = 右后角 (x+arcW+oblX)，蓝色 apex = 左后角 (x+oblX)
-     // 相邻橙蓝柱共享同一顶点 → 整体顶面锯齿减半
-     const apexX = flipped ? (x + effOblX) : (x + arcW + effOblX);
-     // 蓝色前弧略上凸（朝向圆心），橙色下凸（朝向圆弧）
-     const sagCY = topY + (flipped ? -sagY * 0.6 : sagY);
-     ctx.save();
-     ctx.beginPath();
-     ctx.moveTo(x, topY);
-     ctx.quadraticCurveTo(x + arcW / 2, sagCY, x + arcW, topY);
-     ctx.lineTo(apexX, topY - effOblY);
-     ctx.closePath();
-     ctx.fillStyle = blendTop ? '#F0C880' : c.top; ctx.fill();
-     ctx.strokeStyle = blendTop ? '#C8A040' : c.stroke;
-     ctx.lineWidth = blendTop ? 0.25 : 0.5; ctx.stroke();
-     ctx.restore();
-    }
+   /* 单根蓝色扇形柱：矩形 + 底面等腰三角（齿朝下，翻转） */
+   function f4ColBlue(ctx, x, botY, arcW, ch, depth) {
+    ctx.save();
+    ctx.fillStyle = '#4A90E8';
+    ctx.fillRect(x, botY - ch, arcW, ch);
+    ctx.strokeStyle = '#1840A0'; ctx.lineWidth = 0.7;
+    ctx.strokeRect(x, botY - ch, arcW, ch);
+    ctx.fillStyle = '#88BBF4';
+    ctx.beginPath();
+    ctx.moveTo(x, botY);
+    ctx.lineTo(x + arcW, botY);
+    ctx.lineTo(x + arcW / 2, botY + depth);
+    ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = '#1840A0'; ctx.lineWidth = 0.5; ctx.stroke();
+    ctx.restore();
+   }
 
-    /* 前面矩形（左到右） */
+   /* 画完整咬合块（n 列交替橙蓝） */
+   function f4DrawBlock4(ctx, n, startX, botY, arcW, ch, depth) {
     for (let i = 0; i < n; i++) {
-     const x = xs[i], c = F4COL[i % 2];
-     ctx.save();
-     ctx.fillStyle = c.front; ctx.fillRect(x, topY, arcW, colH);
-     ctx.strokeStyle = c.stroke; ctx.lineWidth = 0.7; ctx.strokeRect(x, topY, arcW, colH);
-     ctx.restore();
+     const x = startX + i * arcW;
+     if (i % 2 === 0) f4ColOrange(ctx, x, botY, arcW, ch, depth);
+     else              f4ColBlue(ctx, x, botY, arcW, ch, depth);
     }
    }
 
+   /* 创建 Canvas + 滑块 overlay */
    function getF4Canvas(s) {
     const svg = s.ownerSVGElement || s;
     const wrap = svg.closest('.canvas-wrap') || svg.parentElement;
@@ -180,7 +153,7 @@
      wrap.after(overlay);
      const canvasRef = canvas;
      function onSlider() {
-      if (f4State.animRaf) { cancelAnimationFrame(f4State.animRaf); f4State.animRaf = null; f4State.animDone = true; }
+      if (f4State.animRaf) { cancelAnimationFrame(f4State.animRaf); f4State.animRaf = null; }
       f4DrawStep(canvasRef);
       const sf = document.getElementById('sform');
       try { if (sf) sf.textContent = ANIMS[ct.id][cs].formula; } catch(e) {}
@@ -203,160 +176,131 @@
     f4State.curStep = -1;
    }
 
-   /* ─── 静态绘图入口 ─── */
+   /* ─── 静态绘图 ─── */
    function f4DrawStep(canvas) {
     const W = 420, H = 280, pi = Math.PI;
     const ctx = canvas.getContext('2d');
     ctx.clearRect(0, 0, W, H);
-    const D = f4D();
-    const { r, h, topY, botY, colH, oblX, oblY, blockW, cylCX, cylRx } = D;
+    const step = f4State.curStep;
 
-    /* 两种布局的 startX */
-    const startXwithCyl = cylCX + cylRx + 30; // Steps 0-2：圆柱右侧
-    const startXcenter  = Math.round((W - blockW) / 2);  // Steps 3-5：居中
-
-    if (f4State.curStep === 0) {
-     /* ── Step 0：3D 圆柱 ── */
-     f4Cyl(ctx, cylCX, topY, D, false, 0);
-     /* r 标注 */
+    if (step === 0) {
+     /* ── Step 0：圆柱 + r/h 标注 + V=? 卡片 ── */
+     const D = f4D(8);
+     const { r, h, ch, cylCX, cylRx, cylRy, botY } = D;
+     f4Cyl(ctx, cylCX, botY - ch, D, false, 0);
      ctx.save(); ctx.strokeStyle = '#0A7050'; ctx.lineWidth = 1.5;
-     ctx.beginPath(); ctx.moveTo(cylCX, topY); ctx.lineTo(cylCX + cylRx, topY); ctx.stroke();
+     ctx.beginPath(); ctx.moveTo(cylCX, botY - ch); ctx.lineTo(cylCX + cylRx, botY - ch); ctx.stroke();
      ctx.restore();
-     f4Label(ctx, `r = ${r}`, cylCX + cylRx / 2, topY - 10, '#0A7050', 13, 'center', '600');
-     /* h 标注 */
-     const hx = cylCX + cylRx + 12;
+     f4Label(ctx, `r = ${r}`, cylCX + cylRx / 2, botY - ch - 10, '#0A7050', 13, 'center', '600');
+     const hx = cylCX + cylRx + 14;
      ctx.save(); ctx.strokeStyle = '#C03030'; ctx.lineWidth = 1.5; ctx.setLineDash([4, 3]);
-     ctx.beginPath(); ctx.moveTo(hx, topY); ctx.lineTo(hx, botY); ctx.stroke();
-     ctx.beginPath(); ctx.moveTo(hx - 5, topY); ctx.lineTo(hx + 5, topY); ctx.stroke();
-     ctx.beginPath(); ctx.moveTo(hx - 5, botY); ctx.lineTo(hx + 5, botY); ctx.stroke();
+     ctx.beginPath(); ctx.moveTo(hx, botY - ch); ctx.lineTo(hx, botY); ctx.stroke();
+     ctx.beginPath(); ctx.moveTo(hx-5, botY-ch); ctx.lineTo(hx+5, botY-ch); ctx.stroke();
+     ctx.beginPath(); ctx.moveTo(hx-5, botY); ctx.lineTo(hx+5, botY); ctx.stroke();
      ctx.restore();
-     f4Label(ctx, `h = ${h}`, hx + 7, (topY + botY) / 2, '#C03030', 13, 'left', '600');
-     /* V=? 卡片 */
-     f4RoundRect(ctx, 160, 36, 218, 120, 8, '#FFF8E7', '#9A5800', 1.5);
-     f4Label(ctx, '圆柱体积', 269, 60, '#9A5800', 13, 'center', '600');
-     f4Label(ctx, 'V = ?', 269, 90, '#A03060', 22, 'center', '700');
-     f4Label(ctx, '底面积 × 高', 269, 122, '#9A5800', 12);
-     f4Label(ctx, '= πr² × h', 269, 142, '#9A5800', 12);
+     f4Label(ctx, `h = ${h}`, hx + 8, botY - ch / 2, '#C03030', 13, 'left', '600');
+     f4RoundRect(ctx, 152, 38, 230, 112, 8, '#FFF8E7', '#9A5800', 1.5);
+     f4Label(ctx, '圆柱体积', 267, 62, '#9A5800', 13, 'center', '600');
+     f4Label(ctx, 'V = ?', 267, 94, '#A03060', 22, 'center', '700');
+     f4Label(ctx, '底面积 × 高 = πr² × h', 267, 128, '#9A5800', 11);
     }
 
-    else if (f4State.curStep === 1) {
-     /* ── Step 1：圆柱顶面加切割线 ── */
-     f4Cyl(ctx, cylCX, topY, D, true, 8);
-     /* r 和 h 标注（同 Step0） */
+    else if (step === 1) {
+     /* ── Step 1：圆柱顶面8条切割线 + 奇偶说明 ── */
+     const D = f4D(8);
+     const { r, h, ch, cylCX, cylRx, botY } = D;
+     f4Cyl(ctx, cylCX, botY - ch, D, true, 8);
      ctx.save(); ctx.strokeStyle = '#0A7050'; ctx.lineWidth = 1.5;
-     ctx.beginPath(); ctx.moveTo(cylCX, topY); ctx.lineTo(cylCX + cylRx, topY); ctx.stroke();
+     ctx.beginPath(); ctx.moveTo(cylCX, botY - ch); ctx.lineTo(cylCX + cylRx, botY - ch); ctx.stroke();
      ctx.restore();
-     f4Label(ctx, `r = ${r}`, cylCX + cylRx / 2, topY - 10, '#0A7050', 13, 'center', '600');
-     const hx = cylCX + cylRx + 12;
+     f4Label(ctx, `r = ${r}`, cylCX + cylRx / 2, botY - ch - 10, '#0A7050', 12, 'center', '600');
+     const hx = cylCX + cylRx + 14;
      ctx.save(); ctx.strokeStyle = '#C03030'; ctx.lineWidth = 1.5; ctx.setLineDash([4, 3]);
-     ctx.beginPath(); ctx.moveTo(hx, topY); ctx.lineTo(hx, botY); ctx.stroke();
-     ctx.beginPath(); ctx.moveTo(hx - 5, topY); ctx.lineTo(hx + 5, topY); ctx.stroke();
-     ctx.beginPath(); ctx.moveTo(hx - 5, botY); ctx.lineTo(hx + 5, botY); ctx.stroke();
+     ctx.beginPath(); ctx.moveTo(hx, botY-ch); ctx.lineTo(hx, botY); ctx.stroke();
      ctx.restore();
-     f4Label(ctx, `h = ${h}`, hx + 7, (topY + botY) / 2, '#C03030', 13, 'left', '600');
-     /* 标注 */
-     f4RoundRect(ctx, 158, 36, 230, 60, 8, '#FFF0F0', '#AA0020', 1.5);
-     f4Label(ctx, '沿高度方向竖切成8等份', 273, 58, '#AA0020', 12, 'center', '600');
-     f4Label(ctx, '得到 8 个扇形柱', 273, 80, '#AA0020', 12, 'center', '600');
-     /* 箭头提示 */
-     f4Label(ctx, '每个扇形柱：宽=πr×1/4，高=h', 273, 120, '#555', 11);
+     f4Label(ctx, `h = ${h}`, hx + 8, botY - ch / 2, '#C03030', 12, 'left', '600');
+     f4RoundRect(ctx, 148, 36, 244, 66, 8, '#FFF0F0', '#AA0020', 1.5);
+     f4Label(ctx, '竖切8等份：奇数扇形柱→橙色', 270, 57, '#AA0020', 12, 'center', '600');
+     f4Label(ctx, '偶数扇形柱→蓝色（翻转180°）', 270, 80, '#AA0020', 12, 'center', '600');
     }
 
-    else if (f4State.curStep === 2) {
-     /* ── Step 2：8柱静态最终排列 + 圆柱 ── */
-     f4Cyl(ctx, cylCX, topY, D, true, 8);
+    else if (step === 2) {
+     /* ── Step 2：咬合完成帧（动画结束后） ── */
+     const D = f4D(8);
+     const { ch, arcW, depth, cylCX, cylRx, botY, startXcyl } = D;
+     f4Cyl(ctx, cylCX, botY - ch, D, true, 8);
      /* 箭头 */
-     const ax = startXwithCyl - 14;
+     const ax = startXcyl - 8;
      ctx.save(); ctx.strokeStyle = '#555'; ctx.lineWidth = 2;
-     ctx.beginPath(); ctx.moveTo(cylCX + cylRx + 6, (topY + botY) / 2); ctx.lineTo(ax, (topY + botY) / 2); ctx.stroke();
+     ctx.beginPath(); ctx.moveTo(cylCX + cylRx + 4, botY - ch / 2); ctx.lineTo(ax, botY - ch / 2); ctx.stroke();
      ctx.fillStyle = '#555';
-     ctx.beginPath(); ctx.moveTo(ax, (topY + botY) / 2); ctx.lineTo(ax - 7, (topY + botY) / 2 - 5); ctx.lineTo(ax - 7, (topY + botY) / 2 + 5); ctx.closePath(); ctx.fill();
+     ctx.beginPath(); ctx.moveTo(ax, botY - ch/2); ctx.lineTo(ax-7, botY-ch/2-5); ctx.lineTo(ax-7, botY-ch/2+5); ctx.closePath(); ctx.fill();
      ctx.restore();
-     f4DrawBlock(ctx, 8, startXwithCyl, D, null);
-     f4Label(ctx, '8个扇形柱直立排开', startXwithCyl + blockW / 2, botY + 18, '#333', 11, 'center', '600');
+     f4DrawBlock4(ctx, 8, startXcyl, botY, arcW, ch, depth);
+     f4Label(ctx, '橙蓝咬合 ≈ 近似长方体', startXcyl + F4BW / 2, botY + depth + 14, '#333', 11, 'center', '600');
     }
 
-    else if (f4State.curStep === 3) {
-     /* ── Step 3：16柱静态 + 虚线框标注 ── */
-     f4DrawBlock(ctx, 16, startXcenter, D, null);
-     /* 虚线标注框 */
+    else if (step === 3) {
+     /* ── Step 3：16份静态展示 + 标注 ── */
+     const D = f4D(16);
+     const { r, ch, arcW, depth, botY, startXcenter } = D;
+     f4DrawBlock4(ctx, 16, startXcenter, botY, arcW, ch, depth);
+     /* 虚线框 */
      ctx.save(); ctx.strokeStyle = '#0A7050'; ctx.lineWidth = 1.2; ctx.setLineDash([5, 4]);
-     ctx.strokeRect(startXcenter, topY, blockW, colH);
+     ctx.strokeRect(startXcenter, botY - ch - depth, F4BW, ch + depth * 2);
      ctx.restore();
-     /* 长 ≈ πr */
+     /* 长标注 */
      ctx.save(); ctx.strokeStyle = '#0A7050'; ctx.lineWidth = 1.2;
-     ctx.beginPath(); ctx.moveTo(startXcenter, botY + 14); ctx.lineTo(startXcenter + blockW, botY + 14); ctx.stroke();
-     ctx.beginPath(); ctx.moveTo(startXcenter, botY + 9); ctx.lineTo(startXcenter, botY + 19); ctx.stroke();
-     ctx.beginPath(); ctx.moveTo(startXcenter + blockW, botY + 9); ctx.lineTo(startXcenter + blockW, botY + 19); ctx.stroke();
+     ctx.beginPath(); ctx.moveTo(startXcenter, botY + depth + 14); ctx.lineTo(startXcenter + F4BW, botY + depth + 14); ctx.stroke();
+     ctx.beginPath(); ctx.moveTo(startXcenter, botY + depth + 9); ctx.lineTo(startXcenter, botY + depth + 19); ctx.stroke();
+     ctx.beginPath(); ctx.moveTo(startXcenter + F4BW, botY + depth + 9); ctx.lineTo(startXcenter + F4BW, botY + depth + 19); ctx.stroke();
      ctx.restore();
-     f4Label(ctx, `长 ≈ πr = π×${r} ≈ ${(pi * r).toFixed(1)}`, startXcenter + blockW / 2, botY + 30, '#0A7050', 12, 'center', '600');
-     /* 高 = h */
-     const rhx = startXcenter + blockW + oblX + 10;
+     f4Label(ctx, `长 ≈ πr = π×${r} ≈ ${(pi * r).toFixed(1)}`, startXcenter + F4BW / 2, botY + depth + 28, '#0A7050', 12, 'center', '600');
+     /* 高标注 */
+     const hx = startXcenter + F4BW + 14;
      ctx.save(); ctx.strokeStyle = '#C03030'; ctx.lineWidth = 1.2;
-     ctx.beginPath(); ctx.moveTo(rhx, topY); ctx.lineTo(rhx, botY); ctx.stroke();
-     ctx.beginPath(); ctx.moveTo(rhx - 5, topY); ctx.lineTo(rhx + 5, topY); ctx.stroke();
-     ctx.beginPath(); ctx.moveTo(rhx - 5, botY); ctx.lineTo(rhx + 5, botY); ctx.stroke();
+     ctx.beginPath(); ctx.moveTo(hx, botY - ch); ctx.lineTo(hx, botY); ctx.stroke();
+     ctx.beginPath(); ctx.moveTo(hx-5, botY-ch); ctx.lineTo(hx+5, botY-ch); ctx.stroke();
+     ctx.beginPath(); ctx.moveTo(hx-5, botY); ctx.lineTo(hx+5, botY); ctx.stroke();
      ctx.restore();
-     f4Label(ctx, `高 = h = ${h}`, rhx + 7, (topY + botY) / 2, '#C03030', 11, 'left', '600');
-     f4Label(ctx, '16个扇形柱交错排列，整体接近长方体', W / 2, topY - 16, '#333', 11, 'center', '600');
+     f4Label(ctx, `高=h=${f4State.h}`, hx + 7, botY - ch / 2, '#C03030', 11, 'left', '600');
+     f4Label(ctx, '切得越细，整体越像长方体', W / 2, botY - ch - depth - 14, '#333', 11, 'center', '600');
     }
 
-    else if (f4State.curStep === 4) {
-     /* ── Step 4：32柱 → 近似长方体 + 推导公式 ── */
-     f4DrawBlock(ctx, 32, startXcenter, D, null);
-     /* 宽=r：标在右侧面中线上 */
-     const sfMx = startXcenter + blockW + oblX / 2;   // 右侧面水平中点
-     const sfMy = (topY - oblY / 2 + botY - oblY / 2) / 2;  // 右侧面垂直中点
-     ctx.save(); ctx.strokeStyle = '#9030A0'; ctx.lineWidth = 1; ctx.setLineDash([3, 3]);
-     ctx.beginPath(); ctx.moveTo(startXcenter + blockW, topY); ctx.lineTo(startXcenter + blockW + oblX, topY - oblY); ctx.stroke();
-     ctx.restore();
-     f4Label(ctx, `宽≈r=${r}`, sfMx + 4, sfMy - 4, '#9030A0', 11, 'left', '600');
-     /* 长 */
-     ctx.save(); ctx.strokeStyle = '#0A7050'; ctx.lineWidth = 1.2;
-     ctx.beginPath(); ctx.moveTo(startXcenter, botY + 12); ctx.lineTo(startXcenter + blockW, botY + 12); ctx.stroke();
-     ctx.beginPath(); ctx.moveTo(startXcenter, botY + 7); ctx.lineTo(startXcenter, botY + 17); ctx.stroke();
-     ctx.beginPath(); ctx.moveTo(startXcenter + blockW, botY + 7); ctx.lineTo(startXcenter + blockW, botY + 17); ctx.stroke();
-     ctx.restore();
-     f4Label(ctx, `长≈πr = ${(pi * r).toFixed(2)}`, startXcenter + blockW / 2, botY + 28, '#0A7050', 11, 'center', '600');
-     /* 高 */
-     const hx2 = startXcenter + blockW + oblX + 10;
-     ctx.save(); ctx.strokeStyle = '#C03030'; ctx.lineWidth = 1.2;
-     ctx.beginPath(); ctx.moveTo(hx2, topY); ctx.lineTo(hx2, botY); ctx.stroke();
-     ctx.beginPath(); ctx.moveTo(hx2 - 5, topY); ctx.lineTo(hx2 + 5, topY); ctx.stroke();
-     ctx.beginPath(); ctx.moveTo(hx2 - 5, botY); ctx.lineTo(hx2 + 5, botY); ctx.stroke();
-     ctx.restore();
-     f4Label(ctx, `高=${h}`, hx2 + 6, (topY + botY) / 2, '#C03030', 11, 'left', '600');
-     /* 推导 */
-     f4Label(ctx, `V ≈ πr × r × h = πr²h`, W / 2, botY + 46, '#A03060', 13, 'center', '700');
-    }
-
-    else if (f4State.curStep === 5) {
-     /* ── Step 5：公式验证 ── */
-     f4DrawBlock(ctx, 32, startXcenter, D, null);
+    else if (step === 4) {
+     /* ── Step 4：公式验证 + 滑块 ── */
+     const D = f4D(16);
+     const { r, h, ch, arcW, depth, botY, startXcenter } = D;
+     f4DrawBlock4(ctx, 16, startXcenter, botY, arcW, ch, depth);
      const vol = (3.14 * r * r * h).toFixed(2);
-     f4RoundRect(ctx, 22, botY + 4, W - 44, 54, 8, '#E8F5E9', '#2E7D32', 1.5);
-     f4Label(ctx, 'V = πr²h', W / 2, botY + 22, '#2E7D32', 16, 'center', '700');
-     f4Label(ctx, `r=${r}, h=${h}  →  V = 3.14×${r}²×${h} = 3.14×${r*r}×${h} ≈ ${vol}`, W / 2, botY + 44, '#2E7D32', 12, 'center', '600');
+     f4RoundRect(ctx, 22, botY + depth + 8, W - 44, 52, 8, '#E8F5E9', '#2E7D32', 1.5);
+     f4Label(ctx, 'V = πr²h', W / 2, botY + depth + 24, '#2E7D32', 16, 'center', '700');
+     f4Label(ctx, `r=${r}, h=${h}  →  V = 3.14×${r}²×${h} = 3.14×${r*r}×${h} ≈ ${vol}`, W / 2, botY + depth + 46, '#2E7D32', 12, 'center', '600');
     }
    }
 
-   /*
-    * Step 2 动画：n 个扇形柱从圆柱右侧飞出，stagger 60ms/柱，各自滑到最终位置
-    */
-   function f4StartAnim(canvas, n) {
-    const D = f4D();
-    const { topY, blockW, cylCX, cylRx } = D;
-    const arcW = blockW / n;
-    const startXwithCyl = cylCX + cylRx + 30;
-    const srcXorange = cylCX + cylRx + 4;             // 橙色柱从圆柱右侧飞出
-    const srcXblue   = startXwithCyl + blockW + arcW; // 蓝色柱从右端反向插入
+   /* ─── Step 2 动画：橙色柱从圆柱飞出，蓝色柱从上方落下插入 ─── */
+   function f4StartAnim(canvas) {
+    const n = 8;
+    const D = f4D(n);
+    const { ch, arcW, depth, cylCX, cylRx, botY, startXcyl } = D;
 
-    const STAGGER = 60;   // ms
-    const COLDUR  = 380;  // 每柱飞行时间
-    const totalDur = STAGGER * n + COLDUR;
+    /* 橙色柱最终 x（偶数槽 0,2,4,6） */
+    const orangeFinalX = [0, 2, 4, 6].map(i => startXcyl + i * arcW);
+    /* 蓝色柱最终 x（奇数槽 1,3,5,7） */
+    const blueFinalX   = [1, 3, 5, 7].map(i => startXcyl + i * arcW);
+
+    /* 橙色起点：紧贴圆柱右边缘 */
+    const srcX = cylCX + cylRx + 2;
+    /* 蓝色起点：在橙色三角顶点上方（从上落入） */
+    const blueSrcBotY = botY - ch - 2 * depth - 32;
+
+    const STAGGER    = 70;   // ms/柱
+    const COLDUR     = 340;  // 飞行时长
+    const BLUE_START = 310;  // 蓝色开始落下的延迟
+    const totalDur   = BLUE_START + STAGGER * 4 + COLDUR + 50;
 
     if (f4State.animRaf) { cancelAnimationFrame(f4State.animRaf); f4State.animRaf = null; }
-    f4State.animDone = false;
     const t0 = performance.now();
 
     (function tick(now) {
@@ -364,36 +308,39 @@
      const ctx = canvas.getContext('2d');
      ctx.clearRect(0, 0, 420, 280);
 
-     /* 圆柱（固定） */
-     f4Cyl(ctx, cylCX, topY, D, true, n);
+     /* 圆柱固定 */
+     f4Cyl(ctx, cylCX, botY - ch, D, true, n);
 
-     /* 计算每柱当前 x：橙色从左飞，蓝色从右插入 */
-     const xs = [];
-     let anyMoving = false;
-     for (let i = 0; i < n; i++) {
-      const isBlue = (i % 2 === 1);
-      const srcX   = isBlue ? srcXblue : srcXorange;
-      const colElapsed = elapsed - i * STAGGER;
-      const p = Math.max(0, Math.min(1, colElapsed / COLDUR));
-      const pe = p * p * (3 - 2 * p);   // ease in-out
-      const finalX = startXwithCyl + i * arcW;
-      xs.push(srcX + (finalX - srcX) * pe);
-      if (pe < 1) anyMoving = true;
+     /* 橙色柱从左飞出（先画，在下层） */
+     for (let i = 0; i < 4; i++) {
+      const p  = Math.max(0, Math.min(1, (elapsed - i * STAGGER) / COLDUR));
+      const pe = p * p * (3 - 2 * p);
+      const x  = srcX + (orangeFinalX[i] - srcX) * pe;
+      f4ColOrange(ctx, x, botY, arcW, ch, depth);
      }
 
-     /* 画柱块（使用当前位置数组） */
-     f4DrawBlock(ctx, n, startXwithCyl, D, xs);
+     /* 蓝色柱从上落下（后画，在上层） */
+     for (let i = 0; i < 4; i++) {
+      const t = elapsed - BLUE_START - i * STAGGER;
+      if (t <= 0) continue;
+      const p  = Math.min(1, t / COLDUR);
+      const pe = p * p * (3 - 2 * p);
+      const x  = blueFinalX[i];
+      const y  = blueSrcBotY + (botY - blueSrcBotY) * pe;
+      f4ColBlue(ctx, x, y, arcW, ch, depth);
+     }
 
      /* 进度文字 */
-     const done = xs.filter((x, i) => Math.abs(x - (startXwithCyl + i * arcW)) < 1).length;
-     if (done < n) {
-      f4Label(ctx, `${done}/${n} 就位`, startXwithCyl + blockW / 2, D.botY + 18, '#555', 11, 'center', '400');
+     const od = [0,1,2,3].filter(i => (elapsed - i*STAGGER)/COLDUR >= 1).length;
+     const bd = [0,1,2,3].filter(i => (elapsed - BLUE_START - i*STAGGER)/COLDUR >= 1).length;
+     if (od < 4 || bd < 4) {
+      f4Label(ctx, `橙 ${od}/4 就位  蓝 ${bd}/4 落入`, startXcyl + F4BW / 2, botY + depth + 14, '#555', 11, 'center');
      }
 
-     if (elapsed < totalDur || anyMoving) {
+     if (elapsed < totalDur) {
       f4State.animRaf = requestAnimationFrame(tick);
      } else {
-      f4State.animRaf = null; f4State.animDone = true;
+      f4State.animRaf = null;
       f4DrawStep(canvas);
      }
     })(performance.now());
@@ -408,32 +355,26 @@
       draw(s) { const {canvas}=getF4Canvas(s); f4State.curStep=0; f4DrawStep(canvas); },
      },
      {
-      hint: '沿高度方向竖切成8等份——圆柱顶面可以看到8条切割线，得到8个扇形柱，每个柱的宽≈πr÷4，高=h。',
-      formula: '竖切8等份 → 8个扇形柱（宽≈πr/4，高=h的3D柱体）',
+      hint: '沿高度方向竖切成8等份：奇数号扇形柱（橙色）组成一组，偶数号（蓝色）组成另一组，蓝色组翻转180°准备咬合。',
+      formula: '竖切8等份 → 橙色奇数组（齿朝上）+ 蓝色偶数组（齿朝下，翻转）',
       dur: 100, noAutoFit: true,
       draw(s) { const {canvas}=getF4Canvas(s); f4State.curStep=1; f4DrawStep(canvas); },
      },
      {
-      hint: '8个扇形柱直立展开——从圆柱中飞出，一个个排开。每个柱有弧形顶面和矩形前面，整体像一本摊开的书。',
-      formula: '8个扇形柱直立排列 → 宽=8×arcW=2πr，高=h',
+      hint: '橙色扇形柱展开平铺（齿朝上），蓝色扇形柱从上方落入间隙（齿朝下），两者交替咬合成近似长方体！',
+      formula: '两组咬合 → 近似长方体（长≈πr，高=h，宽=r）',
       dur: 100, noAutoFit: true,
-      draw(s) { const {canvas}=getF4Canvas(s); f4State.curStep=2; f4StartAnim(canvas, 8); },
+      draw(s) { const {canvas}=getF4Canvas(s); f4State.curStep=2; f4StartAnim(canvas); },
      },
      {
-      hint: '切成16等份静态排列：长≈πr（半个圆周），高=h。虚线框勾勒出近似长方体的轮廓，切得越细越像长方体。',
-      formula: '16个扇形柱 → 长≈πr，高=h → 越来越像长方体',
+      hint: '切成16等份后更接近长方体：长≈πr（半圆周长），高=h，切得越细整体轮廓越平整。',
+      formula: '16份咬合 → 更接近长方体：长≈πr，高=h → V≈πr×r×h',
       dur: 100, noAutoFit: true,
       draw(s) { const {canvas}=getF4Canvas(s); f4State.curStep=3; f4DrawStep(canvas); },
-     },
-     {
-      hint: '切成32等份，三个维度都能看清：长≈πr、宽=r（顶面深度方向）、高=h。体积 ≈ πr×r×h = πr²h！',
-      formula: '32个扇形柱 ≈ 长方体：长≈πr，宽=r，高=h → V≈πr²h',
-      dur: 100, noAutoFit: true,
-      draw(s) { const {canvas}=getF4Canvas(s); f4State.curStep=4; f4DrawStep(canvas); },
      },
      {
       hint: '圆柱体积公式：V = πr²h。拖动滑块改变r和h，实时验算。',
       get formula() { const r=f4State.r,h=f4State.h; return `V = πr²h，r=${r}，h=${h} → V=3.14×${r}²×${h}≈${(3.14*r*r*h).toFixed(2)}`; },
       dur: 100, noAutoFit: true,
-      draw(s) { const {canvas}=getF4Canvas(s); f4State.curStep=5; f4DrawStep(canvas); },
+      draw(s) { const {canvas}=getF4Canvas(s); f4State.curStep=4; f4DrawStep(canvas); },
      },
