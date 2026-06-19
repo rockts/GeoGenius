@@ -26,6 +26,7 @@ e2_src   = root / 'src' / 'topics' / 'e2.js'
 e3_src   = root / 'src' / 'topics' / 'e3.js'
 f2_src   = root / 'src' / 'topics' / 'f2.js'
 f4_src   = root / 'src' / 'topics' / 'f4.js'
+f5_src   = root / 'src' / 'topics' / 'f5.js'
 inplace  = $INPLACE
 
 html = src_html.read_text('utf-8')
@@ -34,6 +35,7 @@ e2   = e2_src.read_text('utf-8')
 e3   = e3_src.read_text('utf-8')
 f2   = f2_src.read_text('utf-8')
 f4   = f4_src.read_text('utf-8')
+f5   = f5_src.read_text('utf-8')
 
 def extract_section(src, name):
     m = re.search(
@@ -64,6 +66,8 @@ html = replace_region(html, 'f2-helpers', extract_section(f2, 'helpers'))
 html = replace_region(html, 'f2-anims',   extract_section(f2, 'anims'))
 html = replace_region(html, 'f4-helpers', extract_section(f4, 'helpers'))
 html = replace_region(html, 'f4-anims',   extract_section(f4, 'anims'))
+html = replace_region(html, 'f5-helpers', extract_section(f5, 'helpers'))
+html = replace_region(html, 'f5-anims',   extract_section(f5, 'anims'))
 
 if inplace:
     src_html.write_text(html, 'utf-8')
