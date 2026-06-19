@@ -444,9 +444,10 @@
 
    /* ─── 动画入口：p===0 时强制重启，animTick 后续帧复用已跑的 RAF ───
       forceRestart=true  → 主 app 新一轮（run() 发来 p=0），必须重启
-      forceRestart=false → animTick 中途调用，动画已在跑则忽略         */
+      forceRestart=false → animTick 中途调用：正在播放(animRaf)或已结束(animT0===0)
+                           都忽略，避免 f4 自身 RAF 先结束后被重启成死循环。 */
    function f4StartAnim(canvas, forceRestart) {
-    if (!forceRestart && f4State.animRaf) return;
+    if (!forceRestart && (f4State.animRaf || f4State.animT0 === 0)) return;
     if (f4State.animRaf) { cancelAnimationFrame(f4State.animRaf); f4State.animRaf = null; }
 
     const SM  = (typeof slowMode !== 'undefined' && slowMode) ? 1.9 : 1;
