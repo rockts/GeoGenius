@@ -149,7 +149,7 @@
      const hMid = [FBR[0] + 18, (FBR[1]+FTR[1])/2];
      g1Lbl(ctx, 'h = '+h, hMid[0], hMid[1], G1_CH, 12, 'center', 'bold', 'rgba(255,255,255,0.8)');
      // Info card on right
-     const cw = 168, ch = 114;
+     const cw = 168, ch = 136;
      const cx = Math.max(RX, 245), cy = (H - ch) / 2;
      g1Box(ctx, cx, cy, cw, ch, 8, '#F8F6F0', '#8A7860', 1.5);
      g1Lbl(ctx, '长方体的特征', cx+cw/2, cy+18, '#4A3820', 13, 'center', 'bold');
@@ -158,10 +158,10 @@
       ['6',  '个面', '#2E9E6B'],
       ['8',  '个顶点','#5C7CE0'],
      ].forEach(([n, label, c], i) => {
-      g1Lbl(ctx, n,     cx+28, cy+44+i*24, c,      20, 'center', 'bold');
-      g1Lbl(ctx, label, cx+60, cy+44+i*24, '#333', 13, 'left');
+      g1Lbl(ctx, n,     cx+28, cy+46+i*24, c,      20, 'center', 'bold');
+      g1Lbl(ctx, label, cx+60, cy+46+i*24, '#333', 13, 'left');
      });
-     g1Lbl(ctx, '相对的面完全相同', cx+cw/2, cy+ch-14, '#888', 11, 'center');
+     g1Lbl(ctx, '相对的面完全相同', cx+cw/2, cy+120, '#888', 11, 'center');
     }
 
     // ── Step 1: highlight 3 pairs of opposite faces ──────────────────────────
