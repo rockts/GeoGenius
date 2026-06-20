@@ -5989,110 +5989,101 @@
      g2Lbl(ctx,'三条边 + 三个角 + 三个顶点',W/2-14,265,'#555',11,'center');
     }
 
-    // ── Step 1: 按角分类（交互式） ─────────────────────────────────────────────
+    // ── Step 1: 按角分类（纯滑块驱动） ─────────────────────────────────────────
     if (step===1) {
      const {A,B,C}=g2MainPts();
      const aA=g2Ang(B,A,C), aB=g2Ang(A,B,C), aC=g2Ang(A,C,B);
      const cls=g2Classify(aA,aB,aC);
      const mx=Math.max(aA,aB,aC);
 
-     // Triangle fill colored by current type
      g2DrawTri(ctx,[A,B,C],cls.color+'18',cls.color,2);
 
-     // Angle arcs — highlight the largest angle
+     // Angle arcs — largest angle highlighted
      [[A,B,C,G2_CA,aA],[B,A,C,G2_CB,aB],[C,A,B,G2_CC,aC]].forEach(([v,p1,p2,col,ang])=>{
       const isMax=ang===mx;
       if (Math.abs(ang-90)<=1) g2RightMark(ctx,v,p1,p2,14,col);
-      else g2Arc(ctx,v,p1,p2,isMax?26:16,col,isMax?0.55:0.18);
+      else g2Arc(ctx,v,p1,p2,isMax?28:16,col,isMax?0.55:0.18);
      });
 
-     // Angle labels — keep close to vertex, always inside triangle
-     g2Lbl(ctx,aA+'°',A[0]+26,A[1]-10,G2_CA,10,'center','bold','rgba(255,255,255,0.85)');
-     g2Lbl(ctx,aB+'°',B[0]-26,B[1]-10,G2_CB,10,'center','bold','rgba(255,255,255,0.85)');
-     // aC label: above or below C depending on position
-     const cLblY=C[1]<100?C[1]+22:C[1]-14;
-     g2Lbl(ctx,aC+'°',C[0],cLblY,G2_CC,10,'center','bold','rgba(255,255,255,0.85)');
-
-     // Bottom info bar (replaces right card — no overlap possible)
-     const clsDesc={'锐角三角形':'三个角都 < 90°','直角三角形':'一个角 = 90°','钝角三角形':'最大角 > 90°'};
-     const barY=226,barH=26;
-     g2Box(ctx,8,barY,404,barH,6,cls.color+'14',cls.color,1.5);
-     g2Lbl(ctx,cls.type,72,barY+barH/2+4,cls.color,14,'center','bold');
-     g2Lbl(ctx,'·',152,barY+barH/2+4,'#bbb',12,'center');
-     g2Lbl(ctx,clsDesc[cls.type],250,barY+barH/2+4,'#444',11,'center');
-     g2Lbl(ctx,'最大角='+mx+'°',370,barY+barH/2+4,cls.color,11,'center','bold');
-
-     // Bottom type-chip row
-     const angChips=[{type:'锐角三角形',color:'#1A7A40'},{type:'直角三角形',color:'#8B4000'},{type:'钝角三角形',color:'#6030B0'}];
-     angChips.forEach(({type,color},i)=>{
-      const chipX=18+i*134, chipW=124, active=type===cls.type;
-      g2Box(ctx,chipX,260,chipW,18,4,active?color+'20':'#F5F5F5',active?color:'#ccc',active?2:1);
-      g2Lbl(ctx,type,chipX+chipW/2,269,active?color:'#aaa',10,'center',active?'bold':'normal');
+     // Vertex dots
+     [[A,G2_CA],[B,G2_CB],[C,G2_CC]].forEach(([pt,col])=>{
+      ctx.save(); ctx.fillStyle=col;
+      ctx.beginPath(); ctx.arc(pt[0],pt[1],4,0,Math.PI*2); ctx.fill(); ctx.restore();
      });
-     g2Lbl(ctx,'拖动滑块改变三角形——实时显示分类',W/2,278,'#777',10,'center');
+
+     // Angle value labels — smart offsets to avoid overlap
+     const bg='rgba(255,255,255,0.9)';
+     // A is bottom-left: label right and up
+     g2Lbl(ctx,aA+'°',A[0]+30,A[1]-8,G2_CA,11,'center','bold',bg);
+     // B is bottom-right: label left and up
+     g2Lbl(ctx,aB+'°',B[0]-30,B[1]-8,G2_CB,11,'center','bold',bg);
+     // C is top-center: label below-center, nudge away from edges
+     const cLx=Math.max(40,Math.min(380,C[0]));
+     g2Lbl(ctx,aC+'°',cLx,C[1]+20,G2_CC,11,'center','bold',bg);
+
+     // Bottom classification bar
+     const clsDesc1={'锐角三角形':'三个角都小于 90°','直角三角形':'有一个角等于 90°','钝角三角形':'有一个角大于 90°'};
+     g2Box(ctx,8,222,404,28,6,cls.color+'14',cls.color,1.5);
+     g2Lbl(ctx,cls.type,100,236,cls.color,15,'center','bold');
+     g2Lbl(ctx,clsDesc1[cls.type],255,236,'#333',11,'center');
+     g2Lbl(ctx,'最大角 '+mx+'°',385,236,cls.color,11,'center','bold');
+     g2Lbl(ctx,'拖动"顶点位置"滑块，观察分类变化',W/2,264,'#888',10,'center');
     }
 
-    // ── Step 2: 按边分类（滑块三段切换） ─────────────────────────────────────
+    // ── Step 2: 按边分类（纯滑块驱动） ─────────────────────────────────────────
     if (step===2) {
-     // Slider range 50-270 divided into 3 equal zones
-     const typeIdx = g2State.tx < 123 ? 0 : g2State.tx < 197 ? 1 : 2;
-     // Visually distinct shapes: equilateral / narrow-base isosceles / lopsided scalene
-     const tDefs=[
-      { label:'等边三角形', desc:'三边相等', formula:'a = b = c',
-        color:'#1A5FA8', fill:'rgba(50,110,230,0.18)',
-        A:[4,188], B:[88,188], C:[46,115], tk:[1,1,1],
-        sides:['a','b','c'], eq:[true,true,true] },
-      { label:'等腰三角形', desc:'两腰相等', formula:'a = b ≠ c',
-        color:'#C07020', fill:'rgba(220,150,30,0.18)',
-        A:[118,188], B:[162,188], C:[140,105], tk:[1,1,2],
-        sides:['a','b','c'], eq:[true,true,false] },
-      { label:'不等边三角形', desc:'三边各不等', formula:'a ≠ b ≠ c',
-        color:'#A03060', fill:'rgba(200,50,110,0.18)',
-        A:[195,192], B:[285,192], C:[217,118], tk:[0,0,0],
-        sides:['a','b','c'], eq:[false,false,false] },
-     ];
-     tDefs.forEach(({label,desc,color,fill,A,B,C,tk,sides,eq},i)=>{
-      const active=i===typeIdx;
-      ctx.save(); ctx.globalAlpha=active?1:0.18;
-      g2DrawTri(ctx,[A,B,C],active?fill:'rgba(150,150,150,0.05)',active?color:'#bbb',active?2.5:1);
-      if (active) {
-       // Tick marks on equal sides
-       if (tk[0]) g2Tick(ctx,A,C,tk[0],color);
-       if (tk[1]) g2Tick(ctx,B,C,tk[1],color);
-       if (tk[2]) g2Tick(ctx,A,B,tk[2],color);
-       // Side labels (a, b, c) with background
-       const bg='rgba(255,255,255,0.88)';
-       const lAC=Math.round(Math.hypot(C[0]-A[0],C[1]-A[1])/5);
-       const lBC=Math.round(Math.hypot(C[0]-B[0],C[1]-B[1])/5);
-       const lAB=Math.round(Math.hypot(B[0]-A[0],B[1]-A[1])/5);
-       g2Lbl(ctx,'b='+lAC,(A[0]+C[0])/2-14,(A[1]+C[1])/2,color,10,'center','bold',bg);
-       g2Lbl(ctx,'a='+lBC,(B[0]+C[0])/2+14,(B[1]+C[1])/2,color,10,'center','bold',bg);
-       g2Lbl(ctx,'c='+lAB,(A[0]+B[0])/2,(A[1]+B[1])/2+13,color,10,'center','bold',bg);
-      }
-      const midX=(A[0]+B[0])/2;
-      g2Lbl(ctx,label,midX,A[1]+20,active?color:'#ccc',11,'center',active?'bold':'normal');
-      if (active) g2Lbl(ctx,desc,midX,A[1]+34,color,10,'center');
-      ctx.restore();
-     });
+     const {A,B,C}=g2MainPts();
+     const rAB=Math.hypot(B[0]-A[0],B[1]-A[1]);
+     const rAC=Math.hypot(C[0]-A[0],C[1]-A[1]);
+     const rBC=Math.hypot(C[0]-B[0],C[1]-B[1]);
+     // Relative-tolerance side equality: within 10% of harmonic mean
+     const near=(a,b)=>Math.abs(a-b)/((a+b)/2)<0.10;
+     const eqAC_BC=near(rAC,rBC), eqAB_AC=near(rAB,rAC), eqAB_BC=near(rAB,rBC);
+     let sc;
+     if (eqAC_BC&&eqAB_AC&&eqAB_BC) sc={type:'等边三角形',color:'#1A5FA8',rel:'a = b = c'};
+     else if (eqAC_BC||eqAB_AC||eqAB_BC) sc={type:'等腰三角形',color:'#C07020',rel:'两腰相等'};
+     else sc={type:'不等边三角形',color:'#A03060',rel:'三边各不相等'};
 
-     // Right info card for selected type
-     const sel=tDefs[typeIdx];
-     const RX=298,cw=116,ch=114,cy=(H-ch)/2;
-     g2Box(ctx,RX,cy,cw,ch,8,'#FAFAFA',sel.color,2.5);
-     g2Lbl(ctx,'按边分类',RX+cw/2,cy+16,'#888',11,'center');
-     g2Lbl(ctx,sel.label,RX+cw/2,cy+48,sel.color,14,'center','bold');
-     g2Lbl(ctx,sel.formula,RX+cw/2,cy+72,sel.color,14,'center','bold');
-     const sideProps={'等边三角形':'三个内角都是60°','等腰三角形':'两底角相等','不等边三角形':'三个角互不相等'};
-     g2Lbl(ctx,sideProps[sel.label],RX+cw/2,cy+ch-14,sel.color,10,'center');
+     g2DrawTri(ctx,[A,B,C],sc.color+'18',sc.color,2);
 
-     // Three-zone chip strip at bottom — shows slider zones
-     const chipDefs=[{t:'等边',c:'#1A5FA8'},{t:'等腰',c:'#C07020'},{t:'不等边',c:'#A03060'}];
-     chipDefs.forEach(({t,c},i)=>{
-      const chipX=10+i*138,chipW=128,active=i===typeIdx;
-      g2Box(ctx,chipX,240,chipW,22,4,active?c+'22':'#F5F5F5',active?c:'#ccc',active?2:1);
-      g2Lbl(ctx,t+'三角形',chipX+chipW/2,251,active?c:'#aaa',11,'center',active?'bold':'normal');
+     // Tick marks on equal sides
+     if (eqAC_BC||eqAB_AC&&eqAB_BC) {
+      if (eqAC_BC) g2Tick(ctx,A,C,1,sc.color);
+      if (eqAC_BC) g2Tick(ctx,B,C,1,sc.color);
+      if (eqAB_AC) g2Tick(ctx,A,B,eqAC_BC?1:2,sc.color);
+      if (eqAB_BC&&!eqAB_AC) g2Tick(ctx,A,B,2,sc.color);
+      if (eqAB_BC&&!eqAC_BC) g2Tick(ctx,B,C,2,sc.color);
+      if (eqAB_AC&&!eqAC_BC) g2Tick(ctx,A,C,2,sc.color);
+     }
+
+     // Side length labels (in /8 units, 1 decimal)
+     const bg2='rgba(255,255,255,0.9)';
+     const lAB=(rAB/8).toFixed(1), lAC=(rAC/8).toFixed(1), lBC=(rBC/8).toFixed(1);
+     // b = AC (left side): label left of midpoint
+     const bmx=(A[0]+C[0])/2, bmy=(A[1]+C[1])/2;
+     g2Lbl(ctx,'b='+lAC,bmx-20,bmy,sc.color,10,'center','bold',bg2);
+     // a = BC (right side): label right of midpoint
+     const amx=(B[0]+C[0])/2, amy=(B[1]+C[1])/2;
+     g2Lbl(ctx,'a='+lBC,amx+20,amy,sc.color,10,'center','bold',bg2);
+     // c = AB (base): label ABOVE the base to avoid bar overlap
+     g2Lbl(ctx,'c='+lAB,(A[0]+B[0])/2,A[1]-10,sc.color,10,'center','bold',bg2);
+
+     // Vertex dots + labels (A,B at side to avoid bar at y=222+)
+     [[A,sc.color],[B,sc.color],[C,sc.color]].forEach(([pt,col])=>{
+      ctx.save(); ctx.fillStyle=col;
+      ctx.beginPath(); ctx.arc(pt[0],pt[1],4,0,Math.PI*2); ctx.fill(); ctx.restore();
      });
-     g2Lbl(ctx,'← 拖动滑块切换三种类型 →',W/2,272,'#888',10,'center');
+     g2Lbl(ctx,'A',A[0]-16,A[1]-4,sc.color,11,'center','bold',bg2);
+     g2Lbl(ctx,'B',B[0]+16,B[1]-4,sc.color,11,'center','bold',bg2);
+     const cLx2=Math.max(20,Math.min(400,C[0]));
+     g2Lbl(ctx,'C',cLx2,C[1]-14,sc.color,11,'center','bold',bg2);
+
+     // Bottom classification bar
+     g2Box(ctx,8,222,404,28,6,sc.color+'14',sc.color,1.5);
+     g2Lbl(ctx,sc.type,100,236,sc.color,15,'center','bold');
+     g2Lbl(ctx,sc.rel,240,236,'#333',11,'center');
+     g2Lbl(ctx,'a='+lBC+'  b='+lAC+'  c='+lAB,365,236,sc.color,10,'center','bold');
+     g2Lbl(ctx,'拖动"顶点位置"滑块，观察边长分类变化',W/2,264,'#888',10,'center');
     }
 
     // ── Step 3: 内角和 = 180° ─────────────────────────────────────────────────
@@ -6169,15 +6160,25 @@
     if (o) o.remove();
    }
 
+   function g2SideCls() {
+    const {A,B,C}=g2MainPts();
+    const rAB=Math.hypot(B[0]-A[0],B[1]-A[1]);
+    const rAC=Math.hypot(C[0]-A[0],C[1]-A[1]);
+    const rBC=Math.hypot(C[0]-B[0],C[1]-B[1]);
+    const near=(a,b)=>Math.abs(a-b)/((a+b)/2)<0.10;
+    const eAC_BC=near(rAC,rBC),eAB_AC=near(rAB,rAC),eAB_BC=near(rAB,rBC);
+    if (eAC_BC&&eAB_AC&&eAB_BC) return {type:'等边三角形',color:'#1A5FA8',la:(rAB/8).toFixed(1),lb:(rAC/8).toFixed(1),lc:(rAB/8).toFixed(1)};
+    if (eAC_BC||eAB_AC||eAB_BC) return {type:'等腰三角形',color:'#C07020',la:(rBC/8).toFixed(1),lb:(rAC/8).toFixed(1),lc:(rAB/8).toFixed(1)};
+    return {type:'不等边三角形',color:'#A03060',la:(rBC/8).toFixed(1),lb:(rAC/8).toFixed(1),lc:(rAB/8).toFixed(1)};
+   }
+
    function g2UpdateInfo() {
     const el=document.getElementById('g2-info');
     if (!el) return;
     if (g2State.curStep===2) {
-     const typeIdx=g2State.tx<123?0:g2State.tx<197?1:2;
-     const types=['等边三角形','等腰三角形','不等边三角形'];
-     const colors=['#1A5FA8','#C07020','#A03060'];
-     el.textContent=`当前：${types[typeIdx]}`;
-     el.style.color=colors[typeIdx];
+     const sc=g2SideCls();
+     el.textContent=`a=${sc.la}  b=${sc.lb}  c=${sc.lc}　→　${sc.type}`;
+     el.style.color=sc.color;
      return;
     }
     const {A,B,C}=g2MainPts();
@@ -6209,16 +6210,20 @@
        顶点位置
        <input id="g2-tx" type="range" min="50" max="270" step="5" value="${g2State.tx}" style="width:130px;accent-color:#3060B0">
       </label>
+      <button id="g2-reset" style="font-size:11px;padding:2px 10px;border:1px solid #aaa;border-radius:12px;background:#fff;color:#666;cursor:pointer">恢复默认</button>
       <span id="g2-info" style="font-size:11px;color:#555;font-weight:600"></span>`;
      wrap.after(overlay);
      const ref=canvas;
-     document.getElementById('g2-tx').addEventListener('input',function(){
-      g2State.tx=+this.value;
+     const onTxChange=()=>{
       g2UpdateInfo();
       if (g2State.animRaf) { cancelAnimationFrame(g2State.animRaf); g2State.animRaf=null; }
       g2DrawStep(ref);
       const sf=document.getElementById('sform');
-      try { if(sf) sf.textContent=ANIMS[ct.id][cs].formula; } catch(e2){}
+      try { if(sf) sf.textContent=ANIMS[ct][cs].formula; } catch(e2){}
+     };
+     document.getElementById('g2-tx').addEventListener('input',function(){ g2State.tx=+this.value; onTxChange(); });
+     document.getElementById('g2-reset').addEventListener('click',function(){
+      g2State.tx=150; document.getElementById('g2-tx').value=150; onTxChange();
      });
      g2UpdateInfo();
     }
@@ -8520,8 +8525,8 @@
       draw(s) { const {canvas}=getG2Canvas(s); g2State.curStep=1; g2DrawStep(canvas); },
      },
      {
-      hint: '按边长分类：三边相等是等边三角形；两腰相等是等腰三角形；三边都不相等是不等边三角形。拖动滑块左/中/右切换三种类型！',
-      get formula() { const typeIdx=g2State.tx<123?0:g2State.tx<197?1:2; return ['等边三角形（a=b=c）','等腰三角形（a=b≠c）','不等边三角形（a≠b≠c）'][typeIdx]; },
+      hint: '按边长分类：三边相等是等边三角形；两边相等是等腰三角形；三边都不相等是不等边三角形。拖动滑块移动顶点C，边长数字实时更新，分类自动判定。',
+      get formula() { const sc=g2SideCls(); return sc.type+'：a='+sc.la+'  b='+sc.lb+'  c='+sc.lc; },
       dur: 100, noAutoFit: true,
       draw(s) { const {canvas}=getG2Canvas(s); g2State.curStep=2; g2DrawStep(canvas); },
      },
