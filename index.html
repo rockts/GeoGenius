@@ -6006,28 +6006,30 @@
       else g2Arc(ctx,v,p1,p2,isMax?26:16,col,isMax?0.55:0.18);
      });
 
-     // Angle labels
-     g2Lbl(ctx,aA+'°',A[0]+26,A[1]-10,G2_CA,10,'center');
-     g2Lbl(ctx,aB+'°',B[0]-26,B[1]-10,G2_CB,10,'center');
-     g2Lbl(ctx,aC+'°',C[0]+4,C[1]+22,G2_CC,10,'center');
+     // Angle labels — keep close to vertex, always inside triangle
+     g2Lbl(ctx,aA+'°',A[0]+26,A[1]-10,G2_CA,10,'center','bold','rgba(255,255,255,0.85)');
+     g2Lbl(ctx,aB+'°',B[0]-26,B[1]-10,G2_CB,10,'center','bold','rgba(255,255,255,0.85)');
+     // aC label: above or below C depending on position
+     const cLblY=C[1]<100?C[1]+22:C[1]-14;
+     g2Lbl(ctx,aC+'°',C[0],cLblY,G2_CC,10,'center','bold','rgba(255,255,255,0.85)');
 
-     // Classification card on right
-     const clsDesc={'锐角三角形':'三个角都 < 90°','直角三角形':'一个角 = 90°','钝角三角形':'一个角 > 90°'};
-     const RX=256,cw=154,ch=108,cy=(H-ch)/2-10;
-     g2Box(ctx,RX,cy,cw,ch,8,'#FAFAFA',cls.color,2.5);
-     g2Lbl(ctx,'按角分类',RX+cw/2,cy+16,'#777',11,'center');
-     g2Lbl(ctx,cls.type,RX+cw/2,cy+50,cls.color,18,'center','bold');
-     g2Lbl(ctx,clsDesc[cls.type],RX+cw/2,cy+74,'#555',11,'center');
-     g2Lbl(ctx,'最大角 = '+mx+'°',RX+cw/2,cy+ch-12,cls.color,12,'center','bold');
+     // Bottom info bar (replaces right card — no overlap possible)
+     const clsDesc={'锐角三角形':'三个角都 < 90°','直角三角形':'一个角 = 90°','钝角三角形':'最大角 > 90°'};
+     const barY=226,barH=26;
+     g2Box(ctx,8,barY,404,barH,6,cls.color+'14',cls.color,1.5);
+     g2Lbl(ctx,cls.type,72,barY+barH/2+4,cls.color,14,'center','bold');
+     g2Lbl(ctx,'·',152,barY+barH/2+4,'#bbb',12,'center');
+     g2Lbl(ctx,clsDesc[cls.type],250,barY+barH/2+4,'#444',11,'center');
+     g2Lbl(ctx,'最大角='+mx+'°',370,barY+barH/2+4,cls.color,11,'center','bold');
 
-     // Bottom type-chip row (shows which type is currently active)
+     // Bottom type-chip row
      const angChips=[{type:'锐角三角形',color:'#1A7A40'},{type:'直角三角形',color:'#8B4000'},{type:'钝角三角形',color:'#6030B0'}];
      angChips.forEach(({type,color},i)=>{
       const chipX=18+i*134, chipW=124, active=type===cls.type;
-      g2Box(ctx,chipX,247,chipW,22,4,active?color+'20':'#F5F5F5',active?color:'#ccc',active?2:1);
-      g2Lbl(ctx,type,chipX+chipW/2,258,active?color:'#aaa',11,'center',active?'bold':'normal');
+      g2Box(ctx,chipX,260,chipW,18,4,active?color+'20':'#F5F5F5',active?color:'#ccc',active?2:1);
+      g2Lbl(ctx,type,chipX+chipW/2,269,active?color:'#aaa',10,'center',active?'bold':'normal');
      });
-     g2Lbl(ctx,'拖动滑块改变三角形——实时显示分类',W/2-14,276,'#555',10,'center');
+     g2Lbl(ctx,'拖动滑块改变三角形——实时显示分类',W/2,278,'#777',10,'center');
     }
 
     // ── Step 2: 按边分类（滑块三段切换） ─────────────────────────────────────
