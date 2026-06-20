@@ -6219,7 +6219,7 @@
       if (g2State.animRaf) { cancelAnimationFrame(g2State.animRaf); g2State.animRaf=null; }
       g2DrawStep(ref);
       const sf=document.getElementById('sform');
-      try { if(sf) sf.textContent=ANIMS[ct][cs].formula; } catch(e2){}
+      try { if(sf&&g2State.curStep>=0) sf.textContent=ANIMS['g2'][g2State.curStep].formula; } catch(e2){}
      };
      document.getElementById('g2-tx').addEventListener('input',function(){ g2State.tx=+this.value; onTxChange(); });
      document.getElementById('g2-reset').addEventListener('click',function(){
