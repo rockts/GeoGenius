@@ -6670,6 +6670,155 @@
    }
    // @@BUILD_END:g3-helpers@@
 
+   /* ── d1 角的度量 交互状态 ── */
+   const d1State = { deg: 65 };
+
+   function d1DrawAngle(canvas) {
+    const ctx = canvas.getContext('2d');
+    const W = canvas.width, H = canvas.height;
+    ctx.clearRect(0, 0, W, H);
+    const deg = d1State.deg;
+    const rad = deg * Math.PI / 180;
+    const cx = 115, cy = 160, len = 115;
+
+    // ── 画第一条射线 OA ──
+    ctx.strokeStyle = '#1A5FA8'; ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx+len, cy); ctx.stroke();
+    // 箭头
+    ctx.fillStyle = '#1A5FA8';
+    ctx.beginPath(); ctx.moveTo(cx+len,cy); ctx.lineTo(cx+len-9,cy-4); ctx.lineTo(cx+len-9,cy+4); ctx.closePath(); ctx.fill();
+    // 标注 A
+    ctx.font = "bold 13px 'Noto Sans SC',sans-serif"; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText('A', cx+len+16, cy);
+
+    // ── 量角器（半圆，半透明） ──
+    const pr = 95;
+    ctx.save();
+    ctx.globalAlpha = 0.78;
+    ctx.fillStyle = 'rgba(240,234,220,0.82)'; ctx.strokeStyle = '#A09080'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(cx+pr, cy); ctx.arc(cx, cy, pr, Math.PI, 0, true); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cx-pr,cy); ctx.lineTo(cx+pr,cy); ctx.strokeStyle='#A09080'; ctx.lineWidth=1; ctx.stroke();
+    // 刻度
+    for (let a=0; a<=180; a+=10) {
+     const r = a*Math.PI/180;
+     const tickLen = a%30===0 ? 10 : 5;
+     ctx.strokeStyle='#9A8878'; ctx.lineWidth = a%90===0?1.5:0.7;
+     ctx.beginPath();
+     ctx.moveTo(cx+(pr-tickLen)*Math.cos(r), cy-(pr-tickLen)*Math.sin(r));
+     ctx.lineTo(cx+pr*Math.cos(r), cy-pr*Math.sin(r)); ctx.stroke();
+     if (a%30===0 && a>0 && a<180) {
+      ctx.fillStyle='#7A6858'; ctx.font="8px sans-serif"; ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText(String(a), cx+76*Math.cos(r), cy-76*Math.sin(r));
+     }
+    }
+    // 中心十字
+    ctx.strokeStyle='#C03030'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(cx-6,cy); ctx.lineTo(cx+6,cy); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cx,cy-6); ctx.lineTo(cx,cy+6); ctx.stroke();
+    ctx.globalAlpha = 1;
+    ctx.restore();
+
+    // ── 目标刻度红色指针 ──
+    const tx = cx + pr*Math.cos(rad), ty = cy - pr*Math.sin(rad);
+    ctx.strokeStyle='#C03030'; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.moveTo(cx+(pr-12)*Math.cos(rad), cy-(pr-12)*Math.sin(rad)); ctx.lineTo(tx,ty); ctx.stroke();
+    ctx.fillStyle='#C03030';
+    ctx.beginPath(); ctx.arc(tx, ty, 4, 0, Math.PI*2); ctx.fill();
+    // 度数标注
+    ctx.font="bold 13px 'Noto Sans SC',sans-serif"; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(deg+'°', cx+(pr+16)*Math.cos(rad), cy-(pr+16)*Math.sin(rad));
+
+    // ── 第二条射线 OB（已画好的角） ──
+    const bx = cx+len*Math.cos(rad), by = cy-len*Math.sin(rad);
+    ctx.strokeStyle='#9A5800'; ctx.lineWidth=2.5;
+    ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(bx,by); ctx.stroke();
+    const aang = Math.atan2(by-cy, bx-cx);
+    ctx.fillStyle='#9A5800';
+    ctx.beginPath(); ctx.moveTo(bx,by);
+    ctx.lineTo(bx-9*Math.cos(aang-0.35), by-9*Math.sin(aang-0.35));
+    ctx.lineTo(bx-9*Math.cos(aang+0.35), by-9*Math.sin(aang+0.35));
+    ctx.closePath(); ctx.fill();
+    // 标注 B
+    ctx.font="bold 13px 'Noto Sans SC',sans-serif"; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText('B', bx+14*Math.cos(rad), by-14*Math.sin(rad));
+
+    // ── 角弧线 + 标注 ──
+    ctx.strokeStyle='#9A5800'; ctx.lineWidth=1.5;
+    ctx.fillStyle='rgba(154,88,0,0.10)';
+    ctx.beginPath(); ctx.moveTo(cx,cy);
+    ctx.arc(cx, cy, 30, 0, -rad, true); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.arc(cx, cy, 30, 0, -rad, true); ctx.stroke();
+    const midRad = rad/2;
+    ctx.fillStyle='#9A5800'; ctx.font="bold 14px 'Noto Sans SC',sans-serif";
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText('∠AOB = '+deg+'°', cx+56*Math.cos(midRad), cy-56*Math.sin(midRad));
+
+    // ── 顶点 O ──
+    ctx.fillStyle='#9A5800';
+    ctx.beginPath(); ctx.arc(cx,cy,4,0,Math.PI*2); ctx.fill();
+    ctx.font="bold 13px 'Noto Sans SC',sans-serif"; ctx.textAlign='center'; ctx.textBaseline='top';
+    ctx.fillText('O', cx, cy+8);
+
+    // ── 右侧五步说明 ──
+    const steps = [
+     ['① 画射线OA（一条边）','#1A5FA8'],
+     ['② 量角器中心→顶点O','#0A7050'],
+     ['③ 0刻度线对齐OA','#0A7050'],
+     ['④ 在'+deg+'°处点标记点','#C03030'],
+     ['⑤ 连OB，标∠AOB='+deg+'°','#9A5800'],
+    ];
+    steps.forEach(([txt, col], i) => {
+     ctx.fillStyle = col;
+     ctx.font = `11px 'Noto Sans SC',sans-serif`;
+     ctx.textAlign='left'; ctx.textBaseline='middle';
+     ctx.fillText(txt, 258, 52+i*30);
+    });
+   }
+
+   function getD1Canvas(sv) {
+    const svg = sv.ownerSVGElement || document.getElementById('asvg');
+    const wrap = svg.closest('.canvas-wrap') || svg.parentElement;
+    let canvas = document.getElementById('d1-canvas');
+    if (!canvas) {
+     svg.style.display = 'none';
+     canvas = document.createElement('canvas');
+     canvas.id = 'd1-canvas'; canvas.width = 460; canvas.height = 220;
+     Object.assign(canvas.style, {display:'block',maxWidth:'100%',height:'auto',borderRadius:'6px'});
+     wrap.appendChild(canvas);
+
+     const ov = document.createElement('div');
+     ov.id = 'd1-overlay';
+     Object.assign(ov.style, {display:'flex',gap:'10px',alignItems:'center',justifyContent:'center',
+      flexWrap:'wrap',padding:'6px 0 2px',fontSize:'13px',fontFamily:"'Noto Sans SC',sans-serif"});
+     ov.innerHTML = `
+      <label style="display:flex;align-items:center;gap:6px;color:#9A5800;font-weight:600">
+       目标角度 <input id="d1-ang" type="range" min="25" max="155" step="5" value="${d1State.deg}" style="width:130px;accent-color:#9A5800">
+      </label>
+      <span id="d1-ang-lbl" style="font-size:15px;font-weight:700;color:#9A5800;min-width:38px">${d1State.deg}°</span>
+      <button id="d1-reset" style="font-size:11px;padding:2px 10px;border:1px solid #aaa;border-radius:12px;background:#fff;color:#666;cursor:pointer">恢复默认</button>`;
+     wrap.after(ov);
+
+     const ref = canvas;
+     const onUpdate = () => {
+      d1DrawAngle(ref);
+      const sf = document.getElementById('sform');
+      try { if(sf) sf.textContent = `画出 ${d1State.deg}° 的角`; } catch(e) {}
+     };
+     document.getElementById('d1-ang').addEventListener('input', function() {
+      d1State.deg = +this.value;
+      document.getElementById('d1-ang-lbl').textContent = d1State.deg+'°';
+      onUpdate();
+     });
+     document.getElementById('d1-reset').addEventListener('click', () => {
+      d1State.deg = 65;
+      document.getElementById('d1-ang').value = 65;
+      document.getElementById('d1-ang-lbl').textContent = '65°';
+      onUpdate();
+     });
+    }
+    return { canvas };
+   }
+
    const ANIMS = {
     /* ── 一年级 ── */
     a1: [
@@ -8224,87 +8373,47 @@
       },
      },
      {
-      hint:
-       '三角形内角和=180°（任意三角形），四边形内角和=360°（=两个三角形×180°）。',
-      formula: '三角形∠和=180° | 四边形∠和=360°',
-      dur: 1300,
-      draw(s, t) {
-       const A = [68, 162],
-        B = [258, 162],
-        Cp = [188, 66];
-       PL(s, [A, B, Cp], '#FEF0DC', '#9A5800', 2);
-       if (t > 0.4) {
-        T(s, A[0] - 14, A[1] + 13, '∠A', '#6A3A00', 12, 'start');
-        T(s, B[0] + 6, B[1] + 13, '∠B', '#6A3A00', 12, 'start');
-        T(s, Cp[0], Cp[1] - 12, '∠C', '#6A3A00', 12);
-       }
-       if (t > 0.72) {
-        T(s, 365, 94, '∠A+∠B+∠C', '#6A3A00', 12, 'middle');
-        T(s, 365, 116, '= 180°', '#9A5800', 21, 'middle', '700');
-       }
-      },
+      hint: '画角：先画射线OA作为一边，量角器中心对准顶点O，0线对齐OA，在目标刻度处标点B，连OB即得目标角。拖动滑块换角度。',
+      get formula() { return `画出 ${d1State.deg}° 的角`; },
+      dur: 100, noAutoFit: true,
+      draw(s) { const {canvas}=getD1Canvas(s); d1DrawAngle(canvas); },
      },
      {
-      hint:
-       '锐角三角形：三角均为锐角；直角三角形：一角为直角；钝角三角形：一角为钝角。',
-      formula: '三角形按角分类：锐角/直角/钝角三角形',
-      dur: 1200,
+      hint: '估角练习：先目测估一估这个角大约多少度，再看量角器测量结果。锐角<90°，直角=90°，钝角>90°。',
+      formula: '估角 → 测量验证 → 对比误差',
+      dur: 2000,
       draw(s, t) {
-       if (t > 0.05) {
-        PL(
-         s,
-         [
-          [36, 156],
-          [124, 156],
-          [80, 78],
-         ],
-         '#FEF0DC',
-         '#9A5800',
-         1.8,
-        );
-        T(s, 80, 172, '锐角三角形', '#6A3A00', 12);
-       }
-       if (t > 0.35) {
-        PL(
-         s,
-         [
-          [154, 156],
-          [256, 156],
-          [154, 78],
-         ],
-         '#EEECFE',
-         '#5A4AC0',
-         1.8,
-        );
-        E(
-         'rect',
-         {
-          x: 154,
-          y: 144,
-          width: 12,
-          height: 12,
-          fill: 'none',
-          stroke: '#C03030',
-          'stroke-width': 1.5,
-         },
-         s,
-        );
-        T(s, 205, 172, '直角三角形', '#3A2A90', 12);
-       }
-       if (t > 0.65) {
-        PL(
-         s,
-         [
-          [282, 156],
-          [400, 156],
-          [330, 116],
-         ],
-         '#E4F6EE',
-         '#0A7050',
-         1.8,
-        );
-        T(s, 328, 172, '钝角三角形', '#064A34', 12);
-       }
+       // 三个角：35°（锐）、115°（钝）、72°（锐中等）
+       const angles = [
+        { deg:35,  cx:68,  cy:158, col:'#0A7050', lbl:'锐角' },
+        { deg:115, cx:230, cy:158, col:'#9A5800', lbl:'钝角' },
+        { deg:72,  cx:378, cy:158, col:'#1A5FA8', lbl:'锐角' },
+       ];
+       const rayLen = 68;
+       angles.forEach(({deg, cx, cy, col, lbl}, i) => {
+        if (t < i*0.28) return;
+        const rad = deg*Math.PI/180;
+        // 画角
+        L(s, cx, cy, cx+rayLen, cy, col, 2);
+        L(s, cx, cy, cx+rayLen*Math.cos(rad), cy-rayLen*Math.sin(rad), col, 2);
+        C(s, cx, cy, 3, col, 'none');
+        // 角弧
+        E('path',{d:`M${cx+22},${cy} A22,22,0,${deg>180?1:0},0,${cx+22*Math.cos(rad)},${cy-22*Math.sin(rad)}`,fill:col+'22',stroke:col,'stroke-width':1.2},s);
+        // 先显示问号
+        const revealed = t > i*0.28 + 0.20;
+        const midR = rad/2;
+        if (!revealed) {
+         T(s, cx+40*Math.cos(midR), cy-40*Math.sin(midR)-6, '?°', col, 15, 'middle', '700');
+         T(s, cx, cy+16, '估一估', '#9E9B96', 10);
+        } else {
+         T(s, cx+42*Math.cos(midR), cy-42*Math.sin(midR)-6, deg+'°', col, 15, 'middle', '700');
+         T(s, cx, cy+16, lbl+' ✓', col, 10, 'middle', '600');
+        }
+       });
+       if (t > 0.18) T(s, 68,  36, '角①', '#0A7050', 11, 'middle', '600');
+       if (t > 0.46) T(s, 230, 36, '角②', '#9A5800', 11, 'middle', '600');
+       if (t > 0.74) T(s, 378, 36, '角③', '#1A5FA8', 11, 'middle', '600');
+       if (t > 0.95) T(s, 230, 10, '先估再看——你估对了吗？', '#555', 11, 'middle');
       },
      },
     ],
