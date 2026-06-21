@@ -1,5 +1,16 @@
 # Changelog
 
+## v1.2.9 · 2026-06-21
+
+### 新增
+- Favicon：内联 SVG data URI（蓝紫渐变圆角方块 + 白色三角形 + 内切圆），browser tab 和 iOS 主屏均支持，无额外网络请求
+- Open Graph / WeChat 朋友圈分享 meta 标签（og:title / description / image / url / locale）
+- Twitter Card `summary_large_image` 兼容非微信平台分享
+- `og.svg` 分享预览图（1200×630），含标题、统计数字、几何装饰图形
+- 通用 SEO meta（description / keywords）
+
+---
+
 ## v1.2.8 · 2026-06-21
 
 ### 修复
