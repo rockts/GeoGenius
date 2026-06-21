@@ -1342,7 +1342,7 @@
       title: '长方形与正方形',
       sub: '边角特征与包含关系',
       tag: '特征',
-      steps: 4,
+      steps: 5,
      },
      {
       id: 'b3',
@@ -7506,6 +7506,43 @@
         T(s, 265, 116, '正方形', '#3A2A90', 14, 'middle', '700');
        }
        if (t > 0.75) T(s, 200, 196, '正方形满足长方形所有性质', '#9E9B96', 11);
+      },
+     },
+     {
+      hint: '轴对称：长方形有2条对称轴（横向和纵向中线）；正方形有4条（横、纵中线＋两条对角线）。沿任一对称轴对折，两侧完全重合。',
+      formula: '长方形：2条对称轴 | 正方形：4条对称轴',
+      dur: 2400,
+      draw(s, t) {
+       // 分隔线
+       L(s, 228, 10, 228, 210, '#E0E0E0', 1);
+       // ── 左侧：长方形 ──
+       const rx=34, ry=50, rw=158, rh=100, rMX=rx+rw/2, rMY=ry+rh/2;
+       R(s, rx, ry, rw, rh, '#E8F1FB', '#1A5FA8', 2);
+       // Phase1 (t:0.03-0.33): 右半边绕纵向中线对折
+       if (t > 0.03) {
+        const p1 = ease(Math.min(1,(t-0.03)/0.30));
+        const ca = Math.cos(p1*Math.PI);
+        const pts = [[rMX,ry],[rx+rw,ry],[rx+rw,ry+rh],[rMX,ry+rh]].map(([x,y])=>[rMX+(x-rMX)*ca,y]);
+        E('polygon',{points:pts.map(p=>p.join(',')).join(' '),fill:'#B8D0F0',stroke:'#1A5FA8','stroke-width':1.8,opacity:p1<0.96?0.72:1},s);
+       }
+       if (t > 0.36) { L(s,rMX,ry-9,rMX,ry+rh+9,'#C03030',2,'5,3'); T(s,rMX,ry-18,'纵向中线','#C03030',9,'middle'); }
+       // Phase2 (t:0.46-0.72): 上半边绕横向中线对折
+       if (t > 0.46) {
+        const p2 = ease(Math.min(1,(t-0.46)/0.26));
+        const ca = Math.cos(p2*Math.PI);
+        const pts = [[rx,rMY],[rx+rw,rMY],[rx+rw,ry],[rx,ry]].map(([x,y])=>[x,rMY+(y-rMY)*ca]);
+        E('polygon',{points:pts.map(p=>p.join(',')).join(' '),fill:'#90B8E8',stroke:'#1A5FA8','stroke-width':1.8,opacity:p2<0.96?0.72:1},s);
+       }
+       if (t > 0.75) { L(s,rx-8,rMY,rx+rw+8,rMY,'#C03030',2,'5,3'); T(s,rx-22,rMY,'横向中线','#C03030',9,'end'); }
+       if (t > 0.80) T(s,rMX,ry+rh+18,'长方形：2条对称轴','#0D3F6E',11,'middle','600');
+       // ── 右侧：正方形 ──
+       const sq=110, scx=344, scy=108, sqx=scx-sq/2, sqy=scy-sq/2;
+       if (t > 0.30) R(s,sqx,sqy,sq,sq,'#EEECFE','#5A4AC0',2);
+       if (t > 0.38) L(s,scx,sqy-9,scx,sqy+sq+9,'#C03030',2,'5,3');
+       if (t > 0.52) L(s,sqx-9,scy,sqx+sq+9,scy,'#C03030',2,'5,3');
+       if (t > 0.65) L(s,sqx-6,sqy-6,sqx+sq+6,sqy+sq+6,'#C03030',1.5,'4,2');
+       if (t > 0.78) L(s,sqx+sq+6,sqy-6,sqx-6,sqy+sq+6,'#C03030',1.5,'4,2');
+       if (t > 0.85) T(s,scx,sqy+sq+18,'正方形：4条对称轴','#3A2A90',11,'middle','600');
       },
      },
     ],
