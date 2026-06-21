@@ -59,13 +59,13 @@
 
 ---
 
-## 当前状态（最后更新：2026-06-21 17:32）
+## 当前状态（最后更新：2026-06-21 17:47）
 
 - **知识点**：35 个，144 个动画步骤
-- **当前分支**：dev / `7d75d62` — fix: 更新 og:image meta 指向 og.png（type=image/png）
-- **index.html 大小**：433054 字节 / 11092 行
+- **当前分支**：dev / `13812e7` — fix(og): 域名从 github.io 改为 geogenius.xiaole.app，og-square.png 兜底
+- **index.html 大小**：433036 字节 / 11092 行
 - **Cloudflare 部署分支**：main
-- **最后提交者**：rockts @ 2026-06-21 17:32
+- **最后提交者**：rockts @ 2026-06-21 17:47
 
 
 ## 待办事项
