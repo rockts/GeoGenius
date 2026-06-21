@@ -6798,7 +6798,7 @@
       ctx.textAlign='center'; ctx.textBaseline='bottom';
       ctx.fillText(dimTop,  viewCX, viewCY-fh/2-4);
       ctx.textAlign='right';  ctx.textBaseline='middle';
-      ctx.fillText(dimLeft, viewCX-fw/2-4, viewCY);
+      ctx.fillText(dimLeft, viewCX-fw/2-4, viewCY+14);
       ctx.font="bold 12px 'Noto Sans SC',sans-serif";
       ctx.textAlign='center'; ctx.textBaseline='top';
       ctx.fillText(vname, viewCX, viewCY+fh/2+5);
@@ -6812,7 +6812,7 @@
      ctx.fillStyle='#444'; ctx.font="10px 'Noto Sans SC',sans-serif";
      ctx.textAlign='center'; ctx.textBaseline='bottom';
      ctx.fillText('三视图合起来才能确定立体形状', 310, 218);
-     const MS=Math.min(SC*0.42,18);
+     const MS=Math.min(SC*0.42, 50/Math.max(a,b,h));
      [{label:'正面',W:b*MS,H:h*MS,col:'#1A5FA8',cx:258,cy:248},
       {label:'俯视',W:b*MS,H:a*MS,col:'#5A4AC0',cx:322,cy:248},
       {label:'侧面',W:a*MS,H:h*MS,col:'#9A5800',cx:386,cy:248}].forEach(({label,W,H,col,cx,cy})=>{
