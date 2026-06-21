@@ -6670,6 +6670,220 @@
    }
    // @@BUILD_END:g3-helpers@@
 
+   /* ── d5 观察物体 交互状态 ── */
+   const d5State = { a:4, b:3, h:3, curStep:-1, animRaf:null };
+
+   function d5Geom() {
+    const {a,b,h}=d5State;
+    // x=宽b(left-right visible on front), y=高h(vertical), z=长a(depth into scene)
+    const SC=Math.min(34, 185/(b+a*0.45+0.5), 145/(h+a*0.26+0.5));
+    const bw=b*SC+a*SC*0.45;
+    const ox=Math.max(28,(210-bw)/2+4), oy=228;
+    const P=(x,y,z)=>[ox+x*SC+z*SC*0.45, oy-y*SC-z*SC*0.26];
+    // Front face ABCD: A(0,0,0)=BL, B(b,0,0)=BR, C(b,h,0)=TR, D(0,h,0)=TL
+    // Back:  E(0,0,a), F(b,0,a), G(b,h,a), H(0,h,a)
+    const V={A:P(0,0,0),B:P(b,0,0),C:P(b,h,0),D:P(0,h,0),
+             E:P(0,0,a),F:P(b,0,a),G:P(b,h,a),H:P(0,h,a)};
+    return {SC,P,V};
+   }
+
+   function d5DrawScene(canvas, face, animT) {
+    const ctx=canvas.getContext('2d');
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    const {a,b,h}=d5State, {SC,V}=d5Geom();
+    const fHL=face==='front', tHL=face==='top', rHL=face==='right';
+    const poly=(pts,fill,stroke,lw,al=0.92)=>{
+     ctx.save(); ctx.globalAlpha=al; ctx.fillStyle=fill; ctx.strokeStyle=stroke; ctx.lineWidth=lw;
+     ctx.beginPath(); pts.forEach(([x,y],i)=>i?ctx.lineTo(x,y):ctx.moveTo(x,y)); ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.restore();
+    };
+    const ctr=(ps)=>[ps.reduce((s,p)=>s+p[0],0)/ps.length, ps.reduce((s,p)=>s+p[1],0)/ps.length];
+    // Hidden edges (left-back)
+    ctx.save(); ctx.strokeStyle='#C0C0C0'; ctx.lineWidth=0.8; ctx.setLineDash([3,3]);
+    [[V.A,V.E],[V.D,V.H],[V.E,V.F],[V.E,V.H]].forEach(([p1,p2])=>{ctx.beginPath();ctx.moveTo(...p1);ctx.lineTo(...p2);ctx.stroke();});
+    ctx.setLineDash([]); ctx.restore();
+    // Three visible faces (back-to-front order)
+    poly([V.D,V.C,V.G,V.H], tHL?'#B0A8F4':'#DDDAF8', '#5A4AC0', tHL?3:1.5);  // top (purple)
+    poly([V.B,V.F,V.G,V.C], rHL?'#F8C860':'#FEF0D8', '#9A5800', rHL?3:1.5);  // right (orange)
+    poly([V.A,V.B,V.C,V.D], fHL?'#90C4F8':'#D8EBF8', '#1A5FA8', fHL?3:1.5);  // front (blue)
+    // Far back edges
+    ctx.save(); ctx.strokeStyle='#999'; ctx.lineWidth=1;
+    [[V.F,V.G],[V.G,V.H]].forEach(([p1,p2])=>{ctx.beginPath();ctx.moveTo(...p1);ctx.lineTo(...p2);ctx.stroke();});
+    ctx.restore();
+    // Dimension labels
+    const font11="bold 11px 'Noto Sans SC',sans-serif";
+    // 宽b: below front bottom edge
+    ctx.font=font11; ctx.fillStyle='#1A5FA8'; ctx.textAlign='center'; ctx.textBaseline='top';
+    ctx.fillText('宽b='+b, (V.A[0]+V.B[0])/2, Math.max(V.A[1],V.B[1])+3);
+    // 高h: rotated vertical on left of front face
+    ctx.save();
+    ctx.translate((V.A[0]+V.D[0])/2-10, (V.A[1]+V.D[1])/2);
+    ctx.rotate(-Math.PI/2);
+    ctx.font=font11; ctx.fillStyle='#A03060'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText('高h='+h, 0, 0);
+    ctx.restore();
+    // 长a: along depth edge A→E
+    ctx.font=font11; ctx.fillStyle='#9A5800'; ctx.textAlign='left'; ctx.textBaseline='bottom';
+    ctx.fillText('长a='+a, (V.A[0]+V.E[0])/2+2, (V.A[1]+V.E[1])/2-3);
+
+    if (!face) {
+     // Step 0: fade-in arrows showing three viewing directions
+     const arrAlpha=Math.min(1,animT*2.5);
+     const frontCtr=ctr([V.A,V.B,V.C,V.D]);
+     const topCtr  =ctr([V.D,V.C,V.G,V.H]);
+     const sideCtr =ctr([V.B,V.F,V.G,V.C]);
+     const arrows=[
+      {col:'#1A5FA8',from:frontCtr,to:[55,145],label:'正面'},
+      {col:'#5A4AC0',from:topCtr,  to:[152,58], label:'上面'},
+      {col:'#9A5800',from:sideCtr, to:[222,128],label:'侧面'},
+     ];
+     ctx.save(); ctx.globalAlpha=arrAlpha;
+     arrows.forEach(({col,from,to,label})=>{
+      const ang=Math.atan2(to[1]-from[1],to[0]-from[0]);
+      ctx.strokeStyle=col; ctx.lineWidth=2; ctx.setLineDash([5,3]);
+      ctx.beginPath(); ctx.moveTo(from[0],from[1]); ctx.lineTo(to[0],to[1]); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle=col; ctx.beginPath();
+      ctx.moveTo(to[0],to[1]);
+      ctx.lineTo(to[0]-9*Math.cos(ang-0.4),to[1]-9*Math.sin(ang-0.4));
+      ctx.lineTo(to[0]-9*Math.cos(ang+0.4),to[1]-9*Math.sin(ang+0.4));
+      ctx.closePath(); ctx.fill();
+      ctx.font="11px 'Noto Sans SC',sans-serif"; ctx.fillStyle=col;
+      ctx.textAlign='center'; ctx.textBaseline='middle';
+      const dx=to[0]-from[0], dy=to[1]-from[1];
+      ctx.fillText(label, to[0]+dx*0.2, to[1]+dy*0.2+(dy>0?10:-12));
+     });
+     ctx.restore();
+     return;
+    }
+
+    // Arrow from highlighted face → flat-view area
+    const arrowProg=Math.min(1,animT*2.0);
+    const flatProg =Math.min(1,Math.max(0,(animT-0.44)/0.56));
+    const col=fHL?'#1A5FA8':tHL?'#5A4AC0':'#9A5800';
+    const from=fHL?ctr([V.A,V.B,V.C,V.D]):tHL?ctr([V.D,V.C,V.G,V.H]):ctr([V.B,V.F,V.G,V.C]);
+    // Flat view pixel dimensions: front=b×h, top=b×a, side=a×h
+    const viewW=fHL?b*SC:tHL?b*SC:a*SC;
+    const viewH=fHL?h*SC:tHL?a*SC:h*SC;
+    const viewCX=332, viewCY=118;
+    const arrowEndX=viewCX-viewW/2-14, arrowEndY=viewCY;
+    const ax=from[0]+(arrowEndX-from[0])*arrowProg;
+    const ay=from[1]+(arrowEndY-from[1])*arrowProg;
+    // Dashed arrow line
+    ctx.save(); ctx.strokeStyle=col; ctx.lineWidth=2.2; ctx.setLineDash([5,3]);
+    ctx.beginPath(); ctx.moveTo(from[0],from[1]); ctx.lineTo(ax,ay); ctx.stroke();
+    ctx.setLineDash([]);
+    if (arrowProg>0.80) {
+     const ang=Math.atan2(arrowEndY-from[1],arrowEndX-from[0]);
+     ctx.fillStyle=col; ctx.beginPath();
+     ctx.moveTo(ax,ay);
+     ctx.lineTo(ax-10*Math.cos(ang-0.38),ay-10*Math.sin(ang-0.38));
+     ctx.lineTo(ax-10*Math.cos(ang+0.38),ay-10*Math.sin(ang+0.38));
+     ctx.closePath(); ctx.fill();
+    }
+    ctx.restore();
+    // Flat view grows from arrow end to full size
+    if (flatProg>0) {
+     const fw=viewW*flatProg, fh=viewH*flatProg;
+     ctx.save();
+     ctx.fillStyle=col+'28'; ctx.strokeStyle=col; ctx.lineWidth=2;
+     ctx.fillRect(viewCX-fw/2,viewCY-fh/2,fw,fh);
+     ctx.strokeRect(viewCX-fw/2,viewCY-fh/2,fw,fh);
+     if (flatProg>0.72) {
+      const fa=Math.min(1,(flatProg-0.72)/0.28);
+      ctx.globalAlpha=fa;
+      ctx.fillStyle=col; ctx.font="11px 'Noto Sans SC',sans-serif";
+      const dimTop =fHL?'宽b='+b:tHL?'宽b='+b:'长a='+a;  // horizontal dim
+      const dimLeft=fHL?'高h='+h:tHL?'长a='+a:'高h='+h;  // vertical dim
+      const vname  =fHL?'正面视图':tHL?'俯视图':'侧面视图';
+      ctx.textAlign='center'; ctx.textBaseline='bottom';
+      ctx.fillText(dimTop,  viewCX, viewCY-fh/2-4);
+      ctx.textAlign='right';  ctx.textBaseline='middle';
+      ctx.fillText(dimLeft, viewCX-fw/2-4, viewCY);
+      ctx.font="bold 12px 'Noto Sans SC',sans-serif";
+      ctx.textAlign='center'; ctx.textBaseline='top';
+      ctx.fillText(vname, viewCX, viewCY+fh/2+5);
+     }
+     ctx.restore();
+    }
+    // Step 3 (right face): reveal three mini views side-by-side at end
+    if (rHL && animT>0.84) {
+     const alpha3=Math.min(1,(animT-0.84)/0.16);
+     ctx.save(); ctx.globalAlpha=alpha3;
+     ctx.fillStyle='#444'; ctx.font="10px 'Noto Sans SC',sans-serif";
+     ctx.textAlign='center'; ctx.textBaseline='bottom';
+     ctx.fillText('三视图合起来才能确定立体形状', 310, 218);
+     const MS=Math.min(SC*0.42,18);
+     [{label:'正面',W:b*MS,H:h*MS,col:'#1A5FA8',cx:258,cy:248},
+      {label:'俯视',W:b*MS,H:a*MS,col:'#5A4AC0',cx:322,cy:248},
+      {label:'侧面',W:a*MS,H:h*MS,col:'#9A5800',cx:386,cy:248}].forEach(({label,W,H,col,cx,cy})=>{
+      ctx.fillStyle=col+'30'; ctx.strokeStyle=col; ctx.lineWidth=1.5;
+      ctx.fillRect(cx-W/2,cy-H/2,W,H); ctx.strokeRect(cx-W/2,cy-H/2,W,H);
+      ctx.fillStyle=col; ctx.font="9px sans-serif";
+      ctx.textAlign='center'; ctx.textBaseline='top';
+      ctx.fillText(label, cx, cy+H/2+3);
+     });
+     ctx.restore();
+    }
+   }
+
+   function d5RunStep(canvas) {
+    if (d5State.animRaf) { cancelAnimationFrame(d5State.animRaf); d5State.animRaf=null; }
+    const face=[null,'front','top','right'][d5State.curStep];
+    const dur=d5State.curStep===0?700:1900, start=performance.now();
+    (function tick(now){
+     const t=Math.min(1,(now-start)/dur);
+     const te=t<0.5?2*t*t:1-Math.pow(-2*t+2,2)/2;
+     d5DrawScene(canvas,face,te);
+     if(t<1) d5State.animRaf=requestAnimationFrame(tick); else d5State.animRaf=null;
+    })(performance.now());
+   }
+
+   function getD5Canvas(sv) {
+    const svg=sv.ownerSVGElement||document.getElementById('asvg');
+    const wrap=svg.closest('.canvas-wrap')||svg.parentElement;
+    let canvas=document.getElementById('d5-canvas');
+    if (!canvas) {
+     svg.style.display='none';
+     canvas=document.createElement('canvas');
+     canvas.id='d5-canvas'; canvas.width=420; canvas.height=280;
+     Object.assign(canvas.style,{display:'block',maxWidth:'100%',height:'auto',borderRadius:'6px'});
+     wrap.appendChild(canvas);
+     const ov=document.createElement('div'); ov.id='d5-overlay';
+     Object.assign(ov.style,{display:'flex',gap:'8px',alignItems:'center',justifyContent:'center',
+      flexWrap:'wrap',padding:'6px 0 2px',fontSize:'13px',fontFamily:"'Noto Sans SC',sans-serif"});
+     ov.innerHTML=`
+      <label style="display:flex;align-items:center;gap:4px;color:#1A5FA8;font-weight:600">长a
+       <input id="d5-a" type="range" min="2" max="6" step="1" value="${d5State.a}" style="width:60px;accent-color:#1A5FA8">
+       <span id="d5-a-v" style="min-width:12px">${d5State.a}</span></label>
+      <label style="display:flex;align-items:center;gap:4px;color:#5A4AC0;font-weight:600">宽b
+       <input id="d5-b" type="range" min="2" max="5" step="1" value="${d5State.b}" style="width:60px;accent-color:#5A4AC0">
+       <span id="d5-b-v" style="min-width:12px">${d5State.b}</span></label>
+      <label style="display:flex;align-items:center;gap:4px;color:#A03060;font-weight:600">高h
+       <input id="d5-h" type="range" min="2" max="5" step="1" value="${d5State.h}" style="width:60px;accent-color:#A03060">
+       <span id="d5-h-v" style="min-width:12px">${d5State.h}</span></label>
+      <button id="d5-reset" style="font-size:11px;padding:2px 10px;border:1px solid #aaa;border-radius:12px;background:#fff;color:#666;cursor:pointer">恢复默认</button>`;
+     wrap.after(ov);
+     const ref=canvas;
+     const onUpdate=()=>{
+      if(d5State.animRaf){cancelAnimationFrame(d5State.animRaf);d5State.animRaf=null;}
+      d5DrawScene(ref,[null,'front','top','right'][d5State.curStep],1);
+      const sf=document.getElementById('sform');
+      try{if(sf&&d5State.curStep>=0)sf.textContent=ANIMS['d5'][d5State.curStep].formula;}catch(e){}
+     };
+     ['a','b','h'].forEach(k=>{
+      document.getElementById('d5-'+k).addEventListener('input',function(){
+       d5State[k]=+this.value; document.getElementById('d5-'+k+'-v').textContent=this.value; onUpdate();
+      });
+     });
+     document.getElementById('d5-reset').addEventListener('click',()=>{
+      d5State.a=4;d5State.b=3;d5State.h=3;
+      ['a','b','h'].forEach(k=>{document.getElementById('d5-'+k).value=d5State[k];document.getElementById('d5-'+k+'-v').textContent=d5State[k];});
+      onUpdate();
+     });
+    }
+    return {canvas};
+   }
+
    /* ── d1 角的度量 交互状态 ── */
    const d1State = { deg: 65 };
 
@@ -8703,65 +8917,28 @@
     ],
     d5: [
      {
-      hint: '从不同位置观察同一个物体，看到的形状可能不同。先确定观察方向。',
-      formula: '观察物体：先确定观察方向',
-      dur: 1200,
-      draw(s, t) {
-       R(s, 170, 78, 96, 76, '#E8F1FB', '#1A5FA8', 2, 4);
-       E('path', { d: 'M170,78 L206,52 L302,52 L266,78 Z', fill: '#EEECFE', stroke: '#5A4AC0', 'stroke-width': 2 }, s);
-       E('path', { d: 'M266,78 L302,52 L302,128 L266,154 Z', fill: '#FEF0DC', stroke: '#9A5800', 'stroke-width': 2 }, s);
-       if (t > 0.4) T(s, 218, 186, '前面', '#0D3F6E', 12, 'middle', '700');
-       if (t > 0.65) T(s, 310, 96, '右面', '#6A3A00', 12, 'start', '700');
-       if (t > 0.82) T(s, 236, 42, '上面', '#3A2A90', 12, 'middle', '700');
-      },
+      hint: '从不同位置观察同一个物体，看到的形状可能不同。拖动滑块改变长方体三个尺寸。',
+      formula: '长方体：长a、宽b、高h，三视图各不同',
+      dur: 100, noAutoFit: true,
+      draw(s) { const {canvas}=getD5Canvas(s); d5State.curStep=0; d5RunStep(canvas); },
      },
      {
-      hint: '从前面看，主要看到物体的高和宽；看不到深度。',
-      formula: '前面看到：宽 × 高',
-      dur: 1100,
-      draw(s, t) {
-       R(s, 52, 84, 128, 86, '#E8F1FB', '#1A5FA8', 2, 4);
-       E('path', { d: 'M52,84 L84,60 L212,60 L180,84 Z', fill: '#EEECFE', stroke: '#5A4AC0', 'stroke-width': 2 }, s);
-       E('path', { d: 'M180,84 L212,60 L212,146 L180,170 Z', fill: '#FEF0DC', stroke: '#9A5800', 'stroke-width': 2 }, s);
-       T(s, 124, 194, '实际物体', '#0D3F6E', 11);
-       if (t > 0.45) {
-        T(s, 235, 122, '→', '#9E9B96', 24);
-        R(s, 290, 84, 128, 86, '#E8F1FB', '#1A5FA8', 2, 4);
-        T(s, 354, 194, '前面形状', '#0D3F6E', 11);
-       }
-      },
+      hint: '从正面（前面）看，能看到宽b×高h的矩形；长a（深度）被隐藏了。',
+      get formula() { const {b,h}=d5State; return `正面视图：宽b=${b} × 高h=${h}`; },
+      dur: 100, noAutoFit: true,
+      draw(s) { const {canvas}=getD5Canvas(s); d5State.curStep=1; d5RunStep(canvas); },
      },
      {
-      hint: '从上面看，主要看到物体的长和宽；高度被压缩成一个平面图形。',
-      formula: '上面看到：长 × 宽',
-      dur: 1100,
-      draw(s, t) {
-       E('path', { d: 'M82,120 L150,78 L252,78 L184,120 Z', fill: '#EEECFE', stroke: '#5A4AC0', 'stroke-width': 2 }, s);
-       T(s, 166, 146, '从上往下看', '#3A2A90', 12);
-       if (t > 0.5) {
-        T(s, 272, 104, '→', '#9E9B96', 24);
-        R(s, 318, 78, 96, 66, '#EEECFE', '#5A4AC0', 2, 4);
-        T(s, 366, 166, '上面形状', '#3A2A90', 11);
-       }
-      },
+      hint: '从上面（俯视）看，能看到宽b×长a的矩形；高h（高度）被压缩了。',
+      get formula() { const {a,b}=d5State; return `俯视图：宽b=${b} × 长a=${a}`; },
+      dur: 100, noAutoFit: true,
+      draw(s) { const {canvas}=getD5Canvas(s); d5State.curStep=2; d5RunStep(canvas); },
      },
      {
-      hint: '根据三个方向看到的图形，可以反推物体的大致形状。这是发展空间想象的重要方法。',
-      formula: '三视图：前面、上面、侧面互相印证',
-      dur: 1300,
-      draw(s, t) {
-       R(s, 42, 82, 86, 72, '#E8F1FB', '#1A5FA8', 2, 4);
-       T(s, 85, 174, '前面', '#0D3F6E', 11);
-       if (t > 0.35) {
-        R(s, 184, 92, 88, 50, '#EEECFE', '#5A4AC0', 2, 4);
-        T(s, 228, 174, '上面', '#3A2A90', 11);
-       }
-       if (t > 0.65) {
-        R(s, 330, 82, 58, 72, '#FEF0DC', '#9A5800', 2, 4);
-        T(s, 359, 174, '侧面', '#6A3A00', 11);
-       }
-       if (t > 0.86) T(s, 230, 210, '合起来想象立体形状', '#9E9B96', 11, 'middle');
-      },
+      hint: '从侧面（右面）看，能看到长a×高h的矩形；宽b（宽度）被隐藏了。三视图合起来才能确定立体形状！',
+      get formula() { const {a,h}=d5State; return `侧视图：长a=${a} × 高h=${h}`; },
+      dur: 100, noAutoFit: true,
+      draw(s) { const {canvas}=getD5Canvas(s); d5State.curStep=3; d5RunStep(canvas); },
      },
     ],
 
