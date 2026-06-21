@@ -3109,7 +3109,7 @@
    /** Draw circle divided into n coloured sectors */
    function f2PieCircle(ctx, cx, cy, r, n) {
     const pi = Math.PI;
-    const col = [{fill:'#FCEAF2',stroke:'#A03060'},{fill:'#EEF2FF',stroke:'#4A5AC0'}];
+    const col = [{fill:'#FFD060',stroke:'#B08000'},{fill:'#AACCE8',stroke:'#3078B8'}];
     for (let i = 0; i < n; i++) {
      const a1 = (i / n) * 2 * pi - pi / 2;
      const a2 = ((i + 1) / n) * 2 * pi - pi / 2;
@@ -3119,19 +3119,23 @@
      ctx.strokeStyle = col[i%2].stroke; ctx.lineWidth = 0.9; ctx.stroke();
     }
    }
-   /** Draw n interleaved sectors in a horizontal band. Returns {startX, totalW}. */
+   /** Draw n interleaved sectors in a horizontal band. Returns {startX, totalW}.
+    *  All sectors occupy the SAME height band [bandY-rArr, bandY].
+    *  Up-sectors (even i, golden): apex at TOP (bandY-rArr), arc at bottom (bandY).
+    *  Down-sectors (odd i, blue): apex at BOTTOM (bandY), arc at top (bandY-rArr).
+    *  Adjacent sectors share straight edges; x-spacing = rArr·tan(π/n). */
    function f2Band(ctx, n, bandY, rArr) {
     const pi = Math.PI;
     const alpha = pi / n;
-    const arcW  = 2 * pi * rArr / n;
-    const totalW = n * arcW;
-    const startX = (420 - totalW) / 2;
-    const col = [{fill:'#FCEAF2',stroke:'#A03060'},{fill:'#EEF2FF',stroke:'#4A5AC0'}];
+    const spacing = rArr * Math.tan(alpha);  // apex-to-apex distance for shared edges
+    const totalW  = n * spacing;             // ≈ π·rArr as n→∞
+    const startX  = (420 - totalW) / 2;
+    const col = [{fill:'#FFD060',stroke:'#B08000'},{fill:'#AACCE8',stroke:'#3078B8'}];
     for (let i = 0; i < n; i++) {
-     const openDown = (i % 2 === 0);
-     const cx_ = startX + (i + 0.5) * arcW;
-     const cy_ = openDown ? (bandY - rArr) : (bandY + rArr);
-     f2Sector(ctx, cx_, cy_, rArr, alpha, openDown ? pi / 2 : -pi / 2, col[i%2].fill, col[i%2].stroke);
+     const isUp = (i % 2 === 0);
+     const cx_   = startX + i * spacing;
+     const cy_   = isUp ? (bandY - rArr) : bandY;
+     f2Sector(ctx, cx_, cy_, rArr, alpha, isUp ? pi / 2 : -pi / 2, col[i%2].fill, col[i%2].stroke);
     }
     return { startX, totalW };
    }
@@ -3210,9 +3214,9 @@
      /* Circle + radius line; size scales with r */
      const cx = 145, cy = 128;
      const rPx = Math.max(25, r * 10);
-     f2Circle(ctx, cx, cy, rPx, '#FCEAF2', '#A03060', 2.5);
+     f2Circle(ctx, cx, cy, rPx, '#FFD060', '#B08000', 2.5);
      f2Line(ctx, cx, cy, cx + rPx, cy, '#1A5FA8', 2.5);
-     f2Circle(ctx, cx, cy, 4, '#A03060');
+     f2Circle(ctx, cx, cy, 4, '#B08000');
      f2Label(ctx, `r = ${r}`, cx + rPx / 2, cy - 14, '#1A5FA8', 16, 'center', '700');
      f2RoundRect(ctx, 268, 78, 136, 94, 8, '#FFF8E7', '#9A5800', 1.5);
      f2Label(ctx, '圆的面积', 336, 100, '#9A5800', 13, 'center', '600');
@@ -3220,69 +3224,76 @@
      f2Label(ctx, '推导：扇形切拼', 336, 157, '#9A5800', 12);
     }
     else if (step === 1) {
-     const bandY = 162;
+     const bandY = 175;
      const {startX,totalW} = f2Band(ctx, 8, bandY, RARR);
      f2Line(ctx, startX, bandY-RARR, startX+totalW, bandY-RARR, '#aaa', 1, true);
-     f2Line(ctx, startX, bandY+RARR, startX+totalW, bandY+RARR, '#aaa', 1, true);
-     f2PieCircle(ctx, CX, CY, RS, 8);
+     f2Line(ctx, startX, bandY,      startX+totalW, bandY,       '#aaa', 1, true);
+     const RSr = Math.max(18, Math.min(40, r * 7));
+     f2PieCircle(ctx, CX, CY, RSr, 8);
+     f2Label(ctx, `r=${r}`, CX, CY-RSr-6, '#1A5FA8', 11, 'center', '700');
      // arrow →
      ctx.save(); ctx.strokeStyle='#888'; ctx.lineWidth=1.5;
-     ctx.beginPath(); ctx.moveTo(CX+RS+6,CY); ctx.lineTo(CX+RS+28,CY); ctx.stroke();
+     ctx.beginPath(); ctx.moveTo(CX+RSr+6,CY); ctx.lineTo(CX+RSr+28,CY); ctx.stroke();
      ctx.fillStyle='#888';
-     ctx.beginPath(); ctx.moveTo(CX+RS+28,CY); ctx.lineTo(CX+RS+20,CY-5); ctx.lineTo(CX+RS+20,CY+5); ctx.fill();
+     ctx.beginPath(); ctx.moveTo(CX+RSr+28,CY); ctx.lineTo(CX+RSr+20,CY-5); ctx.lineTo(CX+RSr+20,CY+5); ctx.fill();
      ctx.restore();
-     ctx.save(); ctx.fillStyle='rgba(255,255,255,0.82)'; ctx.fillRect(CX-34,CY+RS+1,68,13); ctx.restore();
-     f2Label(ctx, '8个扇形', CX, CY+RS+8, '#555', 11);
-     f2Label(ctx, '↑ 锯齿明显，近似平行四边形', W/2, 246, '#666', 11);
+     ctx.save(); ctx.fillStyle='rgba(255,255,255,0.82)'; ctx.fillRect(CX-34,CY+RSr+1,68,13); ctx.restore();
+     f2Label(ctx, '8个扇形', CX, CY+RSr+8, '#555', 11);
+     f2Label(ctx, '↑ 锯齿明显，近似平行四边形', W/2, bandY+22, '#666', 11);
     }
     else if (step === 2) {
      /* Final state after animation */
-     const bandY = 162;
+     const bandY = 175;
      const {startX,totalW} = f2Band(ctx, 16, bandY, RARR);
      f2Line(ctx, startX, bandY-RARR, startX+totalW, bandY-RARR, '#aaa', 1, true);
-     f2Line(ctx, startX, bandY+RARR, startX+totalW, bandY+RARR, '#aaa', 1, true);
-     f2PieCircle(ctx, CX, CY, RS, 16);
+     f2Line(ctx, startX, bandY,      startX+totalW, bandY,       '#aaa', 1, true);
+     const RSr = Math.max(18, Math.min(40, r * 7));
+     f2PieCircle(ctx, CX, CY, RSr, 16);
+     f2Label(ctx, `r=${r}`, CX, CY-RSr-6, '#1A5FA8', 11, 'center', '700');
      ctx.save(); ctx.strokeStyle='#888'; ctx.lineWidth=1.5;
-     ctx.beginPath(); ctx.moveTo(CX+RS+6,CY); ctx.lineTo(CX+RS+28,CY); ctx.stroke();
+     ctx.beginPath(); ctx.moveTo(CX+RSr+6,CY); ctx.lineTo(CX+RSr+28,CY); ctx.stroke();
      ctx.fillStyle='#888';
-     ctx.beginPath(); ctx.moveTo(CX+RS+28,CY); ctx.lineTo(CX+RS+20,CY-5); ctx.lineTo(CX+RS+20,CY+5); ctx.fill();
+     ctx.beginPath(); ctx.moveTo(CX+RSr+28,CY); ctx.lineTo(CX+RSr+20,CY-5); ctx.lineTo(CX+RSr+20,CY+5); ctx.fill();
      ctx.restore();
-     ctx.save(); ctx.fillStyle='rgba(255,255,255,0.82)'; ctx.fillRect(CX-40,CY+RS+1,80,13); ctx.restore();
-     f2Label(ctx, '16个扇形', CX, CY+RS+8, '#555', 11);
-     f2Label(ctx, '锯齿变少，越来越像长方形！', W/2, 246, '#666', 12);
+     ctx.save(); ctx.fillStyle='rgba(255,255,255,0.82)'; ctx.fillRect(CX-40,CY+RSr+1,80,13); ctx.restore();
+     f2Label(ctx, '16个扇形', CX, CY+RSr+8, '#555', 11);
+     f2Label(ctx, '锯齿变少，越来越像长方形！', W/2, bandY+22, '#666', 12);
     }
     else if (step === 3) {
-     const bandY = 152;
+     const bandY = 168;
      const {startX,totalW} = f2Band(ctx, 32, bandY, RARR);
-     const top = bandY-RARR, bot = bandY+RARR;
+     const top = bandY-RARR, bot = bandY;
      ctx.save(); ctx.setLineDash([6,4]); ctx.strokeStyle='#1A5FA8'; ctx.lineWidth=2;
-     ctx.strokeRect(startX, top, totalW, 2*RARR); ctx.restore();
+     ctx.strokeRect(startX, top, totalW, RARR); ctx.restore();
      // bottom brace
      ctx.save(); ctx.strokeStyle='#1A5FA8'; ctx.lineWidth=1.5;
-     ctx.beginPath(); ctx.moveTo(startX,bot+22); ctx.lineTo(startX+totalW,bot+22); ctx.stroke();
-     ctx.beginPath(); ctx.moveTo(startX,bot+17); ctx.lineTo(startX,bot+27); ctx.stroke();
-     ctx.beginPath(); ctx.moveTo(startX+totalW,bot+17); ctx.lineTo(startX+totalW,bot+27); ctx.stroke();
+     ctx.beginPath(); ctx.moveTo(startX,bot+18); ctx.lineTo(startX+totalW,bot+18); ctx.stroke();
+     ctx.beginPath(); ctx.moveTo(startX,bot+13); ctx.lineTo(startX,bot+23); ctx.stroke();
+     ctx.beginPath(); ctx.moveTo(startX+totalW,bot+13); ctx.lineTo(startX+totalW,bot+23); ctx.stroke();
      ctx.restore();
-     f2Label(ctx, `长 ≈ πr = π×${r} ≈ ${(pi*r).toFixed(1)}`, W/2, bot+38, '#1A5FA8', 13, 'center', '600');
-     // width label — inside the dashed rect, right side (avoids canvas clipping)
-     ctx.save(); ctx.fillStyle='rgba(255,255,255,0.85)'; ctx.fillRect(startX+totalW-72, bandY-11, 68, 22); ctx.restore();
-     f2Label(ctx, `宽=r=${r}`, startX+totalW-6, bandY, '#C03030', 12, 'right', '600');
+     f2Label(ctx, `长 ≈ πr = π×${r} ≈ ${(pi*r).toFixed(1)}`, W/2, bot+34, '#1A5FA8', 13, 'center', '600');
+     // height label on right side at band midpoint
+     const midY = top + RARR/2;
+     ctx.save(); ctx.fillStyle='rgba(255,255,255,0.85)'; ctx.fillRect(startX+totalW+2, midY-10, 54, 20); ctx.restore();
+     f2Label(ctx, `宽=r=${r}`, startX+totalW+4, midY, '#C03030', 12, 'left', '600');
      f2Label(ctx, '32个扇形 ≈ 长方形', W/2, top-14, '#333', 12);
      /* reference circle drawn last so it appears above band */
-     f2PieCircle(ctx, CX, CY, RS, 32);
+     const RSr = Math.max(18, Math.min(40, r * 7));
+     f2PieCircle(ctx, CX, CY, RSr, 32);
+     f2Label(ctx, `r=${r}`, CX, CY-RSr-6, '#1A5FA8', 11, 'center', '700');
      ctx.save(); ctx.strokeStyle='#888'; ctx.lineWidth=1.5;
-     ctx.beginPath(); ctx.moveTo(CX+RS+6,CY); ctx.lineTo(CX+RS+26,CY); ctx.stroke();
+     ctx.beginPath(); ctx.moveTo(CX+RSr+6,CY); ctx.lineTo(CX+RSr+26,CY); ctx.stroke();
      ctx.fillStyle='#888';
-     ctx.beginPath(); ctx.moveTo(CX+RS+26,CY); ctx.lineTo(CX+RS+18,CY-5); ctx.lineTo(CX+RS+18,CY+5); ctx.fill();
+     ctx.beginPath(); ctx.moveTo(CX+RSr+26,CY); ctx.lineTo(CX+RSr+18,CY-5); ctx.lineTo(CX+RSr+18,CY+5); ctx.fill();
      ctx.restore();
-     ctx.save(); ctx.fillStyle='rgba(255,255,255,0.82)'; ctx.fillRect(CX-40,CY+RS+1,80,13); ctx.restore();
-     f2Label(ctx, '32个扇形', CX, CY+RS+8, '#555', 11);
+     ctx.save(); ctx.fillStyle='rgba(255,255,255,0.82)'; ctx.fillRect(CX-40,CY+RSr+1,80,13); ctx.restore();
+     f2Label(ctx, '32个扇形', CX, CY+RSr+8, '#555', 11);
     }
     else if (step === 4) {
      const cx=68, cy=78, rS=56;
-     f2Circle(ctx, cx, cy, rS, '#FCEAF2', '#A03060', 2);
+     f2Circle(ctx, cx, cy, rS, '#FFD060', '#B08000', 2);
      f2Line(ctx, cx, cy, cx+rS, cy, '#1A5FA8', 2);
-     f2Circle(ctx, cx, cy, 4, '#A03060');
+     f2Circle(ctx, cx, cy, 4, '#B08000');
      f2Label(ctx, `r = ${r}`, cx+rS/2, cy-14, '#1A5FA8', 14, 'center', '600');
      const area = (3.14*r*r).toFixed(2);
      const fw=224,fh=145,fx=168,fy=22;
@@ -3290,9 +3301,9 @@
      f2Label(ctx, '推导过程', fx+fw/2, fy+18, '#9A5800', 12, 'center', '600');
      f2Label(ctx, 'S = 长 × 宽', fx+fw/2, fy+40, '#555', 13);
      f2Label(ctx, '= πr × r', fx+fw/2, fy+63, '#555', 13);
-     f2Label(ctx, '= πr²', fx+fw/2, fy+90, '#A03060', 20, 'center', '700');
+     f2Label(ctx, '= πr²', fx+fw/2, fy+90, '#B08000', 20, 'center', '700');
      f2Label(ctx, `r=${r} → S = 3.14×${r}²`, fx+fw/2, fy+116, '#555', 12);
-     f2Label(ctx, `= 3.14×${r*r} ≈ ${area}`, fx+fw/2, fy+136, '#A03060', 14, 'center', '700');
+     f2Label(ctx, `= 3.14×${r*r} ≈ ${area}`, fx+fw/2, fy+136, '#B08000', 14, 'center', '700');
      f2RoundRect(ctx, 50, 185, 316, 55, 8, '#E8F5E9', '#2E7D32', 1.5);
      f2Label(ctx, '圆的面积公式：S = πr²', 208, 206, '#2E7D32', 15, 'center', '700');
      f2Label(ctx, '切得越细越准确！', 208, 228, '#2E7D32', 12, 'center', '600');
@@ -3305,11 +3316,11 @@
     const CX = 52, CY = 48, RS = 42;
     const ctx = canvas.getContext('2d');
     ctx.clearRect(0, 0, W, H);
-    const alpha = pi / n;
-    const arcW = 2 * pi * RARR / n;
-    const totalW = n * arcW;
-    const startX = (W - totalW) / 2;
-    const col = [{fill:'#FCEAF2',stroke:'#A03060'},{fill:'#EEF2FF',stroke:'#4A5AC0'}];
+    const alpha   = pi / n;
+    const spacing = RARR * Math.tan(alpha);
+    const totalW  = n * spacing;
+    const startX  = (W - totalW) / 2;
+    const col = [{fill:'#FFD060',stroke:'#B08000'},{fill:'#AACCE8',stroke:'#3078B8'}];
 
     /* stagger: sector i starts flying at p = STAGGER*i/n; each flight lasts FLIGHT_DUR */
     const STAGGER = 0.65;
@@ -3350,7 +3361,7 @@
      ctx.save(); ctx.globalAlpha = la; ctx.setLineDash([5,4]);
      ctx.strokeStyle='#aaa'; ctx.lineWidth=1;
      ctx.beginPath(); ctx.moveTo(startX, bandY-RARR); ctx.lineTo(startX+totalW, bandY-RARR); ctx.stroke();
-     ctx.beginPath(); ctx.moveTo(startX, bandY+RARR); ctx.lineTo(startX+totalW, bandY+RARR); ctx.stroke();
+     ctx.beginPath(); ctx.moveTo(startX, bandY);      ctx.lineTo(startX+totalW, bandY);      ctx.stroke();
      ctx.restore();
     }
 
@@ -3360,15 +3371,15 @@
      if (t <= 0) continue;
      const ease = t * t * (3 - 2 * t);   // smoothstep
      const c = col[i % 2];
-     const openDown = (i % 2 === 0);
+     const isUp = (i % 2 === 0);
 
      /* Source: apex at circle center, opening radially outward */
      const srcMid = (i / n + 0.5 / n) * 2 * pi - pi / 2;
 
-     /* Target: apex at band edge, opening up or down */
-     const tX = startX + (i + 0.5) * arcW;
-     const tY = openDown ? (bandY - RARR) : (bandY + RARR);
-     const tMid = openDown ? pi / 2 : -pi / 2;
+     /* Target: apex at top (up) or bottom (down) of the shared band */
+     const tX   = startX + i * spacing;
+     const tY   = isUp ? (bandY - RARR) : bandY;
+     const tMid = isUp ? pi / 2 : -pi / 2;
 
      /* Interpolate position */
      const curX = CX + (tX - CX) * ease;
@@ -3390,7 +3401,7 @@
    /** Start rAF animation for step 2 (n=16) or step 3 (n=32) */
    function f2StartAnim(canvas, n) {
     const RARR = 60;
-    const bandY = (n === 32) ? 152 : 162;
+    const bandY = (n === 32) ? 168 : 175;
     const dur   = (n === 32) ? 2500 : 2200;
     if (f2State.animRaf) { cancelAnimationFrame(f2State.animRaf); f2State.animRaf = null; }
     f2State.animDone = false;
