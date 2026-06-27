@@ -52,26 +52,26 @@
 
   <!-- badge pill -->
   <rect x="72" y="72" width="200" height="38" rx="19" fill="url(#badge)"/>
-  <text x="172" y="97" font-family="'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif"
-        font-size="17" font-weight="700" fill="white" text-anchor="middle">GeoGenius · v1.2</text>
+  <text x="172" y="97" font-family="'Source Han Sans CN', 'Heiti SC', 'PingFang SC', sans-serif"
+        font-size="17" font-weight="700" fill="white" text-anchor="middle">GeoGenius · v1.3</text>
 
   <!-- main title line 1 -->
-  <text x="72" y="210" font-family="'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif"
+  <text x="72" y="210" font-family="'Source Han Sans CN', 'Heiti SC', 'PingFang SC', sans-serif"
         font-size="88" font-weight="700" fill="#1a1814" letter-spacing="-2">几何直观</text>
 
   <!-- main title line 2 -->
-  <text x="72" y="305" font-family="'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif"
+  <text x="72" y="305" font-family="'Source Han Sans CN', 'Heiti SC', 'PingFang SC', sans-serif"
         font-size="64" font-weight="700" fill="#1a5fa8" letter-spacing="-1">AI 学习助手</text>
 
   <!-- divider -->
   <line x1="72" y1="338" x2="560" y2="338" stroke="#d4d0c8" stroke-width="1.5"/>
 
   <!-- subtitle -->
-  <text x="72" y="382" font-family="'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif"
+  <text x="72" y="382" font-family="'Source Han Sans CN', 'Heiti SC', 'PingFang SC', sans-serif"
         font-size="28" fill="#6b6760" letter-spacing="1">小学图形与几何动态演示学习工具</text>
 
   <!-- stats row -->
-  <g font-family="'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="22" font-weight="600">
+  <g font-family="'Source Han Sans CN', 'Heiti SC', 'PingFang SC', sans-serif" font-size="22" font-weight="600">
     <!-- stat 1 -->
     <rect x="72" y="418" width="110" height="44" rx="8" fill="#e8f1fb"/>
     <text x="127" y="446" fill="#1a5fa8" text-anchor="middle">6 年级</text>
@@ -84,10 +84,10 @@
   </g>
 
   <!-- tagline -->
-  <text x="72" y="530" font-family="'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif"
+  <text x="72" y="530" font-family="'Source Han Sans CN', 'Heiti SC', 'PingFang SC', sans-serif"
         font-size="21" fill="#9e9b96">依据义务教育数学课程标准（2022年版）· 配合 AI 讲解与变式练习</text>
 
   <!-- bottom right: URL -->
-  <text x="1130" y="598" font-family="'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif"
-        font-size="18" fill="#9e9b96" text-anchor="end" opacity="0.7">rockts.github.io/GeoGenius</text>
+  <text x="1130" y="598" font-family="'Source Han Sans CN', 'Heiti SC', 'PingFang SC', sans-serif"
+        font-size="18" fill="#9e9b96" text-anchor="end" opacity="0.7">geogenius.xiaole.app</text>
 </svg>
