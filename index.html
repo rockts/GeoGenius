@@ -1963,6 +1963,9 @@
     removeC5bCanvas();
     removeG1Canvas();
     removeG2Canvas();
+    removeG3Canvas();
+    removeD1Canvas();
+    removeD5Canvas();
     removeF1Canvas();
     removeF2Canvas();
     removeF3Canvas();
@@ -2178,6 +2181,9 @@
     removeC5bCanvas();
     removeG1Canvas();
     removeG2Canvas();
+    removeG3Canvas();
+    removeD1Canvas();
+    removeD5Canvas();
     removeF1Canvas();
     removeF2Canvas();
     removeF3Canvas();
@@ -6149,6 +6155,32 @@
     const c=document.getElementById('g2-canvas');
     if (c) { const sv=c.parentElement?.querySelector('svg'); if(sv) sv.style.display=''; c.remove(); }
     const o=document.getElementById('g2-overlay');
+    if (o) o.remove();
+   }
+
+   function removeG3Canvas() {
+    if (g3State.animRaf) { cancelAnimationFrame(g3State.animRaf); g3State.animRaf = null; }
+    g3State.curStep = -1;
+    const c = document.getElementById('g3-canvas');
+    if (c) { const sv = c.parentElement?.querySelector('svg'); if (sv) sv.style.display = ''; c.remove(); }
+    const o = document.getElementById('g3-overlay');
+    if (o) o.remove();
+   }
+
+   function removeD5Canvas() {
+    if (d5State.animRaf) { cancelAnimationFrame(d5State.animRaf); d5State.animRaf = null; }
+    d5State.curStep = -1;
+    const c = document.getElementById('d5-canvas');
+    if (c) { const sv = c.parentElement?.querySelector('svg'); if (sv) sv.style.display = ''; c.remove(); }
+    const o = document.getElementById('d5-overlay');
+    if (o) o.remove();
+   }
+
+   function removeD1Canvas() {
+    d1State.deg = 65;
+    const c = document.getElementById('d1-canvas');
+    if (c) { const sv = c.parentElement?.querySelector('svg'); if (sv) sv.style.display = ''; c.remove(); }
+    const o = document.getElementById('d1-overlay');
     if (o) o.remove();
    }
 
