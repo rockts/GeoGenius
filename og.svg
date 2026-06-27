@@ -100,7 +100,7 @@
   <!-- badge pill -->
   <rect x="72" y="72" width="210" height="38" rx="19" fill="url(#badge)"/>
   <text x="177" y="97" font-family="'Source Han Sans CN','Heiti SC',sans-serif"
-        font-size="17" font-weight="700" fill="white" text-anchor="middle">GeoGenius · v1.3</text>
+        font-size="17" font-weight="700" fill="white" text-anchor="middle">GeoGenius</text>
 
   <!-- main hook -->
   <text x="72" y="200" font-family="'Source Han Sans CN','Heiti SC',sans-serif"

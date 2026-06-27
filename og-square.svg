@@ -23,7 +23,7 @@
   <!-- ── TOP: brand ── -->
   <rect x="80" y="60" width="240" height="46" rx="23" fill="url(#badge)"/>
   <text x="200" y="90" font-family="'Source Han Sans CN','Heiti SC',sans-serif"
-        font-size="19" font-weight="700" fill="white" text-anchor="middle">GeoGenius · v1.3</text>
+        font-size="19" font-weight="700" fill="white" text-anchor="middle">GeoGenius</text>
 
   <!-- ── TITLE ── -->
   <text x="600" y="198" font-family="'Source Han Sans CN','Heiti SC',sans-serif"
